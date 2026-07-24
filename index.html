@@ -189,6 +189,10 @@
       width: 8px;
     }
 
+    .tabs::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
     .tabs::-webkit-scrollbar-thumb {
       background: rgba(255, 255, 255, 0.24);
       border-radius: 999px;
@@ -202,6 +206,10 @@
       font-weight: 900;
       letter-spacing: .08em;
       text-transform: uppercase;
+    }
+
+    .nav-section.empty-nav-section {
+      display: none;
     }
 
     .role-pill {
@@ -331,21 +339,55 @@
     body.executive-admin-profile [data-hide-executive-admin] { display: none !important; }
 
     body.role-manager-profile .brand {
-      margin-bottom: 16px;
+      margin-bottom: 12px;
+    }
+
+    body.role-manager-profile .tabs {
+      gap: 3px;
+      margin-bottom: 10px;
+      padding-right: 3px;
+      padding-bottom: 8px;
+      scrollbar-color: rgba(255, 255, 255, 0.28) transparent;
+    }
+
+    body.role-manager-profile .tabs::-webkit-scrollbar {
+      width: 5px;
     }
 
     body.role-manager-profile .nav-section {
-      margin-top: 10px;
+      margin-top: 7px;
+      margin-bottom: 3px;
+      padding: 0 10px;
+      font-size: 10px;
+      line-height: 1.2;
     }
 
     body.role-manager-profile .tab {
-      min-height: 38px;
-      padding-top: 9px;
-      padding-bottom: 9px;
+      min-height: 32px;
+      padding: 7px 10px;
+      border-radius: 9px;
+      font-size: 13px;
+      line-height: 1.15;
     }
 
     body.role-manager-profile .signed-in-card {
-      max-height: 118px;
+      max-height: 104px;
+      padding: 10px;
+      gap: 5px;
+      border-radius: 12px;
+    }
+
+    body.role-manager-profile .signed-in-eyebrow {
+      font-size: 10px;
+    }
+
+    body.role-manager-profile .signed-in-name {
+      font-size: 14px;
+    }
+
+    body.role-manager-profile .signed-in-role {
+      padding: 4px 8px;
+      font-size: 10px;
     }
 
     .grid {
@@ -6256,6 +6298,23 @@
       return ["home", "dashboard", "executive", "incidents"].includes(id);
     }
 
+    function syncSidebarSections() {
+      const nav = document.querySelector(".tabs");
+      if (!nav) return;
+      const children = [...nav.children];
+      children.forEach((element, index) => {
+        if (!element.classList?.contains("nav-section")) return;
+        if (element.hasAttribute("hidden")) return;
+        const followingItems = [];
+        for (let i = index + 1; i < children.length; i += 1) {
+          if (children[i].classList?.contains("nav-section")) break;
+          followingItems.push(children[i]);
+        }
+        const hasVisibleItem = followingItems.some(item => item.matches?.(".tab") && !item.hidden);
+        element.classList.toggle("empty-nav-section", !hasVisibleItem);
+      });
+    }
+
     function requireMasterAdmin(action = "manage reports") {
       if (canManageReports()) return true;
       alert(`${ROLE_LABELS[currentProfile] || "Admin"} profile cannot ${action}. Use Master admin or Role Manager for report management.`);
@@ -6291,6 +6350,7 @@
         element.hidden = hideForExecutiveAdmin;
         element.style.display = hideForExecutiveAdmin ? "none" : "";
       });
+      syncSidebarSections();
       if (!canAccessView(getActiveView())) {
         switchView("home");
       } else {
