@@ -99,6 +99,7 @@
       bottom: 0;
       width: 280px;
       height: 100vh;
+      max-height: 100vh;
       min-width: 0;
       overflow: hidden;
       padding: 24px 18px;
@@ -109,6 +110,7 @@
       display: flex;
       flex-direction: column;
       z-index: 30;
+      gap: 0;
     }
 
     main {
@@ -123,7 +125,7 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      margin-bottom: 28px;
+      margin-bottom: 20px;
       min-width: 0;
       flex: 0 0 auto;
     }
@@ -170,16 +172,17 @@
     .tabs {
       display: grid;
       gap: 6px;
-      margin-bottom: 18px;
+      margin-bottom: 12px;
       min-height: 0;
-      flex: 1 1 auto;
+      flex: 1 1 0;
       align-content: start;
       grid-auto-rows: max-content;
       overflow-y: auto;
       overflow-x: hidden;
-      padding-right: 4px;
+      padding-right: 6px;
       padding-bottom: 12px;
       scrollbar-width: thin;
+      overscroll-behavior: contain;
     }
 
     .tabs::-webkit-scrollbar {
@@ -192,7 +195,7 @@
     }
 
     .nav-section {
-      margin: 16px 0 6px;
+      margin: 14px 0 6px;
       padding: 0 12px;
       color: #9fb0c3;
       font-size: 11px;
@@ -217,7 +220,7 @@
       background: transparent;
       color: #dce8f3;
       border-radius: 10px;
-      padding: 11px 12px;
+      padding: 10px 12px;
       text-align: left;
       cursor: pointer;
       display: flex;
@@ -225,7 +228,7 @@
       align-items: center;
       font-weight: 650;
       min-width: 0;
-      min-height: 44px;
+      min-height: 40px;
       flex: 0 0 auto;
       overflow-wrap: anywhere;
     }
@@ -326,6 +329,24 @@
     .view.active { display: block; }
     [hidden] { display: none !important; }
     body.executive-admin-profile [data-hide-executive-admin] { display: none !important; }
+
+    body.role-manager-profile .brand {
+      margin-bottom: 16px;
+    }
+
+    body.role-manager-profile .nav-section {
+      margin-top: 10px;
+    }
+
+    body.role-manager-profile .tab {
+      min-height: 38px;
+      padding-top: 9px;
+      padding-bottom: 9px;
+    }
+
+    body.role-manager-profile .signed-in-card {
+      max-height: 118px;
+    }
 
     .grid {
       display: grid;
@@ -590,16 +611,16 @@
     }
 
     .signed-in-card {
-      margin-top: auto;
+      margin-top: 0;
       border: 1px solid rgba(255, 255, 255, 0.14);
       border-radius: 14px;
       background: rgba(255, 255, 255, 0.08);
-      padding: 13px;
+      padding: 12px;
       color: #f8fafc;
       display: grid;
-      gap: 8px;
+      gap: 7px;
       flex: 0 0 auto;
-      max-height: 150px;
+      max-height: 132px;
       overflow: hidden;
     }
 
@@ -6252,6 +6273,7 @@
     function applyProfileAccess() {
       updateSignedInIdentity();
       document.body.classList.toggle("executive-admin-profile", isExecutiveAdmin());
+      document.body.classList.toggle("role-manager-profile", canManageRoles());
       document.querySelectorAll("[data-master-only]").forEach(element => {
         element.hidden = !canManageReports();
       });
@@ -9813,7 +9835,17 @@
       const activeTab = id === "intake" ? "reports" : id;
       document.querySelectorAll(".tab").forEach(tab => tab.classList.toggle("active", tab.dataset.view === activeTab));
       const activeButton = [...document.querySelectorAll(".tab")].find(tab => tab.dataset.view === activeTab && !tab.hidden);
-      activeButton?.scrollIntoView({ block: "nearest" });
+      if (activeButton) {
+        const nav = activeButton.closest(".tabs");
+        if (nav) {
+          const navTop = nav.scrollTop;
+          const navBottom = navTop + nav.clientHeight;
+          const itemTop = activeButton.offsetTop;
+          const itemBottom = itemTop + activeButton.offsetHeight;
+          if (itemTop < navTop) nav.scrollTop = Math.max(0, itemTop - 10);
+          if (itemBottom > navBottom) nav.scrollTop = itemBottom - nav.clientHeight + 10;
+        }
+      }
       logUserAction("view_opened", { view: id }, { target_type: "view", target_id: id });
       renderAllSafely(`switch to ${id}`);
     }
