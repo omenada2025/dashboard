@@ -2877,7 +2877,7 @@
         <div class="guide-grid">
           <div class="guide-card theme-blue">
             <strong>1. Pick the reporting period</strong>
-            <p class="muted small">Select one week for the meeting, or keep all weeks for a broader product readout.</p>
+            <p class="muted small">This view opens on the latest reporting week with submitted updates.</p>
           </div>
           <div class="guide-card theme-green">
             <strong>2. Review product health</strong>
@@ -7205,6 +7205,37 @@
       });
     }
 
+    function weeklyProjectBriefWeekOptions() {
+      const weeks = new Map();
+      reports.forEach(report => {
+        const weekStart = mondayForDate(report.week);
+        if (!weekStart) return;
+        weeks.set(weekStart, reportingWeekGroupLabel(weekStart));
+      });
+      return [...weeks.entries()]
+        .map(([value, label]) => ({ value, label }))
+        .sort((a, b) => b.value.localeCompare(a.value));
+    }
+
+    function syncWeeklyProjectBriefWeekFilter() {
+      const select = document.getElementById("projectBriefWeekFilter");
+      if (!select) return;
+      const weeks = weeklyProjectBriefWeekOptions();
+      if (!weeks.length) {
+        projectBriefFilters.week = "all";
+        select.innerHTML = `<option value="all">No reporting weeks yet</option>`;
+        select.value = "all";
+        return;
+      }
+      if (!weeks.some(week => week.value === projectBriefFilters.week)) {
+        projectBriefFilters.week = weeks[0].value;
+      }
+      select.innerHTML = weeks
+        .map(week => `<option value="${escapeHtml(week.value)}">${escapeHtml(week.label)}</option>`)
+        .join("");
+      select.value = projectBriefFilters.week;
+    }
+
     function projectBriefProgressCounts(items) {
       const counts = new Map([
         ["0-25%", 0],
@@ -7387,7 +7418,7 @@
 
       fillSelect("projectBriefOwnerFilter", uniqueOwners(), "All owners", projectBriefFilters.owner);
       fillSelect("projectBriefProductFilter", reports.map(report => report.product), "All projects", projectBriefFilters.product);
-      fillSelect("projectBriefWeekFilter", reports.map(report => report.week), "All reporting weeks", projectBriefFilters.week);
+      syncWeeklyProjectBriefWeekFilter();
       const roleSelect = document.getElementById("projectBriefRoleFilter");
       if (roleSelect) roleSelect.value = projectBriefFilters.role;
 
@@ -13460,7 +13491,7 @@
       const items = weeklyProjectBriefRows();
       copyTextToClipboard(managementWeeklyProjectBriefText(items, projectBriefFilters)).then(() => {
         event.currentTarget.textContent = "Copied";
-        setTimeout(() => { event.currentTarget.textContent = "Copy weekly project brief"; }, 1600);
+        setTimeout(() => { event.currentTarget.textContent = "Copy meeting report"; }, 1600);
       });
       logUserAction("weekly_project_brief_copied", { filters: { ...projectBriefFilters } }, { target_type: "weekly_project_brief", target_id: "copy" });
     });
