@@ -1743,6 +1743,99 @@
       min-width: 0;
     }
 
+    .project-talk-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(360px, 100%), 1fr));
+      gap: 14px;
+    }
+
+    .project-talk-card {
+      display: grid;
+      gap: 12px;
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-left: 6px solid var(--accent);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.94);
+      box-shadow: 0 18px 42px rgba(15, 23, 42, 0.08);
+      padding: 16px;
+    }
+
+    .project-talk-card.red { border-left-color: #be2f5b; }
+    .project-talk-card.amber { border-left-color: #d08a12; }
+    .project-talk-card.green { border-left-color: #2f8f5b; }
+    .project-talk-card.gray { border-left-color: #7a8792; }
+    .project-talk-card.blue { border-left-color: #2f6f8f; }
+
+    .project-talk-card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .project-talk-card-header h3 {
+      margin: 8px 0 4px;
+    }
+
+    .project-talk-score {
+      flex: 0 0 auto;
+      border-radius: 999px;
+      background: #edf4f8;
+      color: var(--ink);
+      font-size: 24px;
+      font-weight: 900;
+      padding: 8px 12px;
+    }
+
+    .project-talk-progress {
+      height: 11px;
+      border-radius: 999px;
+      background: #e6eef5;
+      overflow: hidden;
+    }
+
+    .project-talk-progress span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: var(--accent);
+    }
+
+    .project-talk-card.red .project-talk-progress span { background: #be2f5b; }
+    .project-talk-card.amber .project-talk-progress span { background: #d08a12; }
+    .project-talk-card.green .project-talk-progress span { background: #2f8f5b; }
+    .project-talk-card.gray .project-talk-progress span { background: #7a8792; }
+    .project-talk-card.blue .project-talk-progress span { background: #2f6f8f; }
+
+    .project-talk-quickline {
+      margin: 0;
+      color: var(--text);
+      font-size: 15px;
+      line-height: 1.45;
+    }
+
+    .project-talk-mini-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .project-talk-mini-grid > div {
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #f6f9fb;
+      padding: 10px;
+    }
+
+    .project-talk-mini-grid p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
     .user-log-list {
       max-height: min(700px, 72vh);
     }
@@ -2064,7 +2157,7 @@
       }
       .side-actions { position: static; margin-top: 22px; }
       main { margin-left: 0; width: 100%; padding: 18px; }
-      .summary-grid, .two-col, .three-col, .exec-grid, .exec-metrics, .health-stack, .form-grid, .filter-bar, .health-toolbar, .health-detail-grid, .report-card-detail, .timeline-scale, .delivery-row { grid-template-columns: 1fr; }
+      .summary-grid, .two-col, .three-col, .exec-grid, .exec-metrics, .health-stack, .form-grid, .filter-bar, .health-toolbar, .health-detail-grid, .report-card-detail, .timeline-scale, .delivery-row, .project-talk-mini-grid { grid-template-columns: 1fr; }
       .timeline-scale-track {
         display: none;
       }
@@ -2164,6 +2257,7 @@
         <button class="tab" data-view="incidents" title="Major delays, minor delays, blockers, at-risk, and critical workstreams">Incidents & Delays</button>
         <div class="nav-section" data-role-manager-only>Management</div>
         <button class="tab" data-view="managementReview" data-role-manager-only>Manager Meeting</button>
+        <button class="tab" data-view="projectTalkTrack" data-role-manager-only>Project Talk Track</button>
         <button class="tab" data-view="weeklyProjectBrief" data-role-manager-only>Weekly Project Review</button>
         <button class="tab" data-view="reportAnalysis" data-role-manager-only>Report Quality Review</button>
         <button class="tab" data-view="ownerFeedback" data-role-manager-only>Coaching Feedback</button>
@@ -2861,6 +2955,74 @@
             </div>
             <div class="chart-stack" id="managementTrend"></div>
           </div>
+        </div>
+      </section>
+
+      <section class="view" id="projectTalkTrack" data-role-manager-view>
+        <div class="header">
+          <div>
+            <span class="page-kicker">Visual meeting board</span>
+            <h2>Project Talk Track</h2>
+            <p class="muted">A fast, visual page for speaking about every active product in the manager meeting without reading long report text.</p>
+          </div>
+          <button class="btn" type="button" data-logout>Logout</button>
+        </div>
+
+        <div class="guide-grid">
+          <div class="guide-card theme-blue">
+            <strong>1. Start with the signal</strong>
+            <p class="muted small">Each card shows whether the product is healthy, delayed, blocked, or needs a decision.</p>
+          </div>
+          <div class="guide-card theme-green">
+            <strong>2. Talk one product once</strong>
+            <p class="muted small">Products are deduplicated, even when several workstreams exist underneath the same product.</p>
+          </div>
+          <div class="guide-card theme-amber">
+            <strong>3. Close with action</strong>
+            <p class="muted small">Use Next action and Leadership ask to make the meeting outcome clear.</p>
+          </div>
+        </div>
+
+        <div class="panel filter-bar report-filter-bar">
+          <label>
+            Project
+            <select id="talkTrackProductFilter"></select>
+          </label>
+          <label>
+            Owner
+            <select id="talkTrackOwnerFilter"></select>
+          </label>
+          <label>
+            Date / reporting week
+            <select id="talkTrackWeekFilter"></select>
+          </label>
+          <label>
+            Role
+            <select id="talkTrackRoleFilter">
+              <option value="all">All roles</option>
+              <option value="Product Manager">Product Manager</option>
+              <option value="UI/UX">UI/UX</option>
+            </select>
+          </label>
+          <div class="full panel-title">
+            <div>
+              <strong>Presentation mode</strong>
+              <p class="muted small">Use the cards to talk live, or copy the short talking track for meeting notes.</p>
+            </div>
+            <button class="btn soft" type="button" id="copyTalkTrackBtn">Copy talk track</button>
+          </div>
+        </div>
+
+        <div class="grid summary-grid" id="talkTrackCards"></div>
+
+        <div class="panel">
+          <div class="panel-title">
+            <div>
+              <h3>Visual project cards</h3>
+              <p class="muted small">One card per product, sorted by highest delivery attention first.</p>
+            </div>
+          </div>
+          <div class="project-talk-grid" id="talkTrackProjectCards"></div>
         </div>
       </section>
 
@@ -4460,6 +4622,12 @@
       owner: "all",
       product: "all",
       week: "all",
+      role: "all"
+    };
+    const talkTrackFilters = {
+      owner: "all",
+      product: "all",
+      week: "",
       role: "all"
     };
     const ownerFeedbackFilters = {
@@ -6352,7 +6520,7 @@
     }
 
     function canAccessView(id) {
-      if (canManageRoles()) return ["home", "dashboard", "executive", "myDashboard", "workflow", "incidents", "timeline", "intake", "reports", "sourceProjects", "managementReview", "weeklyProjectBrief", "reportAnalysis", "ownerFeedback", "actionItems", "weeklyReview", "workload", "users", "userLog"].includes(id);
+      if (canManageRoles()) return ["home", "dashboard", "executive", "myDashboard", "workflow", "incidents", "timeline", "intake", "reports", "sourceProjects", "managementReview", "projectTalkTrack", "weeklyProjectBrief", "reportAnalysis", "ownerFeedback", "actionItems", "weeklyReview", "workload", "users", "userLog"].includes(id);
       if (isMasterAdmin()) return ["home", "dashboard", "executive", "myDashboard", "incidents", "timeline", "intake", "reports"].includes(id);
       return ["home", "dashboard", "executive", "incidents"].includes(id);
     }
@@ -7401,6 +7569,139 @@
         return "No leadership decision needed right now.";
       }
       return decision;
+    }
+
+    function talkTrackRows() {
+      return analysisRowsForFilters({
+        owner: talkTrackFilters.owner,
+        product: talkTrackFilters.product,
+        week: talkTrackFilters.week,
+        health: "all",
+        role: talkTrackFilters.role
+      });
+    }
+
+    function syncTalkTrackWeekFilter() {
+      const select = document.getElementById("talkTrackWeekFilter");
+      if (!select) return;
+      const weeks = weeklyProjectBriefWeekOptions();
+      if (!weeks.length) {
+        talkTrackFilters.week = "all";
+        select.innerHTML = `<option value="all">No reporting weeks yet</option>`;
+        select.value = "all";
+        return;
+      }
+      if (!talkTrackFilters.week || !weeks.some(week => week.value === talkTrackFilters.week)) {
+        talkTrackFilters.week = weeks[0].value;
+      }
+      select.innerHTML = weeks
+        .map(week => `<option value="${escapeHtml(week.value)}">${escapeHtml(week.label)}</option>`)
+        .join("");
+      select.value = talkTrackFilters.week;
+    }
+
+    function shortMeetingText(value, max = 170) {
+      const text = cleanText(value);
+      if (!text) return "";
+      return text.length > max ? `${text.slice(0, max - 1).trim()}...` : text;
+    }
+
+    function talkTrackMetricDefinitions(items, narratives) {
+      const projectStats = managementProjectStats(items);
+      const activeProjects = activeProjectCount(items);
+      const attentionProjects = narratives.filter(project => projectBriefRiskScore(project) > 0).length;
+      const decisionProjects = narratives.filter(project => projectBriefDecisionNeeded(project) !== "No leadership decision needed right now.").length;
+      const delayedProjects = projectStats.filter(project => project.majorDelay || project.minorDelay).length;
+      const avgProgress = projectStats.length
+        ? Math.round(projectStats.reduce((sum, project) => sum + Number(project.avgProgress || 0), 0) / projectStats.length)
+        : 0;
+      const topProject = narratives[0];
+      return [
+        { label: "Projects to cover", value: narratives.length, tone: "blue", note: "One card per product" },
+        { label: "Active now", value: activeProjects, tone: "green", note: "Open workstreams with end date" },
+        { label: "Start with", value: topProject ? "#1" : "None", tone: topProject?.tone || "green", note: topProject ? topProject.project : "No project signal" },
+        { label: "Need attention", value: attentionProjects, tone: attentionProjects ? "red" : "green", note: "Risk, blocker, or schedule signal" },
+        { label: "Decision asks", value: decisionProjects, tone: decisionProjects ? "amber" : "green", note: "Leadership follow-up needed" },
+        { label: "Schedule watch", value: delayedProjects, tone: delayedProjects ? "red" : "green", note: "Minor or major delay" },
+        { label: "Avg progress", value: `${avgProgress}%`, tone: avgProgress < 50 ? "red" : avgProgress < 75 ? "amber" : "green", note: "Average by product" }
+      ];
+    }
+
+    function talkTrackCardMarkup(project, index) {
+      const progress = Math.max(0, Math.min(100, Number(project.period.avgProgress || 0)));
+      const riskScore = projectBriefRiskScore(project);
+      const owners = project.period.owners.join(", ") || project.overall.owners.join(", ") || "No owner captured";
+      const summary = shortMeetingText(project.latest?.summary || project.talkTrack, 210);
+      const blocker = shortMeetingText(project.blocker || "No blocker captured.", 140);
+      const next = shortMeetingText(project.next || "Confirm the next action, owner, and target date.", 140);
+      const decision = shortMeetingText(projectBriefDecisionNeeded(project), 140);
+      const win = shortMeetingText(project.win || "No win captured.", 140);
+      return `
+        <article class="project-talk-card ${project.tone || "blue"}">
+          <div class="project-talk-card-header">
+            <div>
+              <span class="chip ${project.tone || "blue"}">#${index + 1} ${escapeHtml(project.mainSignal)}</span>
+              <h3>${escapeHtml(project.project)}</h3>
+              <p class="muted small">${escapeHtml(owners)} - ${project.period.workstreams} update${project.period.workstreams === 1 ? "" : "s"} - ${escapeHtml(project.period.scheduleLabel)}</p>
+            </div>
+            <strong class="project-talk-score">${progress}%</strong>
+          </div>
+          <div class="project-talk-progress" aria-label="${progress}% progress">
+            <span style="width:${progress}%"></span>
+          </div>
+          <p class="project-talk-quickline">${escapeHtml(summary || "No summary captured for this product.")}</p>
+          <div class="project-talk-mini-grid">
+            <div><strong>Say this</strong><p>${escapeHtml(project.talkTrack)}</p></div>
+            <div><strong>Risk / blocker</strong><p>${escapeHtml(blocker)}</p></div>
+            <div><strong>Next action</strong><p>${escapeHtml(next)}</p></div>
+            <div><strong>Leadership ask</strong><p>${escapeHtml(decision)}</p></div>
+            <div><strong>Win</strong><p>${escapeHtml(win)}</p></div>
+            <div><strong>Risk score</strong><p>${riskScore ? `${riskScore} attention points` : "No attention signal"}</p></div>
+          </div>
+        </article>
+      `;
+    }
+
+    function talkTrackText(narratives, filters = talkTrackFilters) {
+      const periodLabel = filters.week === "all" ? "selected reporting period" : reportingWeekGroupLabel(filters.week);
+      if (!narratives.length) return `Project talk track - ${periodLabel}\n\nNo product updates match the current filters.`;
+      return [
+        `Project talk track - ${periodLabel}`,
+        `Use this as the quick speaking order. Products are listed once and ranked by delivery attention.`,
+        ...narratives.map((project, index) => [
+          `${index + 1}. ${project.project} - ${project.mainSignal} (${project.period.avgProgress}% progress)`,
+          `Say: ${project.latest?.summary || project.talkTrack}`,
+          `Risk / blocker: ${project.blocker}`,
+          `Next action: ${project.next}`,
+          `Leadership ask: ${projectBriefDecisionNeeded(project)}`
+        ].join("\n"))
+      ].join("\n\n");
+    }
+
+    function renderProjectTalkTrack() {
+      const cards = document.getElementById("talkTrackCards");
+      const projectCards = document.getElementById("talkTrackProjectCards");
+      if (!cards || !projectCards) return;
+      fillSelect("talkTrackProductFilter", reports.map(report => report.product), "All projects", talkTrackFilters.product);
+      fillSelect("talkTrackOwnerFilter", uniqueOwners(), "All owners", talkTrackFilters.owner);
+      syncTalkTrackWeekFilter();
+      const roleSelect = document.getElementById("talkTrackRoleFilter");
+      if (roleSelect) roleSelect.value = talkTrackFilters.role;
+
+      const items = talkTrackRows();
+      const narratives = managementProductNarratives(items, talkTrackFilters)
+        .map(project => ({ ...project, riskScore: projectBriefRiskScore(project) }))
+        .sort((a, b) => b.riskScore - a.riskScore || a.project.localeCompare(b.project));
+      cards.innerHTML = talkTrackMetricDefinitions(items, narratives).map(card => `
+        <div class="panel metric">
+          <span class="chip ${card.tone}">${escapeHtml(card.label)}</span>
+          <strong>${escapeHtml(card.value)}</strong>
+          <span class="muted small">${escapeHtml(card.note)}</span>
+        </div>
+      `).join("");
+      projectCards.innerHTML = narratives.length
+        ? narratives.map(talkTrackCardMarkup).join("")
+        : `<div class="empty"><strong>No project talk track yet</strong>Adjust filters or add reports to generate visual project cards.</div>`;
     }
 
     function projectBriefMeetingOverviewMarkup(items, narratives, filters) {
@@ -12614,6 +12915,7 @@
         timeline: renderDeliveryTimeline,
         sourceProjects: renderSourceProjects,
         managementReview: renderManagementReview,
+        projectTalkTrack: renderProjectTalkTrack,
         weeklyProjectBrief: renderWeeklyProjectBrief,
         reportAnalysis: renderReportAnalysis,
         ownerFeedback: renderOwnerFeedbackPage,
@@ -13519,6 +13821,42 @@
         setTimeout(() => { event.currentTarget.textContent = "Copy narrative"; }, 1600);
       });
       logUserAction("management_review_narrative_copied", { filters: { ...managementFilters } }, { target_type: "management_review", target_id: "narrative" });
+    });
+
+    document.getElementById("talkTrackOwnerFilter").addEventListener("change", event => {
+      talkTrackFilters.owner = event.target.value;
+      logFilterChange("project_talk_track", "owner", event.target.value);
+      renderProjectTalkTrack();
+    });
+
+    document.getElementById("talkTrackProductFilter").addEventListener("change", event => {
+      talkTrackFilters.product = event.target.value;
+      logFilterChange("project_talk_track", "project", event.target.value);
+      renderProjectTalkTrack();
+    });
+
+    document.getElementById("talkTrackWeekFilter").addEventListener("change", event => {
+      talkTrackFilters.week = event.target.value;
+      logFilterChange("project_talk_track", "date", event.target.value);
+      renderProjectTalkTrack();
+    });
+
+    document.getElementById("talkTrackRoleFilter").addEventListener("change", event => {
+      talkTrackFilters.role = event.target.value;
+      logFilterChange("project_talk_track", "role", event.target.value);
+      renderProjectTalkTrack();
+    });
+
+    document.getElementById("copyTalkTrackBtn").addEventListener("click", event => {
+      const items = talkTrackRows();
+      const narratives = managementProductNarratives(items, talkTrackFilters)
+        .map(project => ({ ...project, riskScore: projectBriefRiskScore(project) }))
+        .sort((a, b) => b.riskScore - a.riskScore || a.project.localeCompare(b.project));
+      copyTextToClipboard(talkTrackText(narratives, talkTrackFilters)).then(() => {
+        event.currentTarget.textContent = "Copied";
+        setTimeout(() => { event.currentTarget.textContent = "Copy talk track"; }, 1600);
+      });
+      logUserAction("project_talk_track_copied", { filters: { ...talkTrackFilters } }, { target_type: "project_talk_track", target_id: "copy" });
     });
 
     document.getElementById("projectBriefOwnerFilter").addEventListener("change", event => {
