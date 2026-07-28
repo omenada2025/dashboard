@@ -4366,6 +4366,25 @@
       "PsPortals", "QReate & Track", "Spider Vision", "Strantin", "StreamPay", "Survey software", "SystemView", "TillerStack",
       "Twinpeaksweb", "Webbeeo", "WorkAware", "ZenaDrone", "ZenaPay", "ZenaTech", "Zigvoice", "Zinergy"
     ].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+    const PRODUCT_ALIASES = {
+      daas360: "DaaS360",
+      daas: "DaaS360",
+      k9sky: "K9sky",
+      k9: "K9sky",
+      "k9 sky": "K9sky",
+      othership: "Othership",
+      paceplus: "PacePlus",
+      "pace+": "PacePlus",
+      "pace plus": "PacePlus",
+      psportals: "PsPortals",
+      "ps portals": "PsPortals",
+      "survey software": "Survey software",
+      surveysoftware: "Survey software",
+      workaware: "WorkAware",
+      worksware: "WorkAware",
+      "zoo office ai": "Zoo Office AI",
+      zooofficeai: "Zoo Office AI"
+    };
     const dashboardFilters = {
       period: "monthly",
       week: "",
@@ -4926,10 +4945,20 @@
       return cleanText(value).toLocaleLowerCase();
     }
 
+    function compactKey(value = "") {
+      return canonicalText(value).replace(/[^a-z0-9]/g, "");
+    }
+
     function productDisplay(value = "") {
       const display = cleanText(value);
       if (!display) return "Product not separated";
-      const preferred = productDirectory().find(product => canonicalText(product) === canonicalText(display));
+      const directAlias = PRODUCT_ALIASES[canonicalText(display)] || PRODUCT_ALIASES[compactKey(display)];
+      if (directAlias) return directAlias;
+      const displayKey = canonicalText(display);
+      const displayCompact = compactKey(display);
+      const preferred = productDirectory().find(product =>
+        canonicalText(product) === displayKey || compactKey(product) === displayCompact
+      );
       return preferred || display;
     }
 
@@ -5091,9 +5120,10 @@
     function uniqueProducts(values = []) {
       const map = new Map();
       values.forEach(value => {
-        const display = cleanText(value);
+        const rawDisplay = cleanText(value);
+        const display = PRODUCT_ALIASES[canonicalText(rawDisplay)] || PRODUCT_ALIASES[compactKey(rawDisplay)] || rawDisplay;
         if (!display) return;
-        const key = canonicalText(display);
+        const key = compactKey(display);
         const existing = map.get(key);
         if (!existing || display === display.toUpperCase() || display.length < existing.length) map.set(key, display);
       });
@@ -6902,6 +6932,7 @@
           return category === "minorDelay" || category === "majorDelay";
         }).length;
         const majorDelay = projectReports.filter(report => endDateStatus(report)?.category === "majorDelay").length;
+        const minorDelay = projectReports.filter(report => endDateStatus(report)?.category === "minorDelay").length;
         const blockers = projectReports.filter(report => hasBlockerSignal(report)).length;
         const needsAction = projectItems.filter(item => item.analysis.tone === "red").length;
         const missingNext = projectReports.filter(report => !cleanText(report.next)).length;
@@ -6922,6 +6953,7 @@
           avgProgress,
           delayed,
           majorDelay,
+          minorDelay,
           blockers,
           missingNext,
           needsAction,
@@ -6984,6 +7016,7 @@
         avgProgress: 0,
         delayed: 0,
         majorDelay: 0,
+        minorDelay: 0,
         blockers: 0,
         missingNext: 0,
         needsAction: 0,
@@ -7075,9 +7108,20 @@
       if (!narratives.length) {
         return `Weekly project brief - ${periodLabel}\n\nNo project reports are available for the current filters.`;
       }
+      const avgProgress = Math.round(narratives.reduce((sum, project) => sum + Number(project.period.avgProgress || 0), 0) / narratives.length);
+      const attentionProjects = narratives.filter(project => projectBriefRiskScore(project) > 0).length;
+      const majorDelayProjects = narratives.filter(project => project.period.majorDelay).length;
+      const minorDelayProjects = narratives.filter(project => project.period.minorDelay && !project.period.majorDelay).length;
+      const blockerProjects = narratives.filter(project => project.period.blockers).length;
+      const missingNextProjects = narratives.filter(project => project.period.missingNext).length;
+      const topProject = [...narratives]
+        .map(project => ({ ...project, riskScore: projectBriefRiskScore(project) }))
+        .sort((a, b) => b.riskScore - a.riskScore || a.project.localeCompare(b.project))[0];
       return [
         `Weekly project brief - ${periodLabel}`,
-        `Use this as the manager meeting talking track. Each project includes the current signal, brief explanation, next action, and leadership ask.`,
+        `Executive overview: ${narratives.length} product${narratives.length === 1 ? "" : "s"} reported this period, ${avgProgress}% average progress by product, ${attentionProjects} product${attentionProjects === 1 ? "" : "s"} need management attention, ${majorDelayProjects} major delay${majorDelayProjects === 1 ? "" : "s"}, ${minorDelayProjects} minor delay${minorDelayProjects === 1 ? "" : "s"}, ${blockerProjects} blocker/risk signal${blockerProjects === 1 ? "" : "s"}, and ${missingNextProjects} product${missingNextProjects === 1 ? "" : "s"} missing a clear next action.`,
+        `Start the meeting with: ${topProject.project} - ${topProject.mainSignal}.`,
+        `Use the project notes below as the talking track. Each product is listed once and includes current signal, brief explanation, next action, and leadership ask.`,
         ...narratives.map((project, index) => {
           const status = `${project.mainSignal}; ${project.period.avgProgress}% average progress; ${project.period.scheduleLabel}`;
           const latest = project.latest;
@@ -7123,13 +7167,16 @@
       return "blue";
     }
 
-    function chartRowsFromCounts(counts, total, emptyLabel = "No data available") {
-      const entries = [...counts.entries()].filter(([, count]) => count > 0);
+    function chartRowsFromCounts(counts, total, emptyLabel = "No data available", limit = 0) {
+      const entries = [...counts.entries()]
+        .filter(([, count]) => count > 0)
+        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
       if (!entries.length) {
         return `<div class="empty"><strong>${escapeHtml(emptyLabel)}</strong>No matching records for the current filters.</div>`;
       }
-      return entries
-        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      const visibleEntries = limit ? entries.slice(0, limit) : entries;
+      const hiddenCount = limit ? entries.length - visibleEntries.length : 0;
+      return visibleEntries
         .map(([label, count]) => {
           const percent = total ? Math.round(count / total * 100) : 0;
           const tone = chartToneForLabel(label);
@@ -7140,7 +7187,7 @@
               <span class="muted small">${count} (${percent}%)</span>
             </div>
           `;
-        }).join("");
+        }).join("") + (hiddenCount > 0 ? `<p class="muted small">+ ${hiddenCount} more project${hiddenCount === 1 ? "" : "s"} with smaller signals.</p>` : "");
     }
 
     function countByLabel(items, getter) {
@@ -7307,27 +7354,32 @@
         </div>
         <div class="chart-block">
           <h4>Risk concentration by project</h4>
-          ${chartRowsFromCounts(riskCounts, Math.max(1, [...riskCounts.values()].reduce((sum, count) => sum + count, 0)), "No project risk signals")}
+          ${chartRowsFromCounts(riskCounts, Math.max(1, [...riskCounts.values()].reduce((sum, count) => sum + count, 0)), "No project risk signals", 12)}
         </div>
       `;
     }
 
     function projectBriefMetricDefinitions(items) {
-      const reportsInView = items.map(item => item.report);
       const projectStats = managementProjectStats(items);
-      const dateCounts = endDateCounts(reportsInView);
-      const avgProgress = reportsInView.length
-        ? Math.round(reportsInView.reduce((sum, report) => sum + Number(report.progress || 0), 0) / reportsInView.length)
+      const avgProgress = projectStats.length
+        ? Math.round(projectStats.reduce((sum, project) => sum + Number(project.avgProgress || 0), 0) / projectStats.length)
         : 0;
       const riskProjects = projectStats.filter(project => project.majorDelay || project.critical || project.needsAction || project.blockers).length;
+      const delayedProjects = projectStats.filter(project => project.delayed).length;
+      const majorDelayProjects = projectStats.filter(project => project.majorDelay).length;
+      const minorDelayProjects = projectStats.filter(project => project.minorDelay && !project.majorDelay).length;
       const activeProjects = activeProjectCount(items);
+      const leadershipPriorityProjects = projectStats.filter(project =>
+        project.majorDelay || project.critical || project.needsAction || project.missingNext || project.blockers
+      ).length;
       return [
         { label: "Active projects", value: activeProjects, tone: "green", note: "Open workstreams with end date" },
         { label: "Projects reported", value: projectStats.length, tone: "blue", note: "Unique products in this brief" },
-        { label: "Workstreams", value: items.length, tone: "blue", note: "Reports in this brief" },
+        { label: "Status updates", value: items.length, tone: "blue", note: "Reports in this brief" },
         { label: "At-risk projects", value: riskProjects, tone: riskProjects ? "red" : "green", note: "Need management attention" },
-        { label: "Schedule delay", value: dateCounts.majorDelay + dateCounts.minorDelay, tone: dateCounts.majorDelay ? "red" : dateCounts.minorDelay ? "amber" : "green", note: `${dateCounts.majorDelay} major / ${dateCounts.minorDelay} minor` },
-        { label: "Avg progress", value: `${avgProgress}%`, tone: avgProgress < 50 ? "red" : avgProgress < 75 ? "amber" : "green", note: "Across brief reports" }
+        { label: "Schedule delay", value: delayedProjects, tone: majorDelayProjects ? "red" : minorDelayProjects ? "amber" : "green", note: `${majorDelayProjects} major / ${minorDelayProjects} minor projects` },
+        { label: "Leadership queue", value: leadershipPriorityProjects, tone: leadershipPriorityProjects ? "amber" : "green", note: "Products with follow-up signal" },
+        { label: "Avg progress", value: `${avgProgress}%`, tone: avgProgress < 50 ? "red" : avgProgress < 75 ? "amber" : "green", note: "Average by product" }
       ];
     }
 
@@ -7357,11 +7409,17 @@
       }
       const reportsInView = items.map(item => item.report);
       const activeProjects = activeProjectCount(items);
+      const projectStats = managementProjectStats(items);
       const riskProjects = narratives.filter(project => projectBriefRiskScore(project) > 0).length;
-      const dateCounts = endDateCounts(reportsInView);
-      const avgProgress = reportsInView.length
-        ? Math.round(reportsInView.reduce((sum, report) => sum + Number(report.progress || 0), 0) / reportsInView.length)
+      const avgProgress = projectStats.length
+        ? Math.round(projectStats.reduce((sum, project) => sum + Number(project.avgProgress || 0), 0) / projectStats.length)
         : 0;
+      const majorDelayProjects = projectStats.filter(project => project.majorDelay).length;
+      const minorDelayProjects = projectStats.filter(project => project.minorDelay && !project.majorDelay).length;
+      const aheadProjects = projectStats.filter(project => {
+        const projectReports = reportsInView.filter(report => productKey(report.product) === productKey(project.project));
+        return projectReports.some(report => endDateStatus(report)?.category === "ahead");
+      }).length;
       const periodLabel = filters.week === "all" ? "selected reporting period" : reportingWeekGroupLabel(filters.week);
       const strongestSignal = narratives
         .map(project => ({ ...project, riskScore: projectBriefRiskScore(project) }))
@@ -7372,9 +7430,9 @@
           <h3>${escapeHtml(periodLabel)}</h3>
           <p>${narratives.length} unique product${narratives.length === 1 ? "" : "s"} are included in this review, with ${activeProjects} active product${activeProjects === 1 ? "" : "s"} currently being worked.</p>
           <div class="meeting-update-grid">
-            <div><strong>Overall progress</strong><p class="muted small">${avgProgress}% average across ${reportsInView.length} report${reportsInView.length === 1 ? "" : "s"}.</p></div>
+            <div><strong>Overall progress</strong><p class="muted small">${avgProgress}% average across ${projectStats.length} product${projectStats.length === 1 ? "" : "s"}.</p></div>
             <div><strong>Products needing attention</strong><p class="muted small">${riskProjects} product${riskProjects === 1 ? "" : "s"} have risk, blocker, or schedule signals.</p></div>
-            <div><strong>Schedule signal</strong><p class="muted small">${dateCounts.majorDelay} major delay, ${dateCounts.minorDelay} minor delay, ${dateCounts.ahead} ahead of schedule.</p></div>
+            <div><strong>Schedule signal</strong><p class="muted small">${majorDelayProjects} major delay, ${minorDelayProjects} minor delay, ${aheadProjects} ahead of schedule.</p></div>
             <div><strong>Start the meeting with</strong><p class="muted small">${escapeHtml(strongestSignal.project)} - ${escapeHtml(strongestSignal.mainSignal)}.</p></div>
           </div>
         </div>
