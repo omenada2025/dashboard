@@ -101,7 +101,8 @@
       height: 100vh;
       max-height: 100vh;
       min-width: 0;
-      overflow: hidden;
+      overflow-y: auto;
+      overflow-x: hidden;
       padding: 24px 18px;
       background: linear-gradient(180deg, var(--sidebar), var(--sidebar-soft));
       border-right: 1px solid rgba(255, 255, 255, 0.08);
@@ -111,6 +112,21 @@
       flex-direction: column;
       z-index: 30;
       gap: 0;
+      overscroll-behavior: contain;
+      scrollbar-width: thin;
+    }
+
+    aside::-webkit-scrollbar {
+      width: 7px;
+    }
+
+    aside::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    aside::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.24);
+      border-radius: 999px;
     }
 
     main {
@@ -174,28 +190,12 @@
       gap: 6px;
       margin-bottom: 12px;
       min-height: 0;
-      flex: 1 1 0;
+      flex: 0 0 auto;
       align-content: start;
       grid-auto-rows: max-content;
-      overflow-y: auto;
-      overflow-x: hidden;
-      padding-right: 6px;
+      overflow: visible;
+      padding-right: 0;
       padding-bottom: 12px;
-      scrollbar-width: thin;
-      overscroll-behavior: contain;
-    }
-
-    .tabs::-webkit-scrollbar {
-      width: 8px;
-    }
-
-    .tabs::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    .tabs::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.24);
-      border-radius: 999px;
     }
 
     .nav-section {
@@ -347,11 +347,6 @@
       margin-bottom: 10px;
       padding-right: 3px;
       padding-bottom: 8px;
-      scrollbar-color: rgba(255, 255, 255, 0.28) transparent;
-    }
-
-    body.role-manager-profile .tabs::-webkit-scrollbar {
-      width: 5px;
     }
 
     body.role-manager-profile .nav-section {
@@ -662,6 +657,7 @@
       display: grid;
       gap: 7px;
       flex: 0 0 auto;
+      margin-top: auto;
       max-height: 132px;
       overflow: hidden;
     }
@@ -1797,10 +1793,20 @@
       border-color: #b8ddca;
     }
 
+    .inline-message.info {
+      color: var(--blue);
+      background: var(--blue-soft);
+      border-color: #b6d8e5;
+    }
+
     .inline-message.danger {
       color: var(--red);
       background: var(--red-soft);
       border-color: #e8b6c5;
+    }
+
+    .view-loading-message {
+      margin: 14px 0;
     }
 
     .history-panel {
@@ -4316,6 +4322,7 @@
     let actionLoggingDisabled = false;
     let currentUser = null;
     let currentProfile = "admin";
+    let navigationRenderToken = 0;
     let pendingUserDelete = "";
     let userDirectoryRefreshPromise = null;
     let userActionLogs = [];
@@ -8151,25 +8158,23 @@
       const items = analysisRowsForFilters(actionItemFilters);
       const allActions = actionItemsFromAnalysis(items);
       const actions = actionItemFilters.type === "all" ? allActions : allActions.filter(action => action.type === actionItemFilters.type);
-      const escalations = actions.filter(action => action.type === "escalate").length;
-      const blockers = actions.filter(action => action.type === "blocker").length;
-      const missingNext = actions.filter(action => action.type === "nextAction").length;
-      const schedule = actions.filter(action => action.type === "schedule").length;
-      cards.innerHTML = [
-        ["Action queue", actions.length, actions.length ? "amber" : "green", "Filtered items"],
-        ["Escalations", escalations, escalations ? "red" : "green", "Leadership attention"],
-        ["Blockers", blockers, blockers ? "red" : "green", "Need resolution"],
-        ["Missing next action", missingNext, missingNext ? "amber" : "green", "Need update"],
-        ["Schedule recovery", schedule, schedule ? "amber" : "green", "Delay follow-up"]
-      ].map(([label, value, tone, note]) => `
-        <div class="panel metric">
-          <span class="chip ${tone}">${escapeHtml(label)}</span>
-          <strong>${escapeHtml(value)}</strong>
-          <span class="muted small">${escapeHtml(note)}</span>
-        </div>
+      const actionCardConfigs = [
+        { type: "all", label: "Action queue", value: allActions.length, tone: allActions.length ? "amber" : "green", note: "All filtered items" },
+        { type: "escalate", label: "Escalations", value: allActions.filter(action => action.type === "escalate").length, tone: allActions.some(action => action.type === "escalate") ? "red" : "green", note: "Leadership attention" },
+        { type: "blocker", label: "Blockers", value: allActions.filter(action => action.type === "blocker").length, tone: allActions.some(action => action.type === "blocker") ? "red" : "green", note: "Need resolution" },
+        { type: "nextAction", label: "Missing next action", value: allActions.filter(action => action.type === "nextAction").length, tone: allActions.some(action => action.type === "nextAction") ? "amber" : "green", note: "Need update" },
+        { type: "schedule", label: "Schedule recovery", value: allActions.filter(action => action.type === "schedule").length, tone: allActions.some(action => action.type === "schedule") ? "amber" : "green", note: "Delay follow-up" }
+      ];
+      const activeActionCard = actionCardConfigs.find(card => card.type === actionItemFilters.type) || actionCardConfigs[0];
+      cards.innerHTML = actionCardConfigs.map(card => `
+        <button class="panel metric metric-button ${actionItemFilters.type === card.type ? "selected" : ""}" type="button" data-action-item-type="${escapeHtml(card.type)}" aria-pressed="${actionItemFilters.type === card.type ? "true" : "false"}">
+          <span class="chip ${card.tone}">${escapeHtml(card.label)}</span>
+          <strong>${escapeHtml(card.value)}</strong>
+          <span class="muted small">${escapeHtml(card.note)}</span>
+        </button>
       `).join("");
       summary.textContent = actions.length
-        ? `${actions.length} action item${actions.length === 1 ? "" : "s"} generated from ${items.length} report${items.length === 1 ? "" : "s"}.`
+        ? `${activeActionCard.label}: ${actions.length} action item${actions.length === 1 ? "" : "s"} generated from ${items.length} report${items.length === 1 ? "" : "s"}.`
         : "No action items match the current filters.";
       list.innerHTML = actions.length ? actions.map(action => `
         <div class="report-card">
@@ -9887,6 +9892,58 @@
       }, { target_type: "user", target_id: username });
     }
 
+    const HEAVY_RENDER_VIEWS = new Set([
+      "managementReview",
+      "weeklyProjectBrief",
+      "reportAnalysis",
+      "ownerFeedback",
+      "actionItems",
+      "weeklyReview",
+      "workload",
+      "sourceProjects",
+      "users",
+      "userLog"
+    ]);
+
+    function showViewLoading(viewId) {
+      const section = document.getElementById(viewId);
+      if (!section || !HEAVY_RENDER_VIEWS.has(viewId)) return;
+      section.querySelector(".view-loading-message")?.remove();
+      section.setAttribute("aria-busy", "true");
+      const message = document.createElement("div");
+      message.className = "inline-message info view-loading-message";
+      message.textContent = "Loading this page...";
+      const anchor = section.querySelector(".page-hero, .panel, .card, h1");
+      if (anchor?.parentNode) {
+        anchor.parentNode.insertBefore(message, anchor.nextSibling);
+      } else {
+        section.prepend(message);
+      }
+    }
+
+    function clearViewLoading(viewId) {
+      const section = document.getElementById(viewId);
+      if (!section) return;
+      section.querySelector(".view-loading-message")?.remove();
+      section.removeAttribute("aria-busy");
+    }
+
+    function renderActiveViewDeferred(context = "render") {
+      const viewId = getActiveView();
+      const renderToken = ++navigationRenderToken;
+      showViewLoading(viewId);
+      window.requestAnimationFrame(() => {
+        window.setTimeout(() => {
+          if (renderToken !== navigationRenderToken || getActiveView() !== viewId) return;
+          try {
+            renderAllSafely(context);
+          } finally {
+            clearViewLoading(viewId);
+          }
+        }, 0);
+      });
+    }
+
     function switchView(id) {
       if (!canAccessView(id)) {
         id = "home";
@@ -9894,20 +9951,8 @@
       document.querySelectorAll(".view").forEach(view => view.classList.toggle("active", view.id === id));
       const activeTab = id === "intake" ? "reports" : id;
       document.querySelectorAll(".tab").forEach(tab => tab.classList.toggle("active", tab.dataset.view === activeTab));
-      const activeButton = [...document.querySelectorAll(".tab")].find(tab => tab.dataset.view === activeTab && !tab.hidden);
-      if (activeButton) {
-        const nav = activeButton.closest(".tabs");
-        if (nav) {
-          const navTop = nav.scrollTop;
-          const navBottom = navTop + nav.clientHeight;
-          const itemTop = activeButton.offsetTop;
-          const itemBottom = itemTop + activeButton.offsetHeight;
-          if (itemTop < navTop) nav.scrollTop = Math.max(0, itemTop - 10);
-          if (itemBottom > navBottom) nav.scrollTop = itemBottom - nav.clientHeight + 10;
-        }
-      }
       logUserAction("view_opened", { view: id }, { target_type: "view", target_id: id });
-      renderAllSafely(`switch to ${id}`);
+      renderActiveViewDeferred(`switch to ${id}`);
     }
 
     function getActiveView() {
@@ -13417,6 +13462,21 @@
       actionItemFilters.type = event.target.value;
       logFilterChange("action_items", "type", event.target.value);
       renderActionItems();
+    });
+
+    document.getElementById("actionItemCards").addEventListener("click", event => {
+      const card = event.target.closest("[data-action-item-type]");
+      if (!card) return;
+      const nextType = card.dataset.actionItemType || "all";
+      actionItemFilters.type = nextType;
+      const typeSelect = document.getElementById("actionItemTypeFilter");
+      if (typeSelect) typeSelect.value = nextType;
+      logFilterChange("action_items", "type", nextType);
+      logUserAction("action_item_card_filter", {
+        filter: nextType
+      });
+      renderActionItems();
+      document.getElementById("actionItemList")?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
 
     document.getElementById("weeklyReviewOwnerFilter").addEventListener("change", event => {
