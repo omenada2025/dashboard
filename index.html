@@ -2164,7 +2164,7 @@
         <button class="tab" data-view="incidents" title="Major delays, minor delays, blockers, at-risk, and critical workstreams">Incidents & Delays</button>
         <div class="nav-section" data-role-manager-only>Management</div>
         <button class="tab" data-view="managementReview" data-role-manager-only>Manager Meeting</button>
-        <button class="tab" data-view="weeklyProjectBrief" data-role-manager-only>Weekly Project Brief</button>
+        <button class="tab" data-view="weeklyProjectBrief" data-role-manager-only>Weekly Project Review</button>
         <button class="tab" data-view="reportAnalysis" data-role-manager-only>Report Quality Review</button>
         <button class="tab" data-view="ownerFeedback" data-role-manager-only>Coaching Feedback</button>
         <button class="tab" data-view="actionItems" data-role-manager-only>Action Items</button>
@@ -2867,25 +2867,25 @@
       <section class="view" id="weeklyProjectBrief" data-role-manager-view>
         <div class="header">
           <div>
-            <span class="page-kicker">Weekly project brief</span>
-            <h2>Weekly Project Brief by Product</h2>
-            <p class="muted">Generate a meeting-ready weekly summary for each project, with charts for health, schedule, progress, and risk concentration.</p>
+            <span class="page-kicker">Weekly status report</span>
+            <h2>Weekly Project Review</h2>
+            <p class="muted">Use this meeting-ready view to explain each active product: current status, weekly progress, risks, decisions, and next focus.</p>
           </div>
           <button class="btn" type="button" data-logout>Logout</button>
         </div>
 
         <div class="guide-grid">
           <div class="guide-card theme-blue">
-            <strong>1. Select the week</strong>
-            <p class="muted small">Pick the reporting week or review all available weeks for a broader project readout.</p>
+            <strong>1. Pick the reporting period</strong>
+            <p class="muted small">Select one week for the meeting, or keep all weeks for a broader product readout.</p>
           </div>
           <div class="guide-card theme-green">
-            <strong>2. Read the indicators</strong>
-            <p class="muted small">Use charts to quickly explain health mix, schedule movement, and delivery risk.</p>
+            <strong>2. Review product health</strong>
+            <p class="muted small">Use unique product counts, schedule movement, and risk concentration to avoid duplicate project reads.</p>
           </div>
           <div class="guide-card theme-amber">
-            <strong>3. Present the brief</strong>
-            <p class="muted small">Each project card gives a short explanation, blocker, next action, and leadership ask.</p>
+            <strong>3. Drive decisions</strong>
+            <p class="muted small">Each product card gives the weekly explanation, blocker, next action, and leadership ask.</p>
           </div>
         </div>
 
@@ -2912,14 +2912,35 @@
           </label>
           <div class="full panel-title">
             <div>
-              <strong>Project talking track</strong>
-              <p class="muted small">Copy a concise weekly brief, or use the cards below directly in the manager meeting.</p>
+              <strong>Meeting talking track</strong>
+              <p class="muted small">Copy a concise weekly status report, or use the cards below directly in the manager meeting.</p>
             </div>
-            <button class="btn soft" type="button" id="copyWeeklyProjectBriefBtn">Copy weekly project brief</button>
+            <button class="btn soft" type="button" id="copyWeeklyProjectBriefBtn">Copy meeting report</button>
           </div>
         </div>
 
         <div class="grid summary-grid" id="projectBriefCards"></div>
+
+        <div class="grid two-col">
+          <div class="panel">
+            <div class="panel-title">
+              <div>
+                <h3>Meeting overview</h3>
+                <p class="muted small">One-page readout for the status meeting.</p>
+              </div>
+            </div>
+            <div class="report-list compact-list" id="projectBriefMeetingOverview"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">
+              <div>
+                <h3>Projects needing attention</h3>
+                <p class="muted small">Highest-risk products first, with the action needed.</p>
+              </div>
+            </div>
+            <div class="report-list compact-list" id="projectBriefAttentionList"></div>
+          </div>
+        </div>
 
         <div class="grid two-col">
           <div class="panel">
@@ -2934,7 +2955,7 @@
           <div class="panel">
             <div class="panel-title">
               <div>
-                <h3>Brief narrative</h3>
+                <h3>Meeting narrative</h3>
                 <p class="muted small">Text version ready to paste into meeting notes.</p>
               </div>
             </div>
@@ -2945,8 +2966,8 @@
         <div class="panel">
           <div class="panel-title">
             <div>
-              <h3>Project briefs</h3>
-              <p class="muted small">One short project update per product, ranked by delivery attention needed.</p>
+              <h3>Product status cards</h3>
+              <p class="muted small">One status card per product, ranked by delivery attention needed.</p>
             </div>
           </div>
           <div class="report-list" id="projectBriefNarratives"></div>
@@ -7047,8 +7068,7 @@
       ].join("\n\n");
     }
 
-    function managementWeeklyProjectBriefText(items, filters = managementFilters) {
-      const narratives = managementProductNarratives(items, filters);
+    function managementWeeklyProjectBriefTextFromNarratives(narratives, filters = managementFilters) {
       const periodLabel = filters.week === "all"
         ? "selected reporting period"
         : reportingWeekGroupLabel(filters.week);
@@ -7077,6 +7097,10 @@
           ].filter(Boolean).join("\n");
         })
       ].join("\n\n");
+    }
+
+    function managementWeeklyProjectBriefText(items, filters = managementFilters) {
+      return managementWeeklyProjectBriefTextFromNarratives(managementProductNarratives(items, filters), filters);
     }
 
     function managementDecisionRows(items) {
@@ -7276,6 +7300,84 @@
       ];
     }
 
+    function projectBriefRiskScore(project) {
+      const period = project.period || {};
+      const overall = project.overall || {};
+      return (period.majorDelay || 0) * 5 +
+        (period.minorDelay || 0) * 2 +
+        (period.critical || 0) * 4 +
+        (period.blockers || 0) * 3 +
+        (period.needsAction || 0) * 2 +
+        (period.missingNext || 0) +
+        Math.min(overall.qualityGaps || 0, 8);
+    }
+
+    function projectBriefDecisionNeeded(project) {
+      const decision = cleanText(project.decision);
+      if (!decision || /no management action|no leadership decision|no decision/i.test(decision)) {
+        return "No leadership decision needed right now.";
+      }
+      return decision;
+    }
+
+    function projectBriefMeetingOverviewMarkup(items, narratives, filters) {
+      if (!narratives.length) {
+        return `<div class="empty"><strong>No meeting overview yet</strong>Add reports or adjust filters to generate the status readout.</div>`;
+      }
+      const reportsInView = items.map(item => item.report);
+      const activeProjects = activeProjectCount(items);
+      const riskProjects = narratives.filter(project => projectBriefRiskScore(project) > 0).length;
+      const dateCounts = endDateCounts(reportsInView);
+      const avgProgress = reportsInView.length
+        ? Math.round(reportsInView.reduce((sum, report) => sum + Number(report.progress || 0), 0) / reportsInView.length)
+        : 0;
+      const periodLabel = filters.week === "all" ? "selected reporting period" : reportingWeekGroupLabel(filters.week);
+      const strongestSignal = narratives
+        .map(project => ({ ...project, riskScore: projectBriefRiskScore(project) }))
+        .sort((a, b) => b.riskScore - a.riskScore || a.project.localeCompare(b.project))[0];
+      return `
+        <div class="report-card">
+          <span class="chip blue">Meeting snapshot</span>
+          <h3>${escapeHtml(periodLabel)}</h3>
+          <p>${narratives.length} unique product${narratives.length === 1 ? "" : "s"} are included in this review, with ${activeProjects} active product${activeProjects === 1 ? "" : "s"} currently being worked.</p>
+          <div class="meeting-update-grid">
+            <div><strong>Overall progress</strong><p class="muted small">${avgProgress}% average across ${reportsInView.length} report${reportsInView.length === 1 ? "" : "s"}.</p></div>
+            <div><strong>Products needing attention</strong><p class="muted small">${riskProjects} product${riskProjects === 1 ? "" : "s"} have risk, blocker, or schedule signals.</p></div>
+            <div><strong>Schedule signal</strong><p class="muted small">${dateCounts.majorDelay} major delay, ${dateCounts.minorDelay} minor delay, ${dateCounts.ahead} ahead of schedule.</p></div>
+            <div><strong>Start the meeting with</strong><p class="muted small">${escapeHtml(strongestSignal.project)} - ${escapeHtml(strongestSignal.mainSignal)}.</p></div>
+          </div>
+        </div>
+      `;
+    }
+
+    function projectBriefAttentionListMarkup(narratives) {
+      const ranked = narratives
+        .map(project => ({ ...project, riskScore: projectBriefRiskScore(project) }))
+        .filter(project => project.riskScore > 0)
+        .sort((a, b) => b.riskScore - a.riskScore || a.project.localeCompare(b.project))
+        .slice(0, 6);
+      if (!ranked.length) {
+        return `<div class="empty"><strong>No attention queue</strong>No blocker, delay, or leadership-decision signal was found for the current filters.</div>`;
+      }
+      return ranked.map((project, index) => `
+        <div class="report-card">
+          <div class="panel-title">
+            <div>
+              <span class="chip ${project.tone}">#${index + 1} attention</span>
+              <h3>${escapeHtml(project.project)}</h3>
+              <p class="muted small">${project.period.avgProgress}% progress - ${escapeHtml(project.period.scheduleLabel)} - ${project.period.blockers} blocker/risk note${project.period.blockers === 1 ? "" : "s"}</p>
+            </div>
+            <span class="chip red">${project.riskScore}</span>
+          </div>
+          <div class="meeting-update-grid">
+            <div><strong>Why it matters</strong><p class="muted small">${escapeHtml(project.blocker)}</p></div>
+            <div><strong>Next action</strong><p class="muted small">${escapeHtml(project.next)}</p></div>
+            <div><strong>Decision needed</strong><p class="muted small">${escapeHtml(projectBriefDecisionNeeded(project))}</p></div>
+          </div>
+        </div>
+      `).join("");
+    }
+
     function renderWeeklyProjectBrief() {
       const cards = document.getElementById("projectBriefCards");
       const charts = document.getElementById("projectBriefCharts");
@@ -7298,35 +7400,43 @@
         </div>
       `).join("");
       charts.innerHTML = projectBriefChartBlocks(items);
-      text.value = managementWeeklyProjectBriefText(items, projectBriefFilters);
+      text.value = "Preparing meeting narrative...";
       renderWeeklyProjectBriefNarratives(items, { ...projectBriefFilters });
     }
 
     function renderWeeklyProjectBriefNarratives(items, filters) {
       const list = document.getElementById("projectBriefNarratives");
+      const overview = document.getElementById("projectBriefMeetingOverview");
+      const attention = document.getElementById("projectBriefAttentionList");
+      const text = document.getElementById("projectBriefText");
       if (!list) return;
       const token = ++projectBriefNarrativeRenderToken;
       list.innerHTML = `<div class="empty"><strong>Preparing project briefs...</strong>Building product summaries in the background so the page stays responsive.</div>`;
+      if (overview) overview.innerHTML = `<div class="empty"><strong>Preparing meeting overview...</strong>Summarizing product-level signals.</div>`;
+      if (attention) attention.innerHTML = `<div class="empty"><strong>Preparing attention list...</strong>Ranking products by schedule, blocker, and decision signals.</div>`;
       window.setTimeout(() => {
         if (token !== projectBriefNarrativeRenderToken || getActiveView() !== "weeklyProjectBrief") return;
         const narratives = managementProductNarratives(items, filters);
+        if (overview) overview.innerHTML = projectBriefMeetingOverviewMarkup(items, narratives, filters);
+        if (attention) attention.innerHTML = projectBriefAttentionListMarkup(narratives);
+        if (text) text.value = managementWeeklyProjectBriefTextFromNarratives(narratives, filters);
         list.innerHTML = narratives.length ? narratives.map(project => `
         <details class="report-card">
           <summary class="panel-title">
             <div>
               <span class="chip ${project.tone}">${escapeHtml(project.mainSignal)}</span>
               <h3>${escapeHtml(project.project)}</h3>
-              <p class="muted small">${project.period.workstreams} in selected period - ${project.overall.workstreams} overall reports - ${escapeHtml(project.period.owners.join(", ") || project.overall.owners.join(", ") || "No owner captured")}</p>
+              <p class="muted small">${project.period.workstreams} report${project.period.workstreams === 1 ? "" : "s"} in selected period - ${project.overall.workstreams} overall report${project.overall.workstreams === 1 ? "" : "s"} - ${escapeHtml(project.period.owners.join(", ") || project.overall.owners.join(", ") || "No owner captured")}</p>
             </div>
             <span class="chip ${project.tone}">${project.period.avgProgress}% this period</span>
           </summary>
           <p><strong>Brief explanation:</strong> ${escapeHtml(project.latest?.summary || project.talkTrack)}</p>
           <div class="meeting-update-grid">
-            <div><strong>Selected period</strong><p class="muted small">${project.period.avgProgress}% progress - ${escapeHtml(project.period.healthMix)} - ${escapeHtml(project.period.scheduleLabel)}</p></div>
-            <div><strong>Overall product health</strong><p class="muted small">${project.overall.avgProgress}% average - ${escapeHtml(project.overall.healthMix)} - ${escapeHtml(project.overall.scheduleLabel)}</p></div>
+            <div><strong>Weekly snapshot</strong><p class="muted small">${project.period.avgProgress}% progress - ${escapeHtml(project.period.healthMix)} - ${escapeHtml(project.period.scheduleLabel)}</p></div>
+            <div><strong>Overall readout</strong><p class="muted small">${project.overall.avgProgress}% average - ${escapeHtml(project.overall.healthMix)} - ${escapeHtml(project.overall.scheduleLabel)}</p></div>
             <div><strong>Trend</strong><p class="muted small">${escapeHtml(project.trend)}</p></div>
-            <div><strong>Risk concentration</strong><p class="muted small">${escapeHtml(project.overall.repeatedBlockers.join("; ") || project.overall.rootCauses.join("; ") || "No recurring risk captured.")}</p></div>
-            <div><strong>Leadership ask</strong><p class="muted small">${escapeHtml(project.decision)}</p></div>
+            <div><strong>Recurring risk</strong><p class="muted small">${escapeHtml(project.overall.repeatedBlockers.join("; ") || project.overall.rootCauses.join("; ") || "No recurring risk captured.")}</p></div>
+            <div><strong>Decision needed</strong><p class="muted small">${escapeHtml(projectBriefDecisionNeeded(project))}</p></div>
             <div><strong>Next action</strong><p class="muted small">${escapeHtml(project.next)}</p></div>
             <div><strong>Blocker / risk</strong><p class="muted small">${escapeHtml(project.blocker)}</p></div>
             <div><strong>Win</strong><p class="muted small">${escapeHtml(project.win)}</p></div>
