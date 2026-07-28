@@ -4323,6 +4323,7 @@
     let currentUser = null;
     let currentProfile = "admin";
     let navigationRenderToken = 0;
+    let projectBriefNarrativeRenderToken = 0;
     let pendingUserDelete = "";
     let userDirectoryRefreshPromise = null;
     let userActionLogs = [];
@@ -7289,7 +7290,6 @@
       if (roleSelect) roleSelect.value = projectBriefFilters.role;
 
       const items = weeklyProjectBriefRows();
-      const narratives = managementProductNarratives(items, projectBriefFilters);
       cards.innerHTML = projectBriefMetricDefinitions(items).map(card => `
         <div class="panel metric">
           <span class="chip ${card.tone}">${escapeHtml(card.label)}</span>
@@ -7299,8 +7299,19 @@
       `).join("");
       charts.innerHTML = projectBriefChartBlocks(items);
       text.value = managementWeeklyProjectBriefText(items, projectBriefFilters);
-      list.innerHTML = narratives.length ? narratives.map(project => `
-        <details class="report-card" open>
+      renderWeeklyProjectBriefNarratives(items, { ...projectBriefFilters });
+    }
+
+    function renderWeeklyProjectBriefNarratives(items, filters) {
+      const list = document.getElementById("projectBriefNarratives");
+      if (!list) return;
+      const token = ++projectBriefNarrativeRenderToken;
+      list.innerHTML = `<div class="empty"><strong>Preparing project briefs...</strong>Building product summaries in the background so the page stays responsive.</div>`;
+      window.setTimeout(() => {
+        if (token !== projectBriefNarrativeRenderToken || getActiveView() !== "weeklyProjectBrief") return;
+        const narratives = managementProductNarratives(items, filters);
+        list.innerHTML = narratives.length ? narratives.map(project => `
+        <details class="report-card">
           <summary class="panel-title">
             <div>
               <span class="chip ${project.tone}">${escapeHtml(project.mainSignal)}</span>
@@ -7321,7 +7332,8 @@
             <div><strong>Win</strong><p class="muted small">${escapeHtml(project.win)}</p></div>
           </div>
         </details>
-      `).join("") : `<div class="empty"><strong>No project briefs</strong>No reports match the current filters.</div>`;
+        `).join("") : `<div class="empty"><strong>No project briefs</strong>No reports match the current filters.</div>`;
+      }, 0);
     }
 
     function managementTrendStats(items) {
@@ -9931,13 +9943,22 @@
     function renderActiveViewDeferred(context = "render") {
       const viewId = getActiveView();
       const renderToken = ++navigationRenderToken;
-      showViewLoading(viewId);
+      const loadingTimer = window.setTimeout(() => {
+        if (renderToken === navigationRenderToken && getActiveView() === viewId) {
+          showViewLoading(viewId);
+        }
+      }, 120);
       window.requestAnimationFrame(() => {
         window.setTimeout(() => {
-          if (renderToken !== navigationRenderToken || getActiveView() !== viewId) return;
+          if (renderToken !== navigationRenderToken || getActiveView() !== viewId) {
+            window.clearTimeout(loadingTimer);
+            clearViewLoading(viewId);
+            return;
+          }
           try {
             renderAllSafely(context);
           } finally {
+            window.clearTimeout(loadingTimer);
             clearViewLoading(viewId);
           }
         }, 0);
@@ -12409,7 +12430,9 @@
     }
 
     function renderAllSafely(context = "render") {
-      document.getElementById(getActiveView())?.querySelector(".view-render-error")?.remove();
+      const activeSection = document.getElementById(getActiveView());
+      activeSection?.querySelector(".view-render-error")?.remove();
+      activeSection?.querySelector(".view-loading-message")?.remove();
       try {
         renderAll();
       } catch (error) {
