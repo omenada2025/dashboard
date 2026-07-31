@@ -7082,8 +7082,27 @@
       const dueDate = cleanText(reportEndDate(report));
       const baselineDueDate = cleanText(report.baseline_due_date);
       const progress = Number(report.progress);
+      const startDate = cleanText(report.start_date);
+      const delayReason = cleanText(report.delay_reason);
+      const dateChangeReason = cleanText(report.date_change_reason);
+      const win = cleanText(report.win);
+      const actionOwner = cleanText(report.action_owner);
+      const actionDueDate = cleanText(report.action_due_date);
+      const dependency = cleanText(report.dependency);
+      const milestone = cleanText(report.milestone);
+      const decisionNeeded = cleanText(report.decision_needed);
+      const impact = Number(report.impact || 0);
+      const time = Number(report.time || 0);
       const schedule = endDateStatus(report);
       const duplicate = findDuplicateWorkstreamReport(report, existingId);
+      const hasRiskSignal = health === "red" || priority === "Critical";
+      const blockerLooksEmpty = /^(none|no|no blocker|no blockers|n\/a|na|not applicable|sem bloqueio)$/i.test(blocker);
+      const nextLooksEmpty = /^(none|no|no next action|n\/a|na|not applicable|tbd|to be defined)$/i.test(next);
+      const vagueNextAction = /^(continue|monitor|review|check|follow up|align|discuss|investigate)\b/i.test(next) && next.length < 70;
+      const summaryWordCount = summary.split(/\s+/).filter(Boolean).length;
+      const baselineDelta = baselineDueDate && dueDate ? daysBetweenDates(baselineDueDate, dueDate) : null;
+      const startEndDelta = startDate && dueDate ? daysBetweenDates(startDate, dueDate) : null;
+      const startBaselineDelta = startDate && baselineDueDate ? daysBetweenDates(startDate, baselineDueDate) : null;
 
       if (requireProduct && !product) blockers.push("Product is required.");
       if (!feature) blockers.push("Feature / workstream is required.");
@@ -7094,25 +7113,44 @@
       if (!summary) blockers.push("Summary is required.");
       if (!Number.isFinite(progress) || progress < 0 || progress > 100) blockers.push("Progress must be a number between 0 and 100.");
       if (duplicate) blockers.push(`This owner already has a report for ${productDisplay(product)} / ${feature} in ${reportingFieldLabel(week)}.`);
+      if (startEndDelta !== null && startEndDelta < 0) blockers.push("End date cannot be before the start date.");
+      if (startBaselineDelta !== null && startBaselineDelta < 0) blockers.push("Baseline end date cannot be before the start date.");
       if (isCompletedStageValue(stage) && progress < 100) blockers.push("Completed workstreams must be saved with 100% progress.");
-      if ((health === "red" || priority === "Critical") && !blocker) blockers.push("At Risk or Critical reports must include a blocker or risk.");
-      if (blocker && !next) blockers.push("Reports with a blocker or risk must include the next action.");
-      if (baselineDueDate && dueDate && daysBetweenDates(baselineDueDate, dueDate) > 0 && !cleanText(report.date_change_reason)) {
+      if (hasRiskSignal && (!blocker || blockerLooksEmpty)) blockers.push("At Risk or Critical reports must include a real blocker or risk.");
+      if (blocker && !blockerLooksEmpty && !next) blockers.push("Reports with a blocker or risk must include the next action.");
+      if (nextLooksEmpty) blockers.push("Next action cannot be empty, TBD, or not applicable. Add the concrete next step.");
+      if (hasRiskSignal && next && !actionOwner) blockers.push("At Risk or Critical reports need a corrective action owner.");
+      if (hasRiskSignal && next && !actionDueDate) blockers.push("At Risk or Critical reports need an action target date.");
+      if (baselineDelta !== null && baselineDelta > 0 && !dateChangeReason) {
         blockers.push("When the end date moves later, add the date change reason.");
       }
 
       if (!dueDate && !isCompletedStageValue(stage)) warnings.push("Add an end date so schedule status can be calculated.");
+      if (isCompletedStageValue(stage) && !dueDate) warnings.push("Completed workstreams should include an end date so delivered work can be audited.");
       if (dueDate && !baselineDueDate) warnings.push("Add the baseline end date when this workstream has a planned delivery date.");
+      if (baselineDelta !== null && baselineDelta < 0 && !dateChangeReason) warnings.push("End date moved earlier. Add the date change reason so Ahead of Schedule is auditable.");
       if (schedule?.category === "minorDelay" || schedule?.category === "majorDelay") {
-        if (!cleanText(report.delay_reason)) warnings.push("Add the delay root cause so leadership can understand why the date moved.");
+        if (!delayReason) warnings.push("Add the delay root cause so leadership can understand why the date moved.");
+        if (health === "green") warnings.push("Schedule delay is present. Review Delivery health so it matches the delivery risk.");
       }
       if (schedule?.category === "ahead") positives.push("Schedule is ahead of plan.");
+      if (schedule?.category === "ahead" && progress < 50) warnings.push("Ahead of Schedule with low progress can be confusing. Confirm the end date, baseline, and progress.");
       if (summary && summary.length < 45) warnings.push("Summary is short. Add enough context for a leader to understand what changed.");
-      if (!cleanText(report.win)) warnings.push("Add a Win when progress was made, even if small.");
-      if (next && !cleanText(report.action_owner)) warnings.push("Add a corrective action owner for the next action.");
-      if (next && !cleanText(report.action_due_date)) warnings.push("Add an action target date for the next action.");
-      if ((health === "red" || priority === "Critical") && !cleanText(report.decision_needed)) warnings.push("Add the decision needed when leadership intervention may be required.");
+      if (summary && summaryWordCount < 12) warnings.push("Summary needs a little more detail: what changed, what is blocked, and what happens next.");
+      if (!win) warnings.push("Add a Win when progress was made, even if small.");
+      if (win && win.length < 15) warnings.push("Win is very short. Add the concrete progress achieved this week.");
+      if (next && !actionOwner && !hasRiskSignal) warnings.push("Add a corrective action owner for the next action.");
+      if (next && !actionDueDate && !hasRiskSignal) warnings.push("Add an action target date for the next action.");
+      if (vagueNextAction) warnings.push("Next action is too vague. Make it measurable: owner, action, expected outcome, and target date.");
+      if (hasRiskSignal && !decisionNeeded) warnings.push("Add the decision needed when leadership intervention may be required.");
       if (progress >= 100 && !isCompletedStageValue(stage)) warnings.push("Progress is 100%; consider setting Stage to Completed.");
+      if (isCompletedStageValue(stage) && health !== "green") warnings.push("Completed workstreams should usually be On Track unless post-delivery risk remains.");
+      if (stageMatchesTerms(stage, ["discovery", "research"]) && progress > 50) warnings.push("Discovery/Research usually should not be above 50%. Confirm the stage or progress.");
+      if (stageMatchesTerms(stage, ["qa", "testing", "release", "client", "implementation"]) && progress < 40) warnings.push("Late-stage work usually needs progress above 40%. Confirm the stage or progress.");
+      if (stageMatchesTerms(stage, ["paused", "blocked", "hold", "stalled"]) && !blocker && !decisionNeeded) warnings.push("Paused or blocked work needs a blocker/risk or a decision needed.");
+      if (!milestone && !isCompletedStageValue(stage)) warnings.push("Select a milestone so the timeline can show where this workstream is in delivery.");
+      if (dependency && !actionOwner && !decisionNeeded) warnings.push("Dependency selected. Add an action owner or decision needed so the dependency can be unblocked.");
+      if ((impact >= 3 || priority === "Critical") && time <= 1) warnings.push("High impact or critical work marked as short time to solve. Confirm the urgency and effort estimate.");
       if (stage) positives.push("Stage is captured.");
       if (owner && next) positives.push("Ownership and next action are clear.");
       if (summary && blocker && next) positives.push("Decision signals are connected: summary, blocker, and next action are present.");
