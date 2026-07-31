@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Omena Consulting - Status Reporting Process Guide</title>
+  <style>
+    :root {
+      --ink: #12202f;
+      --muted: #617187;
+      --line: #d7e1eb;
+      --panel: #ffffff;
+      --soft: #f4f8fb;
+      --blue: #0f5574;
+      --green: #16845f;
+      --amber: #c98216;
+      --red: #b51f4a;
+      --shadow: 0 18px 45px rgba(18, 32, 47, 0.10);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
+      color: var(--ink);
+      background:
+        linear-gradient(rgba(214, 225, 235, 0.55) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(214, 225, 235, 0.55) 1px, transparent 1px),
+        #edf3f8;
+      background-size: 24px 24px;
+    }
+
+    .shell {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 32px 18px 64px;
+    }
+
+    .hero, .card, .callout {
+      background: rgba(255, 255, 255, 0.94);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+    }
+
+    .hero {
+      padding: 32px;
+      margin-bottom: 20px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: #e8f4fa;
+      color: var(--blue);
+      font-weight: 800;
+      font-size: 12px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      font-size: clamp(32px, 5vw, 54px);
+      line-height: 1.02;
+      margin: 18px 0 12px;
+    }
+
+    h2 {
+      font-size: 24px;
+      margin: 0 0 10px;
+    }
+
+    h3 {
+      font-size: 17px;
+      margin: 0 0 8px;
+    }
+
+    p {
+      color: var(--muted);
+      line-height: 1.55;
+      margin: 0 0 12px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      margin: 18px 0;
+    }
+
+    .grid.two {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .card {
+      padding: 22px;
+    }
+
+    .card.blue { border-top: 5px solid var(--blue); }
+    .card.green { border-top: 5px solid var(--green); }
+    .card.amber { border-top: 5px solid var(--amber); }
+    .card.red { border-top: 5px solid var(--red); }
+
+    .rule {
+      display: grid;
+      grid-template-columns: 72px 1fr;
+      gap: 16px;
+      align-items: start;
+      padding: 18px;
+      background: var(--soft);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      margin-top: 14px;
+    }
+
+    .number {
+      width: 48px;
+      height: 48px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+      background: #dff0f8;
+      color: var(--blue);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: 16px;
+      margin: 14px 0;
+      background: white;
+      border: 1px solid var(--line);
+    }
+
+    th, td {
+      text-align: left;
+      vertical-align: top;
+      padding: 13px 14px;
+      border-bottom: 1px solid var(--line);
+      line-height: 1.45;
+    }
+
+    th {
+      background: #edf6fb;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    tr:last-child td { border-bottom: 0; }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: 12px;
+      margin: 3px 4px 3px 0;
+      background: #edf4f8;
+      color: #245c78;
+      white-space: nowrap;
+    }
+
+    .pill.green { background: #ddf4e9; color: #10734f; }
+    .pill.amber { background: #fff1d5; color: #a96509; }
+    .pill.red { background: #fde3ec; color: #b51f4a; }
+
+    .example {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .bad, .good {
+      border-radius: 18px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .bad { border-top: 5px solid var(--red); }
+    .good { border-top: 5px solid var(--green); }
+
+    .footer {
+      text-align: center;
+      color: var(--muted);
+      padding: 28px 0 0;
+      font-size: 13px;
+    }
+
+    @media (max-width: 900px) {
+      .grid, .grid.two, .example {
+        grid-template-columns: 1fr;
+      }
+      .hero { padding: 24px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <span class="eyebrow">Process Guide</span>
+      <h1>Como preencher status para gerar metricas confiaveis</h1>
+      <p>
+        A ferramenta funciona melhor quando cada report representa uma entrega real, com owner,
+        semana, stage, prazo, risco e proxima acao. Este guia mostra como transformar updates
+        soltos em dados de gestao para dashboards, reunioes e feedback semanal.
+      </p>
+    </section>
+
+    <section class="grid">
+      <article class="card blue">
+        <h2>1. Estruture</h2>
+        <p>Use Product para o produto principal e Feature / workstream para a entrega especifica.</p>
+      </article>
+      <article class="card green">
+        <h2>2. Atualize</h2>
+        <p>Na mesma semana, edite o report existente. Em uma nova semana, crie o status semanal do workstream.</p>
+      </article>
+      <article class="card amber">
+        <h2>3. Decida</h2>
+        <p>Todo blocker precisa de proxima acao, responsavel e data alvo para virar gestao.</p>
+      </article>
+    </section>
+
+    <section class="card">
+      <h2>Regra principal</h2>
+      <div class="rule">
+        <div class="number">1</div>
+        <div>
+          <h3>Um report = um produto + um workstream + um owner + uma semana</h3>
+          <p>
+            Nao misture varios workstreams no mesmo report. Nao crie um produto novo para cada feature.
+            Esta regra evita duplicacao e permite calcular projetos ativos, progresso, stage mix,
+            atrasos, riscos e workload por owner.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Modelo logico dos campos</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Campo</th>
+            <th>Uso correto</th>
+            <th>Impacto no dashboard</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Product</strong></td>
+            <td>Produto ou projeto principal, como Survey software ou Now Solutions.</td>
+            <td>Conta projetos ativos e gera briefing por produto.</td>
+          </tr>
+          <tr>
+            <td><strong>Feature / workstream</strong></td>
+            <td>Entrega especifica dentro do produto.</td>
+            <td>Conta workstreams, timeline, riscos e progresso.</td>
+          </tr>
+          <tr>
+            <td><strong>Owner</strong></td>
+            <td>Uma pessoa responsavel pelo status e pela proxima acao.</td>
+            <td>Alimenta workload, feedback semanal e accountability.</td>
+          </tr>
+          <tr>
+            <td><strong>Reporting week</strong></td>
+            <td>Semana de referencia do report, normalmente segunda a sexta.</td>
+            <td>Permite comparar semanas e gerar feedback semanal.</td>
+          </tr>
+          <tr>
+            <td><strong>Stage</strong></td>
+            <td>Onde o workstream esta no fluxo de entrega.</td>
+            <td>Mostra stage mix e identifica entregas completas.</td>
+          </tr>
+          <tr>
+            <td><strong>Health</strong></td>
+            <td>Confianca de entrega: On Track, In Progress, At Risk ou Paused.</td>
+            <td>Mostra risco operacional e executivo.</td>
+          </tr>
+          <tr>
+            <td><strong>End date</strong></td>
+            <td>Data atual esperada de entrega.</td>
+            <td>Calcula Ahead of Schedule, On Time, Minor Delay e Major Delay.</td>
+          </tr>
+          <tr>
+            <td><strong>Next action</strong></td>
+            <td>Quem faz o que ate quando.</td>
+            <td>Alimenta action queue e decisoes de gestao.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="grid two">
+      <article class="card">
+        <h2>Stage, Health e Progress</h2>
+        <p><strong>Stage</strong> diz onde o trabalho esta.</p>
+        <p><strong>Health</strong> diz se a entrega esta saudavel ou em risco.</p>
+        <p><strong>Progress</strong> diz quanto foi concluido.</p>
+        <p>
+          Exemplo: um workstream pode estar em <span class="pill">QA Review</span>,
+          com <span class="pill amber">70% progress</span> e ainda ser
+          <span class="pill red">At Risk</span> se existe blocker tecnico.
+        </p>
+      </article>
+      <article class="card">
+        <h2>Schedule</h2>
+        <p>O prazo deve refletir a data real esperada de entrega.</p>
+        <p><span class="pill green">Ahead of Schedule</span> entrega antecipada.</p>
+        <p><span class="pill">On Time</span> dentro do prazo.</p>
+        <p><span class="pill amber">Minor Delay</span> atraso ate 10%.</p>
+        <p><span class="pill red">Major Delay</span> atraso acima de 10%.</p>
+      </article>
+    </section>
+
+    <section class="card">
+      <h2>Checklist antes de salvar</h2>
+      <div class="grid two">
+        <div>
+          <span class="pill green">Product e produto real</span>
+          <span class="pill green">Workstream e entrega especifica</span>
+          <span class="pill green">Owner e uma pessoa</span>
+          <span class="pill green">Reporting week correta</span>
+          <span class="pill green">Stage preenchido</span>
+          <span class="pill green">End date informado</span>
+        </div>
+        <div>
+          <span class="pill amber">Health reflete risco real</span>
+          <span class="pill amber">Progress combina com stage</span>
+          <span class="pill amber">Blocker tem causa clara</span>
+          <span class="pill amber">Next action tem dono e prazo</span>
+          <span class="pill amber">Atraso tem root cause</span>
+          <span class="pill amber">Decisao pendente esta explicita</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Exemplo ruim versus exemplo bom</h2>
+      <div class="example">
+        <div class="bad">
+          <h3>Ruim</h3>
+          <p><strong>Product:</strong> Login screen</p>
+          <p><strong>Workstream:</strong> Working</p>
+          <p><strong>Owner:</strong> Team</p>
+          <p><strong>Stage:</strong> Blank</p>
+          <p><strong>Summary:</strong> In progress</p>
+          <p><strong>Next action:</strong> Continue</p>
+          <p>Resultado: nao gera status confiavel, nao mostra risco e nao cria accountability.</p>
+        </div>
+        <div class="good">
+          <h3>Bom</h3>
+          <p><strong>Product:</strong> Survey software</p>
+          <p><strong>Workstream:</strong> Client onboarding flow</p>
+          <p><strong>Owner:</strong> Nadishani</p>
+          <p><strong>Stage:</strong> QA Review</p>
+          <p><strong>Health:</strong> At Risk</p>
+          <p><strong>Next action:</strong> DevOps to provide credentials by Wednesday; QA restarts regression after access.</p>
+          <p>Resultado: o dashboard consegue mostrar risco, prazo, owner, action queue e impacto.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Como ler o status de um projeto</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Pergunta de gestao</th>
+            <th>Onde olhar</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>O produto esta saudavel?</td>
+            <td>Health mix, Products at risk, Executive View.</td>
+          </tr>
+          <tr>
+            <td>Onde o trabalho esta no ciclo?</td>
+            <td>Stage mix, Delivery Timeline, Portfolio Dashboard.</td>
+          </tr>
+          <tr>
+            <td>Existe atraso?</td>
+            <td>Schedule delay, End Date Monitor, Incidents & Delays.</td>
+          </tr>
+          <tr>
+            <td>Qual e o blocker?</td>
+            <td>Blocker/Risk, Delay root cause, Incident details.</td>
+          </tr>
+          <tr>
+            <td>Quem precisa agir?</td>
+            <td>Next action, Corrective action owner, Action Items.</td>
+          </tr>
+          <tr>
+            <td>O que apresentar na reuniao?</td>
+            <td>Weekly Project Brief e Manager Meeting.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h2>Cadencia semanal</h2>
+      <div class="grid">
+        <div>
+          <h3>Segunda</h3>
+          <p>Criar ou atualizar reports da semana. Confirmar workstreams ativos, stage, datas e dependencias.</p>
+        </div>
+        <div>
+          <h3>Quarta</h3>
+          <p>Revisar blockers, atualizar next action e escalar decisoes pendentes.</p>
+        </div>
+        <div>
+          <h3>Sexta</h3>
+          <p>Fechar status semanal, marcar Completed quando entregue e garantir action owner + target date.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="callout card green">
+      <h2>Regra de ouro para reuniao</h2>
+      <p>
+        Para cada produto, seja capaz de responder em menos de 60 segundos:
+        status geral, stage predominante, progresso, atraso, blocker, impacto, next action e decisao necessaria.
+      </p>
+      <p>Se o report nao responde isso, ele precisa ser melhorado antes de entrar na reuniao.</p>
+    </section>
+
+    <p class="footer">Omena Consulting - Status Reporting Process Guide</p>
+  </main>
+</body>
+</html>
