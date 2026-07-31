@@ -7545,15 +7545,24 @@
       return counts;
     }
 
+    function stageMatchesTerms(stage, terms) {
+      const value = cleanText(stage).toLowerCase();
+      if (!value) return false;
+      const words = value.split(/[^a-z0-9]+/).filter(Boolean);
+      return terms.some(term => value === term || words.includes(term));
+    }
+
+    function isDeliveredStage(report) {
+      return stageMatchesTerms(report?.stage, ["complete", "completed", "done", "delivered"]);
+    }
+
     function isActiveWorkstream(report) {
       const health = cleanText(report.health).toLowerCase();
-      const stage = cleanText(report.stage).toLowerCase();
       const actionStatus = cleanText(report.action_status).toLowerCase();
       const endDate = reportEndDate(report);
       const progress = Number(report.progress || 0);
-      const inactiveStages = ["closed", "complete", "completed", "done", "cancelled", "canceled"];
       const inactiveActionStatuses = ["closed", "complete", "completed", "done", "cancelled", "canceled"];
-      const isInactiveStage = inactiveStages.some(value => stage === value || stage.includes(value));
+      const isInactiveStage = stageMatchesTerms(report.stage, ["closed", "complete", "completed", "done", "cancelled", "canceled", "delivered"]);
       const isInactiveAction = inactiveActionStatuses.includes(actionStatus);
       return Boolean(endDate) &&
         progress < 100 &&
@@ -9384,7 +9393,7 @@
               <h3>${escapeHtml(reportTitle(report))}</h3>
               <p class="muted small">${escapeHtml(report.role || "No role")} - Reporting week ${escapeHtml(reportingFieldLabel(report.week))}${reportEndDate(report) ? ` - ${endDateMarkup(report)}` : ""}</p>
             </div>
-            <span class="chip ${tone}">${escapeHtml(labels[report.health] || report.health || "No health")}</span>
+            ${primaryStatusChip(report, "No health")}
           </div>
           <p>${escapeHtml(report.summary || "No summary captured.")}</p>
           <div class="report-card-detail">
@@ -10602,6 +10611,13 @@
       return "green";
     }
 
+    function primaryStatusChip(report, fallback = "Health") {
+      const delivered = isDeliveredStage(report);
+      const label = delivered ? "Delivered" : labels[report.health] || report.health || fallback;
+      const tone = delivered ? "green" : healthClass(report);
+      return `<span class="chip ${tone}">${escapeHtml(label)}</span>`;
+    }
+
     function isSameDay(value, anchor) {
       return Boolean(value && anchor && value === anchor);
     }
@@ -10753,6 +10769,9 @@
     }
 
     function endDateScheduleClassification(report) {
+      if (isDeliveredStage(report)) {
+        return { category: "delivered", tone: "green", label: "Delivered", percent: 0 };
+      }
       const currentEndDate = reportEndDate(report);
       if (!currentEndDate) return null;
       const baselineEndDate = firstValue(report?.baseline_due_date, report?.baselineDueDate);
@@ -10855,6 +10874,8 @@
         reason = overdueDays
           ? `End date is ${pluralizeDays(overdueDays)} past the current date.`
           : "End date is behind the current schedule classification.";
+      } else if (status.category === "delivered") {
+        reason = "Stage is completed, so this workstream is considered delivered and is not treated as delayed.";
       } else if (status.category === "ahead") {
         reason = "Current end date is more than 5% earlier than the planned date.";
       } else {
@@ -11760,7 +11781,7 @@
               <h3>${escapeHtml(reportTitle(report))}</h3>
               <p class="muted small">${escapeHtml(report.owner || "Unassigned")} - ${escapeHtml(report.role || "No role")} - Reporting week ${escapeHtml(report.week || "No date")}${reportEndDate(report) ? ` - ${endDateMarkup(report)}` : ""}</p>
             </div>
-            <span class="chip ${tone}">${escapeHtml(labels[report.health] || report.health || "No health")}</span>
+            ${primaryStatusChip(report, "No health")}
           </div>
           <p>${escapeHtml(report.summary || "No summary captured.")}</p>
           <div class="report-card-detail">
@@ -11962,7 +11983,7 @@
             <strong>${escapeHtml(reportTitle(report))}</strong>
             <p class="muted small">${escapeHtml(report.owner || "Unassigned")} - ${escapeHtml(report.blocker || report.summary)}</p>
           </div>
-          <span class="chip ${healthClass(report)}">${labels[report.health] || report.health}</span>
+          ${primaryStatusChip(report, "Status")}
         </div>
       `).join("") : `<div class="empty"><strong>No executive risks</strong>No critical risks need executive attention for the current filters.</div>`;
 
@@ -12038,7 +12059,7 @@
             <p class="muted small">${escapeHtml(reportProductLine(report))} - ${escapeHtml(report.owner || "Unassigned")} - ${escapeHtml(report.product_type || "Legacy")} - ${escapeHtml(report.role)} - Stage ${escapeHtml(report.stage || "missing")} - Reporting week ${escapeHtml(report.week || "No date")}${reportEndDate(report) ? ` - ${endDateMarkup(report)}` : ""}</p>
             <p class="muted small">${escapeHtml(report.summary || "No summary captured.")}</p>
           </div>
-          <span class="chip ${healthClass(report)}">${labels[report.health] || report.health}</span>
+          ${primaryStatusChip(report, "Status")}
         </button>
         ${report.id === selectedExecutiveProjectId ? projectDetailMarkup(report, "project") : ""}
       `).join("") : `<div class="empty"><strong>No matching workstreams</strong>Try changing Reporting week, Type of product, Role / Portfolio view, or Delivery health.</div>`;
@@ -12060,7 +12081,7 @@
             <h3>${escapeHtml(reportTitle(report))}</h3>
             <p class="muted small">${escapeHtml(reportProductLine(report))} - ${escapeHtml(report.owner || "Unassigned")} - ${escapeHtml(report.product_type || "Legacy")} - Stage ${escapeHtml(report.stage || "missing")} - ${escapeHtml(report.week || "No reporting week")}${reportEndDate(report) ? ` - ${endDateMarkup(report)}` : ""}</p>
           </div>
-          <span class="chip ${healthClass(report)}">${labels[report.health] || report.health}</span>
+          ${primaryStatusChip(report, "Status")}
         </header>
         <div class="health-detail-grid">
           ${detailRows.map(([label, value]) => `
@@ -12113,7 +12134,7 @@
             <p class="muted small">${escapeHtml(r.summary)}</p>
             <div class="progress"><div class="bar ${healthClass(r)}" style="width:${Number(r.progress || 0)}%"></div></div>
           </div>
-          <span class="chip ${healthClass(r)}">${labels[r.health] || r.health}</span>
+          ${primaryStatusChip(r, "Status")}
         </button>
         ${r.id === selectedPortfolioHealthId ? projectDetailMarkup(r, "card") : ""}
           `).join("")}
@@ -12196,7 +12217,7 @@
                   <strong>${escapeHtml(reportTitle(r))}</strong>
                   <p class="muted small">${escapeHtml(reportProductLine(r))} - ${escapeHtml(r.product_type || "Legacy")} - ${escapeHtml(r.role)} - Stage ${escapeHtml(r.stage || "missing")} - Reporting week ${escapeHtml(r.week)}${r.start_date ? ` - Start ${escapeHtml(r.start_date)}` : ""}${reportEndDate(r) ? ` - ${endDateMarkup(r)}` : ""}</p>
                 </div>
-                <span class="chip ${healthClass(r)}">${labels[r.health] || r.health}</span>
+                ${primaryStatusChip(r, "Status")}
               </header>
               <p class="small">${escapeHtml(r.summary)}</p>
               ${r.id === selectedReportId ? reportCardDetailMarkup(r) : ""}
@@ -12642,7 +12663,7 @@
               <h3>${escapeHtml(report.feature_workstream || report.product || "Untitled report")}</h3>
               <p class="muted small">${escapeHtml(report.summary || "No summary captured yet.")}</p>
             </div>
-            <span class="chip ${healthClass(report)}">${escapeHtml(labels[report.health] || report.health || "Health")}</span>
+            ${primaryStatusChip(report, "Health")}
           </header>
           <div class="summary-meta">
             <span>Owner: ${escapeHtml(report.owner || "Not assigned")}</span>
@@ -12882,7 +12903,7 @@
     }
 
     function stageSelect(current = "Discovery") {
-      const stages = ["Discovery", "Work in Progress", "Research", "Documentation", "Demo", "Testing", "QA", "Environment", "Wireframes", "Visual Design", "Prototype", "Design Review", "Dev Handoff", "QA Review", "Release", "Paused", "Completed"];
+      const stages = ["Discovery", "Work in Progress", "Research", "Documentation", "Demo", "Testing", "QA", "Environment", "Wireframes", "Visual Design", "Prototype", "Design Review", "Dev Handoff", "QA Review", "Client implementation", "Release", "Paused", "Completed"];
       const value = cleanText(current);
       return `
         <label>Stage
