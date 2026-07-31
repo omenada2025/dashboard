@@ -4077,7 +4077,8 @@
                 </label>
                 <label>
                   Stage
-                  <select name="stage">
+                  <select name="stage" required>
+                    <option value="">Select stage</option>
                     <option>Discovery</option>
                     <option>Work in Progress</option>
                     <option>Research</option>
@@ -6841,6 +6842,10 @@
         gaps.push("Owner is missing.");
         suggestions.push("Assign one accountable owner for follow-up and escalation.");
       }
+      if (!cleanText(report.stage)) {
+        gaps.push("Stage is missing.");
+        suggestions.push("Select the current workstream stage so leadership can understand where the activity is in the delivery lifecycle.");
+      }
       if (summary.length < 45) {
         gaps.push("Summary is too short to understand the business context.");
         suggestions.push("Rewrite the summary with what changed, why it matters, and current confidence.");
@@ -8693,6 +8698,16 @@
             tone: "amber",
             reason: "Next action is missing.",
             recommendation: "Add the next delivery, design review, or decision step with owner and expected outcome."
+          });
+        }
+        if (!cleanText(report.stage)) {
+          actions.push({
+            ...base,
+            type: "quality",
+            label: "Add stage",
+            tone: "amber",
+            reason: "Stage is missing.",
+            recommendation: "Select the current delivery stage so the workstream lifecycle is visible in dashboards and reviews."
           });
         }
         if (scheduleStatus?.category === "minorDelay" || scheduleStatus?.category === "majorDelay") {
@@ -11126,7 +11141,7 @@
       return source
         .filter(report => {
           const status = endDateStatus(report);
-          return cleanText(report.next) || cleanText(report.blocker) || cleanText(report.decision_needed) || cleanText(report.action_due_date) || ["minorDelay", "majorDelay"].includes(status?.category);
+          return !cleanText(report.stage) || cleanText(report.next) || cleanText(report.blocker) || cleanText(report.decision_needed) || cleanText(report.action_due_date) || ["minorDelay", "majorDelay"].includes(status?.category);
         })
         .sort((a, b) =>
           (reportEndDate(a) || "9999-12-31").localeCompare(reportEndDate(b) || "9999-12-31") ||
@@ -11208,7 +11223,7 @@
               <div>
                 <span class="product-label">${escapeHtml(report.product || "No product")}</span>
                 <strong>${escapeHtml(reportTitle(report))}</strong>
-                <p class="muted small">${escapeHtml(report.owner || "Unassigned")} - ${reportEndDate(report) ? endDateMarkup(report) : "No end date"}</p>
+                <p class="muted small">${escapeHtml(report.owner || "Unassigned")} - Stage ${escapeHtml(report.stage || "missing")} - ${reportEndDate(report) ? endDateMarkup(report) : "No end date"}</p>
               </div>
               <span class="chip ${status?.tone || healthClass(report)}">${escapeHtml(status?.label || labels[report.health] || "Status")}</span>
             </header>
@@ -11216,6 +11231,7 @@
               <div><strong>Next action</strong><p class="muted small">${escapeHtml(report.next || "No next action captured.")}</p></div>
               <div><strong>Blocker / risk</strong><p class="muted small">${escapeHtml(report.blocker || "No blocker captured.")}</p></div>
               <div><strong>Action owner</strong><p class="muted small">${escapeHtml(report.action_owner || report.owner || "Not assigned")}</p></div>
+              <div><strong>Stage</strong><p class="muted small">${escapeHtml(report.stage || "Missing stage - update required.")}</p></div>
             </div>
             <div class="personal-card-actions"><button class="btn soft" type="button" data-my-open-report="${escapeHtml(report.id)}">Update this status</button></div>
           </div>
@@ -11232,6 +11248,7 @@
               <strong>${escapeHtml(reportTitle(report))}</strong>
               <p class="muted small">${escapeHtml(timelineReportStart(report) || "No start")} to ${escapeHtml(timelineReportEnd(report) || "No end")} - ${escapeHtml(report.progress || 0)}% complete</p>
               <span class="chip ${status?.tone || healthClass(report)}">${escapeHtml(status?.label || labels[report.health] || "On Time")}</span>
+              ${report.stage ? `<span class="chip blue">Stage: ${escapeHtml(report.stage)}</span>` : `<span class="chip amber">Stage missing</span>`}
               ${report.dependency ? `<span class="chip amber">Depends on ${escapeHtml(report.dependency)}</span>` : ""}
             </div>
             <div>
@@ -11279,7 +11296,7 @@
               <div>
                 <span class="product-label">${escapeHtml(report.product || "No product")}</span>
                 <strong>${escapeHtml(reportTitle(report))}</strong>
-                <p class="muted small">${escapeHtml(report.role || "No role")} - ${escapeHtml(labels[report.health] || report.health || "No health")} - ${reportEndDate(report) ? endDateMarkup(report) : "No end date"}</p>
+                <p class="muted small">${escapeHtml(report.role || "No role")} - Stage ${escapeHtml(report.stage || "missing")} - ${escapeHtml(labels[report.health] || report.health || "No health")} - ${reportEndDate(report) ? endDateMarkup(report) : "No end date"}</p>
               </div>
               <span class="chip ${completeness.score >= 80 ? "green" : completeness.score >= 60 ? "amber" : "red"}">${escapeHtml(completeness.score)}% complete</span>
             </header>
@@ -11333,7 +11350,7 @@
             <div>
               <span class="product-label">${escapeHtml(report.product || "No product")}</span>
               <h3>${escapeHtml(reportTitle(report))}</h3>
-              <p class="muted small">${escapeHtml(report.owner || "Unassigned")} - ${escapeHtml(report.role || "No role")} - Reporting week ${escapeHtml(report.week || "No date")}${reportEndDate(report) ? ` - ${endDateMarkup(report)}` : ""}</p>
+              <p class="muted small">${escapeHtml(report.owner || "Unassigned")} - ${escapeHtml(report.role || "No role")} - Stage ${escapeHtml(report.stage || "missing")} - Reporting week ${escapeHtml(report.week || "No date")}${reportEndDate(report) ? ` - ${endDateMarkup(report)}` : ""}</p>
             </div>
             <span class="chip ${tone}">${escapeHtml(incidentLabel(report))}</span>
           </div>
@@ -11520,6 +11537,7 @@
                 <span class="muted small">${escapeHtml(report.owner || "Unassigned")} - ${escapeHtml(report.role || "No role")}</span>
                 <div class="timeline-meta">
                   <span class="chip ${status?.tone || healthClass(report)}">${escapeHtml(status?.label || labels[report.health] || "On Time")}</span>
+                  ${report.stage ? `<span class="chip blue">Stage: ${escapeHtml(report.stage)}</span>` : `<span class="chip amber">Stage missing</span>`}
                   ${report.milestone ? `<span class="chip blue">${escapeHtml(report.milestone)}</span>` : ""}
                   ${report.dependency ? `<span class="chip amber">Depends on</span>` : ""}
                 </div>
@@ -12017,7 +12035,7 @@
           <div>
             <span class="product-label">${escapeHtml(report.product || "No product")}</span>
             <strong>${escapeHtml(reportTitle(report))}</strong>
-            <p class="muted small">${escapeHtml(reportProductLine(report))} - ${escapeHtml(report.owner || "Unassigned")} - ${escapeHtml(report.product_type || "Legacy")} - ${escapeHtml(report.role)} - Reporting week ${escapeHtml(report.week || "No date")}${reportEndDate(report) ? ` - ${endDateMarkup(report)}` : ""}</p>
+            <p class="muted small">${escapeHtml(reportProductLine(report))} - ${escapeHtml(report.owner || "Unassigned")} - ${escapeHtml(report.product_type || "Legacy")} - ${escapeHtml(report.role)} - Stage ${escapeHtml(report.stage || "missing")} - Reporting week ${escapeHtml(report.week || "No date")}${reportEndDate(report) ? ` - ${endDateMarkup(report)}` : ""}</p>
             <p class="muted small">${escapeHtml(report.summary || "No summary captured.")}</p>
           </div>
           <span class="chip ${healthClass(report)}">${labels[report.health] || report.health}</span>
@@ -12030,7 +12048,9 @@
       const detailRows = [
         ["Wins", report.win || `No wins captured for this ${noun} yet.`],
         ["Blockers", report.blocker || `No blockers captured for this ${noun} yet.`],
-        ["Next Action", report.next || `No next action captured for this ${noun} yet.`]
+        ["Next Action", report.next || `No next action captured for this ${noun} yet.`],
+        ["Stage", report.stage || "Stage missing - owner should update this workstream."],
+        ["Progress", `${Number(report.progress || 0)}%`]
       ];
       return `
         <div class="health-detail executive-inline-detail">
@@ -12038,7 +12058,7 @@
           <div>
             <span class="product-label">${escapeHtml(report.product || "No product")}</span>
             <h3>${escapeHtml(reportTitle(report))}</h3>
-            <p class="muted small">${escapeHtml(reportProductLine(report))} - ${escapeHtml(report.owner || "Unassigned")} - ${escapeHtml(report.product_type || "Legacy")} - ${escapeHtml(report.week || "No reporting week")}${reportEndDate(report) ? ` - ${endDateMarkup(report)}` : ""}</p>
+            <p class="muted small">${escapeHtml(reportProductLine(report))} - ${escapeHtml(report.owner || "Unassigned")} - ${escapeHtml(report.product_type || "Legacy")} - Stage ${escapeHtml(report.stage || "missing")} - ${escapeHtml(report.week || "No reporting week")}${reportEndDate(report) ? ` - ${endDateMarkup(report)}` : ""}</p>
           </div>
           <span class="chip ${healthClass(report)}">${labels[report.health] || report.health}</span>
         </header>
@@ -12089,7 +12109,7 @@
           <div>
             <span class="product-label">${escapeHtml(r.product || "No product")}</span>
             <strong>${escapeHtml(reportTitle(r))}</strong>
-            <p class="muted small">${escapeHtml(reportProductLine(r))} - ${escapeHtml(r.owner || "Unassigned")} - ${escapeHtml(r.role)} - ${escapeHtml(r.stage)} - Reported ${escapeHtml(r.week || "No date")}${reportEndDate(r) ? ` - ${endDateMarkup(r, "Due")}` : ""}</p>
+            <p class="muted small">${escapeHtml(reportProductLine(r))} - ${escapeHtml(r.owner || "Unassigned")} - ${escapeHtml(r.role)} - Stage ${escapeHtml(r.stage || "missing")} - Reported ${escapeHtml(r.week || "No date")}${reportEndDate(r) ? ` - ${endDateMarkup(r, "Due")}` : ""}</p>
             <p class="muted small">${escapeHtml(r.summary)}</p>
             <div class="progress"><div class="bar ${healthClass(r)}" style="width:${Number(r.progress || 0)}%"></div></div>
           </div>
@@ -12174,7 +12194,7 @@
                 <div>
                   <span class="product-label">${escapeHtml(r.product || "No product")}</span>
                   <strong>${escapeHtml(reportTitle(r))}</strong>
-                  <p class="muted small">${escapeHtml(reportProductLine(r))} - ${escapeHtml(r.product_type || "Legacy")} - ${escapeHtml(r.role)} - Reporting week ${escapeHtml(r.week)}${r.start_date ? ` - Start ${escapeHtml(r.start_date)}` : ""}${reportEndDate(r) ? ` - ${endDateMarkup(r)}` : ""}</p>
+                  <p class="muted small">${escapeHtml(reportProductLine(r))} - ${escapeHtml(r.product_type || "Legacy")} - ${escapeHtml(r.role)} - Stage ${escapeHtml(r.stage || "missing")} - Reporting week ${escapeHtml(r.week)}${r.start_date ? ` - Start ${escapeHtml(r.start_date)}` : ""}${reportEndDate(r) ? ` - ${endDateMarkup(r)}` : ""}</p>
                 </div>
                 <span class="chip ${healthClass(r)}">${labels[r.health] || r.health}</span>
               </header>
@@ -12192,6 +12212,7 @@
         ["Feature / workstream", report.feature_workstream],
         ["Owner", report.owner],
         ["Reporting week", report.week],
+        ["Stage", report.stage],
         ["End date", reportEndDate(report)],
         ["Summary", report.summary],
         ["Win", report.win],
@@ -12862,10 +12883,12 @@
 
     function stageSelect(current = "Discovery") {
       const stages = ["Discovery", "Work in Progress", "Research", "Documentation", "Demo", "Testing", "QA", "Environment", "Wireframes", "Visual Design", "Prototype", "Design Review", "Dev Handoff", "QA Review", "Release", "Paused", "Completed"];
+      const value = cleanText(current);
       return `
         <label>Stage
-          <select name="stage">
-            ${stages.map(stage => `<option ${stage === current ? "selected" : ""}>${escapeHtml(stage)}</option>`).join("")}
+          <select name="stage" required>
+            <option value="" ${value ? "" : "selected"} disabled>Select stage</option>
+            ${stages.map(stage => `<option ${stage === value ? "selected" : ""}>${escapeHtml(stage)}</option>`).join("")}
           </select>
         </label>
       `;
@@ -12939,10 +12962,14 @@
       if (isWeekend(data.week)) {
         throw new Error("Reporting week cannot be Saturday or Sunday.");
       }
+      if (!cleanText(data.stage)) {
+        throw new Error("Select a stage before saving.");
+      }
       return normalizeReportPeople({
         ...data,
         id,
         role: data.role || "Product Manager",
+        stage: cleanText(data.stage),
         action_status: normalizeActionStatus(data.action_status),
         progress: Math.max(0, Math.min(100, Number(data.progress || 0))),
         impact: Number(data.impact || 1),
