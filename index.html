@@ -1933,6 +1933,80 @@
       border-color: #e8b6c5;
     }
 
+    .quality-check-panel {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px;
+      background: #f8fbfc;
+      display: grid;
+      gap: 12px;
+    }
+
+    .quality-check-panel:empty {
+      display: none;
+    }
+
+    .quality-check-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .quality-check-title {
+      display: grid;
+      gap: 4px;
+    }
+
+    .quality-check-score {
+      min-width: 92px;
+      text-align: right;
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--muted);
+    }
+
+    .quality-check-score strong {
+      display: block;
+      font-size: 24px;
+      line-height: 1;
+      color: var(--ink);
+    }
+
+    .quality-check-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .quality-check-item {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 9px 10px;
+      background: #fff;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .quality-check-item.red {
+      border-color: #e8b6c5;
+      background: var(--red-soft);
+      color: var(--red);
+    }
+
+    .quality-check-item.amber {
+      border-color: #f1d9a9;
+      background: var(--amber-soft);
+      color: #9a6500;
+    }
+
+    .quality-check-item.green {
+      border-color: #b8ddca;
+      background: var(--green-soft);
+      color: var(--green);
+    }
+
     .view-loading-message {
       margin: 14px 0;
     }
@@ -4112,6 +4186,7 @@
                     <option>Design Review</option>
                     <option>Dev Handoff</option>
                     <option>QA Review</option>
+                    <option>Client implementation</option>
                     <option>Release</option>
                     <option>Paused</option>
                     <option>Completed</option>
@@ -4206,6 +4281,7 @@
                 </label>
               </div>
             </div>
+            <div class="quality-check-panel" id="statusQualityCheck" aria-live="polite"></div>
             <div class="form-actions">
               <button class="btn" type="reset">Clear</button>
               <button class="btn primary" type="submit" id="saveReportBtn">Save Report</button>
@@ -5051,7 +5127,14 @@
         }
         return "A report with the same product, feature/workstream, owner, reporting week, and summary already exists. I updated the existing report instead of creating a duplicate.";
       }
-      if (error.message?.includes("Saturday or Sunday") || error.message?.includes("Select a product")) {
+      if (
+        error.validationIssues?.length ||
+        error.message?.startsWith("Quality check:") ||
+        error.message?.includes("Saturday or Sunday") ||
+        error.message?.includes("Select a product") ||
+        error.message?.includes("required") ||
+        error.message?.includes("Completed workstreams")
+      ) {
         return error.message;
       }
       if (isActionStatusConstraintError(error)) {
@@ -5533,6 +5616,7 @@
         if (menu) menu.hidden = false;
         if (button) button.setAttribute("aria-expanded", "true");
       }
+      refreshVisibleQualityChecks();
     }
 
     function initPeoplePickers(root = document) {
@@ -5589,6 +5673,7 @@
         if (menu) menu.hidden = false;
         if (button) button.setAttribute("aria-expanded", "true");
       }
+      refreshVisibleQualityChecks();
     }
 
     function initProductPickers(root = document) {
@@ -5649,6 +5734,7 @@
         if (menu) menu.hidden = false;
         if (button) button.setAttribute("aria-expanded", "true");
       }
+      refreshVisibleQualityChecks();
     }
 
     function initDependencyPickers(root = document) {
@@ -5695,6 +5781,21 @@
         report.week || "",
         canonicalText(report.summary || "")
       ].join("|");
+    }
+
+    function reportWorkstreamKey(report) {
+      return [
+        productKey(report.product || ""),
+        canonicalText(report.feature_workstream || ""),
+        ownerKey(report.owner || ""),
+        report.week || ""
+      ].join("|");
+    }
+
+    function findDuplicateWorkstreamReport(report, existingId = "") {
+      const key = reportWorkstreamKey(report);
+      if (!key || key.split("|").some(part => !part)) return null;
+      return reports.find(existing => existing.id !== existingId && reportWorkstreamKey(existing) === key) || null;
     }
 
     function reportLegacyIdentityKey(report) {
@@ -6953,6 +7054,134 @@
       const priorityLabel = label === "Escalate" ? "High priority" : label === "Needs action" ? "Medium priority" : label === "Needs details" ? "Needs details" : "Low priority";
 
       return { gaps, suggestions, fastTrack, lessons, score, tone, label, priorityLabel, scheduleStatus, completeness, escalation };
+    }
+
+    function uniqueMessages(items = []) {
+      return [...new Set(items.map(cleanText).filter(Boolean))];
+    }
+
+    function isCompletedStageValue(value = "") {
+      const key = canonicalText(value);
+      return key === "completed" || key === "complete";
+    }
+
+    function assessReportReadiness(report, { existingId = "", requireProduct = true } = {}) {
+      const blockers = [];
+      const warnings = [];
+      const positives = [];
+      const product = cleanText(report.product);
+      const feature = cleanText(report.feature_workstream);
+      const owner = cleanText(report.owner);
+      const week = cleanText(report.week);
+      const stage = cleanText(report.stage);
+      const summary = cleanText(report.summary);
+      const blocker = cleanText(report.blocker);
+      const next = cleanText(report.next);
+      const health = cleanText(report.health);
+      const priority = cleanText(report.priority);
+      const dueDate = cleanText(reportEndDate(report));
+      const baselineDueDate = cleanText(report.baseline_due_date);
+      const progress = Number(report.progress);
+      const schedule = endDateStatus(report);
+      const duplicate = findDuplicateWorkstreamReport(report, existingId);
+
+      if (requireProduct && !product) blockers.push("Product is required.");
+      if (!feature) blockers.push("Feature / workstream is required.");
+      if (!owner) blockers.push("Owner is required.");
+      if (!week) blockers.push("Reporting week is required.");
+      if (isWeekend(week)) blockers.push("Reporting week cannot be Saturday or Sunday.");
+      if (!stage) blockers.push("Stage is required so dashboards can show the workstream lifecycle.");
+      if (!summary) blockers.push("Summary is required.");
+      if (!Number.isFinite(progress) || progress < 0 || progress > 100) blockers.push("Progress must be a number between 0 and 100.");
+      if (duplicate) blockers.push(`This owner already has a report for ${productDisplay(product)} / ${feature} in ${reportingFieldLabel(week)}.`);
+      if (isCompletedStageValue(stage) && progress < 100) blockers.push("Completed workstreams must be saved with 100% progress.");
+      if ((health === "red" || priority === "Critical") && !blocker) blockers.push("At Risk or Critical reports must include a blocker or risk.");
+      if (blocker && !next) blockers.push("Reports with a blocker or risk must include the next action.");
+      if (baselineDueDate && dueDate && daysBetweenDates(baselineDueDate, dueDate) > 0 && !cleanText(report.date_change_reason)) {
+        blockers.push("When the end date moves later, add the date change reason.");
+      }
+
+      if (!dueDate && !isCompletedStageValue(stage)) warnings.push("Add an end date so schedule status can be calculated.");
+      if (dueDate && !baselineDueDate) warnings.push("Add the baseline end date when this workstream has a planned delivery date.");
+      if (schedule?.category === "minorDelay" || schedule?.category === "majorDelay") {
+        if (!cleanText(report.delay_reason)) warnings.push("Add the delay root cause so leadership can understand why the date moved.");
+      }
+      if (schedule?.category === "ahead") positives.push("Schedule is ahead of plan.");
+      if (summary && summary.length < 45) warnings.push("Summary is short. Add enough context for a leader to understand what changed.");
+      if (!cleanText(report.win)) warnings.push("Add a Win when progress was made, even if small.");
+      if (next && !cleanText(report.action_owner)) warnings.push("Add a corrective action owner for the next action.");
+      if (next && !cleanText(report.action_due_date)) warnings.push("Add an action target date for the next action.");
+      if ((health === "red" || priority === "Critical") && !cleanText(report.decision_needed)) warnings.push("Add the decision needed when leadership intervention may be required.");
+      if (progress >= 100 && !isCompletedStageValue(stage)) warnings.push("Progress is 100%; consider setting Stage to Completed.");
+      if (stage) positives.push("Stage is captured.");
+      if (owner && next) positives.push("Ownership and next action are clear.");
+      if (summary && blocker && next) positives.push("Decision signals are connected: summary, blocker, and next action are present.");
+
+      const analysis = analyzeReportQuality(report);
+      const score = Math.max(0, Math.min(100, 100 - blockers.length * 18 - warnings.length * 6 - analysis.gaps.length * 2));
+      const tone = blockers.length ? "red" : warnings.length ? "amber" : "green";
+      const label = blockers.length ? "Fix before saving" : warnings.length ? "Ready with warnings" : "Ready to save";
+      return {
+        blockers: uniqueMessages(blockers),
+        warnings: uniqueMessages(warnings),
+        positives: uniqueMessages(positives).slice(0, 3),
+        score,
+        tone,
+        label,
+        analysis
+      };
+    }
+
+    function qualityCheckMarkup(readiness) {
+      if (!readiness) return "";
+      const issueItems = [
+        ...readiness.blockers.map(item => ({ tone: "red", label: "Required fix", item })),
+        ...readiness.warnings.map(item => ({ tone: "amber", label: "Quality note", item })),
+        ...readiness.positives.map(item => ({ tone: "green", label: "Good signal", item }))
+      ];
+      return `
+        <div class="quality-check-header">
+          <div class="quality-check-title">
+            <span class="chip ${readiness.tone}">Quality check</span>
+            <strong>${escapeHtml(readiness.label)}</strong>
+            <span class="muted small">Checks required fields, duplicate workstreams, date replanning, risk clarity, and next action ownership.</span>
+          </div>
+          <div class="quality-check-score">
+            <strong>${Math.round(readiness.score)}</strong>
+            readiness score
+          </div>
+        </div>
+        ${issueItems.length ? `<div class="quality-check-list">${issueItems.map(entry => `
+          <div class="quality-check-item ${entry.tone}"><strong>${escapeHtml(entry.label)}:</strong> ${escapeHtml(entry.item)}</div>
+        `).join("")}</div>` : ""}
+      `;
+    }
+
+    function renderFormQualityCheck(targetId, form, reportId = crypto.randomUUID(), options = {}) {
+      const target = document.getElementById(targetId);
+      if (!target || !form) return;
+      try {
+        const report = readReportForm(form, reportId, { ...options, validateQuality: false, validateRequired: false });
+        target.innerHTML = qualityCheckMarkup(assessReportReadiness(report, { existingId: reportId, requireProduct: options.requireProduct !== false }));
+      } catch (error) {
+        target.innerHTML = "";
+      }
+    }
+
+    function refreshStatusQualityCheck() {
+      const form = document.getElementById("statusForm");
+      renderFormQualityCheck("statusQualityCheck", form, crypto.randomUUID(), { requireProduct: true });
+    }
+
+    function refreshEditQualityCheck(reportId = selectedReportId) {
+      const form = document.getElementById("editReportForm");
+      if (!form || !reportId) return;
+      renderFormQualityCheck("editQualityCheck", form, reportId, { requireProduct: false });
+    }
+
+    function refreshVisibleQualityChecks() {
+      refreshStatusQualityCheck();
+      refreshEditQualityCheck();
     }
 
     function renderAnalysisList(items) {
@@ -12846,6 +13075,7 @@
               </div>
             </section>
           </div>
+          <div class="quality-check-panel" id="editQualityCheck" aria-live="polite"></div>
           <div class="form-actions detail-actions">
             <button class="btn" type="button" id="reportHistoryBtn">${reportHistoryOpen ? "Hide History" : "History"}</button>
             <button class="btn" type="button" id="cancelEditReport">Cancel</button>
@@ -12861,7 +13091,11 @@
       initProductPickers(detail);
       initPeoplePickers(detail);
       initDependencyPickers(detail);
-      initWeekPicker(editWeekButton, editWeekPicker, () => {}, report.week || mondayForDate(), editWeekInput);
+      initWeekPicker(editWeekButton, editWeekPicker, () => refreshEditQualityCheck(report.id), report.week || mondayForDate(), editWeekInput);
+      const editForm = document.getElementById("editReportForm");
+      refreshEditQualityCheck(report.id);
+      editForm.addEventListener("input", () => refreshEditQualityCheck(report.id));
+      editForm.addEventListener("change", () => refreshEditQualityCheck(report.id));
       document.getElementById("reportHistoryBtn").addEventListener("click", async () => {
         reportHistoryOpen = !reportHistoryOpen;
         if (reportHistoryOpen) {
@@ -12907,7 +13141,7 @@
           showReportMessage(error.message || "Could not delete this report. Check Supabase permissions or connection.", "danger");
         }
       });
-      document.getElementById("editReportForm").addEventListener("submit", async event => {
+      editForm.addEventListener("submit", async event => {
         event.preventDefault();
         if (!canEditReport(report)) {
           showReportMessage("Only the report owner, Master admin, or Role Manager can edit this status.", "danger");
@@ -13078,34 +13312,45 @@
       return "";
     }
 
-    function readReportForm(form, id = crypto.randomUUID(), { requireProduct = true } = {}) {
+    function readReportForm(form, id = crypto.randomUUID(), { requireProduct = true, validateRequired = true, validateQuality = true } = {}) {
       const data = Object.fromEntries(new FormData(form).entries());
       ["product", "owner", "participants", "action_owner", "dependency"].forEach(name => {
         const value = pickerFormValue(form, name);
         if (value || name === "product") data[name] = value;
       });
       if (!cleanText(data.product)) {
-        if (requireProduct) {
+        if (requireProduct && validateRequired) {
           throw new Error("Select a product before saving.");
         }
         data.product = "";
       }
-      if (isWeekend(data.week)) {
+      if (isWeekend(data.week) && validateRequired) {
         throw new Error("Reporting week cannot be Saturday or Sunday.");
       }
-      if (!cleanText(data.stage)) {
+      if (!cleanText(data.stage) && validateRequired) {
         throw new Error("Select a stage before saving.");
       }
-      return normalizeReportPeople({
+      const rawProgress = Number(data.progress || 0);
+      const report = normalizeReportPeople({
         ...data,
         id,
         role: data.role || "Product Manager",
         stage: cleanText(data.stage),
         action_status: normalizeActionStatus(data.action_status),
-        progress: Math.max(0, Math.min(100, Number(data.progress || 0))),
+        progress: Number.isFinite(rawProgress) ? Math.max(0, Math.min(100, rawProgress)) : rawProgress,
         impact: Number(data.impact || 1),
         time: Number(data.time || 1)
       });
+      if (validateQuality) {
+        const readiness = assessReportReadiness(report, { existingId: id, requireProduct });
+        if (readiness.blockers.length) {
+          const error = new Error(`Quality check: ${readiness.blockers.slice(0, 5).join(" ")}`);
+          error.validationIssues = readiness.blockers;
+          error.readiness = readiness;
+          throw error;
+        }
+      }
+      return report;
     }
 
     function renderDashboardView() {
@@ -13608,6 +13853,7 @@
         });
         setWeekdayDateValue(document.getElementById("statusWeekFilter"), mondayForDate());
         setWeekdayDateValue(form.week, mondayForDate());
+        refreshStatusQualityCheck();
         saveBtn.textContent = "Saved";
         showStatusFormMessage("Report saved successfully.");
         setTimeout(() => { saveBtn.textContent = "Save Report"; }, 1400);
@@ -13636,6 +13882,7 @@
           picker.dataset.selected = "";
           renderDependencyPicker(picker);
         });
+        refreshStatusQualityCheck();
       }, 0);
     });
 
@@ -14458,6 +14705,7 @@
     });
     initWeekPicker(document.getElementById("statusWeekFilter"), document.getElementById("statusWeekPicker"), value => {
       document.querySelector('#statusForm input[name="week"]').value = value;
+      refreshStatusQualityCheck();
     }, defaultReportingMonday, document.querySelector('#statusForm input[name="week"]'));
     initWeekPicker(document.getElementById("dashboardWeekFilter"), document.getElementById("dashboardWeekPicker"), value => {
       dashboardFilters.week = value;
@@ -14505,9 +14753,13 @@
       logFilterChange("source_reports", "reporting_week", reportingFieldLabel(value));
       renderReports();
     }, "");
-    initProductPickers(document.getElementById("statusForm"));
-    initPeoplePickers(document.getElementById("statusForm"));
-    initDependencyPickers(document.getElementById("statusForm"));
+    const statusForm = document.getElementById("statusForm");
+    initProductPickers(statusForm);
+    initPeoplePickers(statusForm);
+    initDependencyPickers(statusForm);
+    statusForm.addEventListener("input", refreshStatusQualityCheck);
+    statusForm.addEventListener("change", refreshStatusQualityCheck);
+    refreshStatusQualityCheck();
     initReportingWeekInputs();
     (async () => {
       await syncUsersWithCloud();
