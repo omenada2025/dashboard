@@ -1178,6 +1178,25 @@
     .gray { color: #68737b; background: #eef1f2; }
     .orange { color: #c76816; background: #fff1df; }
 
+    .stage-chip {
+      font-weight: 800;
+      letter-spacing: .01em;
+    }
+
+    .card-chip-stack {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    .card-chip-stack .chip {
+      white-space: nowrap;
+    }
+
     .end-date-status {
       display: inline-flex;
       align-items: center;
@@ -7556,6 +7575,31 @@
       return stageMatchesTerms(report?.stage, ["complete", "completed", "done", "delivered"]);
     }
 
+    function stageLabel(reportOrStage) {
+      const stage = typeof reportOrStage === "string" ? reportOrStage : reportOrStage?.stage;
+      return cleanText(stage) || "Stage missing";
+    }
+
+    function stageTone(reportOrStage) {
+      const stage = typeof reportOrStage === "string" ? reportOrStage : reportOrStage?.stage;
+      if (!cleanText(stage)) return "amber";
+      if (isDeliveredStage({ stage })) return "green";
+      if (stageMatchesTerms(stage, ["paused", "blocked", "hold", "stalled"])) return "red";
+      if (stageMatchesTerms(stage, ["client", "implementation", "testing", "qa", "review", "release"])) return "blue";
+      if (stageMatchesTerms(stage, ["work", "progress", "development", "prototype", "discovery", "research"])) return "amber";
+      return "blue";
+    }
+
+    function stageChip(reportOrStage, prefix = "Stage") {
+      const label = stageLabel(reportOrStage);
+      const display = prefix ? `${prefix}: ${label}` : label;
+      return `<span class="chip stage-chip ${stageTone(reportOrStage)}">${escapeHtml(display)}</span>`;
+    }
+
+    function statusStageChips(report, fallback = "Status") {
+      return `<div class="card-chip-stack">${primaryStatusChip(report, fallback)}${stageChip(report)}</div>`;
+    }
+
     function isActiveWorkstream(report) {
       const health = cleanText(report.health).toLowerCase();
       const actionStatus = cleanText(report.action_status).toLowerCase();
@@ -9393,12 +9437,12 @@
               <h3>${escapeHtml(reportTitle(report))}</h3>
               <p class="muted small">${escapeHtml(report.role || "No role")} - Reporting week ${escapeHtml(reportingFieldLabel(report.week))}${reportEndDate(report) ? ` - ${endDateMarkup(report)}` : ""}</p>
             </div>
-            ${primaryStatusChip(report, "No health")}
+            ${statusStageChips(report, "No health")}
           </div>
           <p>${escapeHtml(report.summary || "No summary captured.")}</p>
           <div class="report-card-detail">
             <div><strong>Progress</strong><p class="muted small">${Number(report.progress || 0)}%</p></div>
-            <div><strong>Stage</strong><p class="muted small">${escapeHtml(report.stage || "No stage")}</p></div>
+            <div><strong>Stage</strong><p class="muted small">${stageChip(report, "")}</p></div>
             <div><strong>Schedule</strong><p class="muted small">${escapeHtml(schedule?.label || "No end date status")}</p></div>
             <div><strong>Blocker or risk</strong><p class="muted small">${escapeHtml(report.blocker || "No blocker captured.")}</p></div>
             <div><strong>Next action</strong><p class="muted small">${escapeHtml(report.next || "No next action captured.")}</p></div>
@@ -11244,15 +11288,18 @@
               <div>
                 <span class="product-label">${escapeHtml(report.product || "No product")}</span>
                 <strong>${escapeHtml(reportTitle(report))}</strong>
-                <p class="muted small">${escapeHtml(report.owner || "Unassigned")} - Stage ${escapeHtml(report.stage || "missing")} - ${reportEndDate(report) ? endDateMarkup(report) : "No end date"}</p>
+                <p class="muted small">${escapeHtml(report.owner || "Unassigned")} - ${reportEndDate(report) ? endDateMarkup(report) : "No end date"}</p>
               </div>
-              <span class="chip ${status?.tone || healthClass(report)}">${escapeHtml(status?.label || labels[report.health] || "Status")}</span>
+              <div class="card-chip-stack">
+                <span class="chip ${status?.tone || healthClass(report)}">${escapeHtml(status?.label || labels[report.health] || "Status")}</span>
+                ${stageChip(report)}
+              </div>
             </header>
             <div class="report-card-detail">
               <div><strong>Next action</strong><p class="muted small">${escapeHtml(report.next || "No next action captured.")}</p></div>
               <div><strong>Blocker / risk</strong><p class="muted small">${escapeHtml(report.blocker || "No blocker captured.")}</p></div>
               <div><strong>Action owner</strong><p class="muted small">${escapeHtml(report.action_owner || report.owner || "Not assigned")}</p></div>
-              <div><strong>Stage</strong><p class="muted small">${escapeHtml(report.stage || "Missing stage - update required.")}</p></div>
+              <div><strong>Stage</strong><p class="muted small">${stageChip(report, "")}</p></div>
             </div>
             <div class="personal-card-actions"><button class="btn soft" type="button" data-my-open-report="${escapeHtml(report.id)}">Update this status</button></div>
           </div>
@@ -11269,7 +11316,7 @@
               <strong>${escapeHtml(reportTitle(report))}</strong>
               <p class="muted small">${escapeHtml(timelineReportStart(report) || "No start")} to ${escapeHtml(timelineReportEnd(report) || "No end")} - ${escapeHtml(report.progress || 0)}% complete</p>
               <span class="chip ${status?.tone || healthClass(report)}">${escapeHtml(status?.label || labels[report.health] || "On Time")}</span>
-              ${report.stage ? `<span class="chip blue">Stage: ${escapeHtml(report.stage)}</span>` : `<span class="chip amber">Stage missing</span>`}
+              ${stageChip(report)}
               ${report.dependency ? `<span class="chip amber">Depends on ${escapeHtml(report.dependency)}</span>` : ""}
             </div>
             <div>
@@ -11317,9 +11364,12 @@
               <div>
                 <span class="product-label">${escapeHtml(report.product || "No product")}</span>
                 <strong>${escapeHtml(reportTitle(report))}</strong>
-                <p class="muted small">${escapeHtml(report.role || "No role")} - Stage ${escapeHtml(report.stage || "missing")} - ${escapeHtml(labels[report.health] || report.health || "No health")} - ${reportEndDate(report) ? endDateMarkup(report) : "No end date"}</p>
+                <p class="muted small">${escapeHtml(report.role || "No role")} - ${escapeHtml(labels[report.health] || report.health || "No health")} - ${reportEndDate(report) ? endDateMarkup(report) : "No end date"}</p>
               </div>
-              <span class="chip ${completeness.score >= 80 ? "green" : completeness.score >= 60 ? "amber" : "red"}">${escapeHtml(completeness.score)}% complete</span>
+              <div class="card-chip-stack">
+                <span class="chip ${completeness.score >= 80 ? "green" : completeness.score >= 60 ? "amber" : "red"}">${escapeHtml(completeness.score)}% complete</span>
+                ${stageChip(report)}
+              </div>
             </header>
             <p class="small">${escapeHtml(report.summary || "No summary captured.")}</p>
             <div class="personal-card-actions"><button class="btn soft" type="button" data-my-open-report="${escapeHtml(report.id)}">Open / update</button></div>
@@ -11371,9 +11421,12 @@
             <div>
               <span class="product-label">${escapeHtml(report.product || "No product")}</span>
               <h3>${escapeHtml(reportTitle(report))}</h3>
-              <p class="muted small">${escapeHtml(report.owner || "Unassigned")} - ${escapeHtml(report.role || "No role")} - Stage ${escapeHtml(report.stage || "missing")} - Reporting week ${escapeHtml(report.week || "No date")}${reportEndDate(report) ? ` - ${endDateMarkup(report)}` : ""}</p>
+              <p class="muted small">${escapeHtml(report.owner || "Unassigned")} - ${escapeHtml(report.role || "No role")} - Reporting week ${escapeHtml(report.week || "No date")}${reportEndDate(report) ? ` - ${endDateMarkup(report)}` : ""}</p>
             </div>
-            <span class="chip ${tone}">${escapeHtml(incidentLabel(report))}</span>
+            <div class="card-chip-stack">
+              <span class="chip ${tone}">${escapeHtml(incidentLabel(report))}</span>
+              ${stageChip(report)}
+            </div>
           </div>
           <p>${escapeHtml(report.summary || "No summary captured.")}</p>
           <div class="report-card-detail">
@@ -11743,6 +11796,29 @@
       return new Set(source.map(report => canonicalText(report[key])).filter(Boolean)).size;
     }
 
+    function stageStats(source) {
+      const result = source.reduce((acc, report) => {
+        const label = stageLabel(report);
+        const key = canonicalText(label) || "stage missing";
+        if (!acc.byStage.has(key)) {
+          acc.byStage.set(key, { label, count: 0, tone: stageTone(report) });
+        }
+        acc.byStage.get(key).count += 1;
+        if (isDeliveredStage(report)) {
+          acc.delivered += 1;
+        } else if (!cleanText(report.stage)) {
+          acc.missing += 1;
+        } else {
+          acc.active += 1;
+        }
+        return acc;
+      }, { active: 0, delivered: 0, missing: 0, byStage: new Map() });
+      result.top = [...result.byStage.values()]
+        .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label))[0]
+        || { label: "No stage", count: 0, tone: "gray" };
+      return result;
+    }
+
     function productsNeedingAttention(source) {
       return uniqueCount(source.filter(report => report.health === "red" || report.priority === "Critical"), "product");
     }
@@ -11755,6 +11831,9 @@
       if (metric === "products" || metric === "workstreams") return [...source];
       if (metric === "risk") return source.filter(isRiskReport);
       if (metric === "delayed") return source.filter(report => incidentFlags(report).delayed || incidentFlags(report).dueSoon);
+      if (metric === "stage") return [...source].sort((a, b) =>
+        stageLabel(a).localeCompare(stageLabel(b)) || reportTitle(a).localeCompare(reportTitle(b))
+      );
       if (metric === "progress") return [...source].sort((a, b) => Number(a.progress || 0) - Number(b.progress || 0));
       return [];
     }
@@ -11781,14 +11860,14 @@
               <h3>${escapeHtml(reportTitle(report))}</h3>
               <p class="muted small">${escapeHtml(report.owner || "Unassigned")} - ${escapeHtml(report.role || "No role")} - Reporting week ${escapeHtml(report.week || "No date")}${reportEndDate(report) ? ` - ${endDateMarkup(report)}` : ""}</p>
             </div>
-            ${primaryStatusChip(report, "No health")}
+            ${statusStageChips(report, "No health")}
           </div>
           <p>${escapeHtml(report.summary || "No summary captured.")}</p>
           <div class="report-card-detail">
             <div><strong>Win</strong><p class="muted small">${escapeHtml(report.win || "No win captured.")}</p></div>
             <div><strong>Blocker or risk</strong><p class="muted small">${escapeHtml(report.blocker || "No blocker captured.")}</p></div>
             <div><strong>Next action</strong><p class="muted small">${escapeHtml(report.next || "No next action captured.")}</p></div>
-            <div><strong>Stage</strong><p class="muted small">${escapeHtml(report.stage || "No stage")}</p></div>
+            <div><strong>Stage</strong><p class="muted small">${stageChip(report, "")}</p></div>
             <div><strong>Progress</strong><p class="muted small">${escapeHtml(report.progress || 0)}%</p></div>
             <div><strong>Priority</strong><p class="muted small">${escapeHtml(report.priority || "Normal")}</p></div>
           </div>
@@ -11826,6 +11905,10 @@
           title: "Schedule delay",
           subtitle: "Workstreams classified as Minor Delay or Major Delay."
         },
+        stage: {
+          title: "Stage Mix",
+          subtitle: "Workstreams grouped by their current delivery stage."
+        },
         progress: {
           title: "Progress details",
           subtitle: "Workstreams sorted from lowest progress to highest."
@@ -11861,6 +11944,29 @@
         return;
       }
 
+      if (metric === "stage") {
+        const stageGroups = [...rows.reduce((acc, report) => {
+          const label = stageLabel(report);
+          const key = canonicalText(label) || "stage missing";
+          if (!acc.has(key)) acc.set(key, { label, rows: [], tone: stageTone(report) });
+          acc.get(key).rows.push(report);
+          return acc;
+        }, new Map()).values()].sort((a, b) => b.rows.length - a.rows.length || a.label.localeCompare(b.label));
+        list.innerHTML = stageGroups.length ? stageGroups.map(group => `
+          <div class="report-card">
+            <div class="panel-title">
+              <div>
+                ${stageChip(group.label, "")}
+                <h3>${escapeHtml(group.label)}</h3>
+                <p class="muted small">${group.rows.length} workstream${group.rows.length === 1 ? "" : "s"} in this stage</p>
+              </div>
+            </div>
+            <div class="report-list">${group.rows.map(portfolioDetailCard).join("")}</div>
+          </div>
+        `).join("") : `<div class="empty"><strong>No stage data</strong>No records match this indicator and the current filters.</div>`;
+        return;
+      }
+
       list.innerHTML = rows.length
         ? rows.map(portfolioDetailCard).join("")
         : `<div class="empty"><strong>No details available</strong>No records match this indicator and the current filters.</div>`;
@@ -11878,11 +11984,13 @@
       const products = uniqueCount(source, "product");
       const riskyProducts = productsNeedingAttention(source);
       const dateCounts = endDateCounts(source);
+      const stages = stageStats(source);
       const metrics = [
         ["products", "Products", products, "blue", "With active workstreams", `${pm.products} PM projects`, `${ux.products} UI/UX projects`],
         ["workstreams", "Workstreams", total, "blue", "Features or workstreams tracked", `${pm.total} PM`, `${ux.total} UI/UX`],
         ["risk", "Products at Risk", riskyProducts, riskyProducts ? "red" : "green", `${atRisk} workstreams need attention`, `${pm.riskyProducts} PM projects`, `${ux.riskyProducts} UI/UX projects`],
         ["delayed", "Schedule Delay", dateCounts.majorDelay + dateCounts.minorDelay, dateCounts.majorDelay ? "red" : dateCounts.minorDelay ? "amber" : "green", "Minor + major delay", `${dateCounts.majorDelay} major`, `${dateCounts.minorDelay} minor`],
+        ["stage", "Stage Mix", `${stages.delivered} delivered`, stages.missing ? "amber" : "green", `${stages.active} active / ${stages.missing} missing`, `${stages.top.count} ${stages.top.label}`, "Click for stages"],
         ["progress", "Avg Progress", `${avg}%`, avg < 50 ? "red" : avg < 75 ? "amber" : "green", "Across filtered reports", `${pm.avg}% PM`, `${ux.avg}% UI/UX`],
       ];
       document.getElementById("metrics").innerHTML = metrics.map(([key, name, value, tone, note, pmNote, uxNote]) => `
@@ -11917,6 +12025,7 @@
       const products = uniqueCount(source, "product");
       const riskyProducts = productsNeedingAttention(source);
       const dateCounts = endDateCounts(source);
+      const stages = stageStats(source);
       const critical = source
         .filter(report => report.health === "red" || report.priority === "Critical" || Number(report.impact || 0) >= 3)
         .sort((a, b) =>
@@ -11935,6 +12044,7 @@
         ["workstreams", "Workstreams", total, "blue", `${onTrack} healthy delivery`],
         ["risk", "Products at Risk", riskyProducts, riskyProducts ? "red" : "green", `${atRisk} risky workstreams`],
         ["delayed", "Schedule Delay", dateCounts.majorDelay + dateCounts.minorDelay, dateCounts.majorDelay ? "red" : dateCounts.minorDelay ? "amber" : "green", `${dateCounts.majorDelay} major / ${dateCounts.minorDelay} minor`],
+        ["stage", "Stage Mix", `${stages.delivered} delivered`, stages.missing ? "amber" : "green", `${stages.active} active / ${stages.missing} missing stage`],
         ["progress", "Avg Progress", `${avg}%`, avg < 50 ? "red" : avg < 75 ? "amber" : "green", "Across filtered workstreams"],
       ];
       document.getElementById("executiveMetrics").innerHTML = metricRows.map(([key, name, value, tone, note]) => `
@@ -11983,7 +12093,7 @@
             <strong>${escapeHtml(reportTitle(report))}</strong>
             <p class="muted small">${escapeHtml(report.owner || "Unassigned")} - ${escapeHtml(report.blocker || report.summary)}</p>
           </div>
-          ${primaryStatusChip(report, "Status")}
+          ${statusStageChips(report, "Status")}
         </div>
       `).join("") : `<div class="empty"><strong>No executive risks</strong>No critical risks need executive attention for the current filters.</div>`;
 
@@ -12056,10 +12166,10 @@
           <div>
             <span class="product-label">${escapeHtml(report.product || "No product")}</span>
             <strong>${escapeHtml(reportTitle(report))}</strong>
-            <p class="muted small">${escapeHtml(reportProductLine(report))} - ${escapeHtml(report.owner || "Unassigned")} - ${escapeHtml(report.product_type || "Legacy")} - ${escapeHtml(report.role)} - Stage ${escapeHtml(report.stage || "missing")} - Reporting week ${escapeHtml(report.week || "No date")}${reportEndDate(report) ? ` - ${endDateMarkup(report)}` : ""}</p>
+            <p class="muted small">${escapeHtml(reportProductLine(report))} - ${escapeHtml(report.owner || "Unassigned")} - ${escapeHtml(report.product_type || "Legacy")} - ${escapeHtml(report.role)} - Reporting week ${escapeHtml(report.week || "No date")}${reportEndDate(report) ? ` - ${endDateMarkup(report)}` : ""}</p>
             <p class="muted small">${escapeHtml(report.summary || "No summary captured.")}</p>
           </div>
-          ${primaryStatusChip(report, "Status")}
+          ${statusStageChips(report, "Status")}
         </button>
         ${report.id === selectedExecutiveProjectId ? projectDetailMarkup(report, "project") : ""}
       `).join("") : `<div class="empty"><strong>No matching workstreams</strong>Try changing Reporting week, Type of product, Role / Portfolio view, or Delivery health.</div>`;
@@ -12070,7 +12180,7 @@
         ["Wins", report.win || `No wins captured for this ${noun} yet.`],
         ["Blockers", report.blocker || `No blockers captured for this ${noun} yet.`],
         ["Next Action", report.next || `No next action captured for this ${noun} yet.`],
-        ["Stage", report.stage || "Stage missing - owner should update this workstream."],
+        ["Stage", stageChip(report, "")],
         ["Progress", `${Number(report.progress || 0)}%`]
       ];
       return `
@@ -12079,15 +12189,15 @@
           <div>
             <span class="product-label">${escapeHtml(report.product || "No product")}</span>
             <h3>${escapeHtml(reportTitle(report))}</h3>
-            <p class="muted small">${escapeHtml(reportProductLine(report))} - ${escapeHtml(report.owner || "Unassigned")} - ${escapeHtml(report.product_type || "Legacy")} - Stage ${escapeHtml(report.stage || "missing")} - ${escapeHtml(report.week || "No reporting week")}${reportEndDate(report) ? ` - ${endDateMarkup(report)}` : ""}</p>
+            <p class="muted small">${escapeHtml(reportProductLine(report))} - ${escapeHtml(report.owner || "Unassigned")} - ${escapeHtml(report.product_type || "Legacy")} - ${escapeHtml(report.week || "No reporting week")}${reportEndDate(report) ? ` - ${endDateMarkup(report)}` : ""}</p>
           </div>
-          ${primaryStatusChip(report, "Status")}
+          ${statusStageChips(report, "Status")}
         </header>
         <div class="health-detail-grid">
           ${detailRows.map(([label, value]) => `
             <div class="health-detail-card">
               <strong>${escapeHtml(label)}</strong>
-              <p class="muted small">${escapeHtml(value)}</p>
+              <p class="muted small">${label === "Stage" ? value : escapeHtml(value)}</p>
             </div>
           `).join("")}
         </div>
@@ -12130,11 +12240,11 @@
           <div>
             <span class="product-label">${escapeHtml(r.product || "No product")}</span>
             <strong>${escapeHtml(reportTitle(r))}</strong>
-            <p class="muted small">${escapeHtml(reportProductLine(r))} - ${escapeHtml(r.owner || "Unassigned")} - ${escapeHtml(r.role)} - Stage ${escapeHtml(r.stage || "missing")} - Reported ${escapeHtml(r.week || "No date")}${reportEndDate(r) ? ` - ${endDateMarkup(r, "Due")}` : ""}</p>
+            <p class="muted small">${escapeHtml(reportProductLine(r))} - ${escapeHtml(r.owner || "Unassigned")} - ${escapeHtml(r.role)} - Reported ${escapeHtml(r.week || "No date")}${reportEndDate(r) ? ` - ${endDateMarkup(r, "Due")}` : ""}</p>
             <p class="muted small">${escapeHtml(r.summary)}</p>
             <div class="progress"><div class="bar ${healthClass(r)}" style="width:${Number(r.progress || 0)}%"></div></div>
           </div>
-          ${primaryStatusChip(r, "Status")}
+          ${statusStageChips(r, "Status")}
         </button>
         ${r.id === selectedPortfolioHealthId ? projectDetailMarkup(r, "card") : ""}
           `).join("")}
@@ -12215,9 +12325,9 @@
                 <div>
                   <span class="product-label">${escapeHtml(r.product || "No product")}</span>
                   <strong>${escapeHtml(reportTitle(r))}</strong>
-                  <p class="muted small">${escapeHtml(reportProductLine(r))} - ${escapeHtml(r.product_type || "Legacy")} - ${escapeHtml(r.role)} - Stage ${escapeHtml(r.stage || "missing")} - Reporting week ${escapeHtml(r.week)}${r.start_date ? ` - Start ${escapeHtml(r.start_date)}` : ""}${reportEndDate(r) ? ` - ${endDateMarkup(r)}` : ""}</p>
+                  <p class="muted small">${escapeHtml(reportProductLine(r))} - ${escapeHtml(r.product_type || "Legacy")} - ${escapeHtml(r.role)} - Reporting week ${escapeHtml(r.week)}${r.start_date ? ` - Start ${escapeHtml(r.start_date)}` : ""}${reportEndDate(r) ? ` - ${endDateMarkup(r)}` : ""}</p>
                 </div>
-                ${primaryStatusChip(r, "Status")}
+                ${statusStageChips(r, "Status")}
               </header>
               <p class="small">${escapeHtml(r.summary)}</p>
               ${r.id === selectedReportId ? reportCardDetailMarkup(r) : ""}
@@ -12663,7 +12773,7 @@
               <h3>${escapeHtml(report.feature_workstream || report.product || "Untitled report")}</h3>
               <p class="muted small">${escapeHtml(report.summary || "No summary captured yet.")}</p>
             </div>
-            ${primaryStatusChip(report, "Health")}
+            ${statusStageChips(report, "Health")}
           </header>
           <div class="summary-meta">
             <span>Owner: ${escapeHtml(report.owner || "Not assigned")}</span>
