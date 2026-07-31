@@ -2575,13 +2575,13 @@
 
         <div class="grid two-col">
           <div class="panel">
-            <h3>Workstream Health</h3>
+            <h3>Project Health</h3>
             <div class="health-toolbar">
               <label>
                 Group by
                 <select id="healthGroupBy">
                   <option value="date">Reporting week</option>
-                  <option value="project">Product</option>
+                  <option value="project">Project</option>
                   <option value="owner">Owner</option>
                 </select>
               </label>
@@ -2785,7 +2785,7 @@
         <div class="guide-grid">
           <div class="guide-card theme-blue">
             <strong>Health first</strong>
-            <p class="muted small">Start with the Workstream Health Summary to focus the portfolio list.</p>
+            <p class="muted small">Start with Project Health Summary to focus the portfolio by project before opening workstreams.</p>
           </div>
           <div class="guide-card theme-amber">
             <strong>Attention list</strong>
@@ -2870,19 +2870,19 @@
           <div class="panel">
             <div class="panel-title">
               <div>
-                <h3>Workstream Health Summary</h3>
-                <p class="muted small">Click a status, then select a workstream to view Wins, Blockers, and Next Action.</p>
+                <h3>Project Health Summary</h3>
+                <p class="muted small">Click a status, then open a project and select a workstream to view Wins, Blockers, and Next Action.</p>
               </div>
             </div>
             <div class="health-stack" id="executiveHealth"></div>
             <div class="executive-health-title">
               <div>
-                <h3 id="executiveHealthProjectsTitle">Workstreams Needing Attention</h3>
-                <p class="muted small" id="executiveHealthProjectsSubtitle">Highest-priority workstreams are shown first.</p>
+                <h3 id="executiveHealthProjectsTitle">Projects Needing Attention</h3>
+                <p class="muted small" id="executiveHealthProjectsSubtitle">Highest-priority projects are shown first.</p>
               </div>
             </div>
             <div class="executive-health-projects" id="executiveHealthProjects">
-              <div class="empty"><strong>Select a status</strong>Select a delivery health status to show matching workstreams.</div>
+              <div class="empty"><strong>Select a status</strong>Select a delivery health status to show matching projects.</div>
             </div>
           </div>
           <div class="panel">
@@ -12117,6 +12117,112 @@
         .sort((a, b) => a[0].localeCompare(b[0]));
     }
 
+    function latestReportFromRows(rows = []) {
+      return [...rows].sort((a, b) =>
+        String(b.week || "").localeCompare(String(a.week || "")) ||
+        String(b.updated_at || b.created_at || "").localeCompare(String(a.updated_at || a.created_at || ""))
+      )[0] || rows[0] || null;
+    }
+
+    function projectGroupsFromReports(source = []) {
+      return [...source.reduce((acc, report) => {
+        const project = productDisplay(report.product || "No product");
+        const key = productKey(project) || "no product";
+        if (!acc.has(key)) acc.set(key, { project, rows: [] });
+        acc.get(key).rows.push(report);
+        return acc;
+      }, new Map()).values()].map(group => {
+        const rows = group.rows;
+        const owners = [...new Set(rows.flatMap(report => splitPeople(report.owner).map(normalizePersonDisplay)).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+        const roles = [...new Set(rows.map(report => report.role || "No role"))].sort((a, b) => a.localeCompare(b));
+        const avgProgress = rows.length ? Math.round(rows.reduce((sum, report) => sum + Number(report.progress || 0), 0) / rows.length) : 0;
+        const riskCount = rows.filter(isRiskReport).length;
+        const delayedCount = rows.filter(report => {
+          const status = endDateStatus(report).label;
+          return status === "Major Delay" || status === "Minor Delay";
+        }).length;
+        const blockerCount = rows.filter(hasBlockerSignal).length;
+        const missingNextCount = rows.filter(report => !cleanText(report.next)).length;
+        const latest = latestReportFromRows(rows);
+        return {
+          ...group,
+          owners,
+          roles,
+          avgProgress,
+          riskCount,
+          delayedCount,
+          blockerCount,
+          missingNextCount,
+          latest
+        };
+      }).sort((a, b) =>
+        b.riskCount - a.riskCount ||
+        b.delayedCount - a.delayedCount ||
+        b.blockerCount - a.blockerCount ||
+        a.project.localeCompare(b.project)
+      );
+    }
+
+    function projectSummaryLine(group) {
+      const owners = group.owners.length ? group.owners.join(", ") : "Unassigned";
+      return `${group.rows.length} workstream${group.rows.length === 1 ? "" : "s"} - ${group.avgProgress}% avg progress - ${group.riskCount} risk - ${group.delayedCount} schedule delay - Owner: ${owners}`;
+    }
+
+    function projectWorkstreamButton(report, options = {}) {
+      const attr = options.attr || "data-health-report";
+      const selectedId = options.selectedId || "";
+      const noun = options.noun || "workstream";
+      return `
+        <button class="status-row interactive ${report.id === selectedId ? "selected" : ""}" type="button" ${attr}="${escapeHtml(report.id)}">
+          <div>
+            <span class="product-label">${escapeHtml(report.product || "No product")}</span>
+            <strong>${escapeHtml(reportTitle(report))}</strong>
+            <p class="muted small">${escapeHtml(reportProductLine(report))} - ${escapeHtml(report.owner || "Unassigned")} - ${escapeHtml(report.role || "No role")} - Reporting week ${escapeHtml(report.week || "No date")}${reportEndDate(report) ? ` - ${endDateMarkup(report, "Due")}` : ""}</p>
+            <p class="muted small">${escapeHtml(report.summary || "No summary captured.")}</p>
+            <div class="progress"><div class="bar ${healthClass(report)}" style="width:${Number(report.progress || 0)}%"></div></div>
+          </div>
+          ${statusStageChips(report, "Status")}
+        </button>
+        ${report.id === selectedId ? projectDetailMarkup(report, noun) : ""}
+      `;
+    }
+
+    function portfolioProjectGroupCard(group, options = {}) {
+      const rows = [...group.rows].sort((a, b) =>
+        Number(b.impact || 0) - Number(a.impact || 0) ||
+        Number(a.progress || 0) - Number(b.progress || 0) ||
+        reportTitle(a).localeCompare(reportTitle(b))
+      );
+      const latest = group.latest || rows[0];
+      const attr = options.attr || "data-health-report";
+      const selectedId = options.selectedId || "";
+      const noun = options.noun || "workstream";
+      const maxVisible = options.maxVisible || rows.length;
+      const visibleRows = rows.slice(0, maxVisible);
+      const hiddenCount = Math.max(0, rows.length - visibleRows.length);
+      return `
+        <div class="report-card project-group-card">
+          <div class="panel-title">
+            <div>
+              <span class="product-label">${escapeHtml(group.project)}</span>
+              <h3>${escapeHtml(group.project)}</h3>
+              <p class="muted small">${escapeHtml(projectSummaryLine(group))}</p>
+            </div>
+            <div class="metric-split">
+              <span>${escapeHtml(group.riskCount)} risk</span>
+              <span>${escapeHtml(group.delayedCount)} delay</span>
+              <span>${escapeHtml(group.blockerCount)} blockers</span>
+            </div>
+          </div>
+          ${latest ? `<p class="muted small"><strong>Latest signal:</strong> ${escapeHtml(latest.summary || reportTitle(latest) || "No summary captured.")}</p>` : ""}
+          <div class="report-list">
+            ${visibleRows.map(report => projectWorkstreamButton(report, { attr, selectedId, noun })).join("")}
+            ${hiddenCount ? `<div class="empty compact"><strong>${hiddenCount} more workstream${hiddenCount === 1 ? "" : "s"}</strong>Use the filters or project details to narrow the list.</div>` : ""}
+          </div>
+        </div>
+      `;
+    }
+
     function portfolioDetailCard(report) {
       const tone = healthClass(report);
       return `
@@ -12161,16 +12267,16 @@
           subtitle: "Products represented in the current filters, with their related workstreams."
         },
         workstreams: {
-          title: "Workstreams",
-          subtitle: "All workstreams included in the current filters."
+          title: "Workstreams by Project",
+          subtitle: "Workstreams grouped under each project so the portfolio is easier to explain."
         },
         risk: {
           title: "Products at Risk",
-          subtitle: "Workstreams marked At Risk or Critical in the current filters."
+          subtitle: "Projects with At Risk, Critical, blocker, or schedule risk signals."
         },
         delayed: {
           title: "Schedule delay",
-          subtitle: "Workstreams classified as Minor Delay or Major Delay."
+          subtitle: "Projects with workstreams classified as Minor Delay or Major Delay."
         },
         stage: {
           title: "Stage Mix",
@@ -12178,12 +12284,12 @@
         },
         progress: {
           title: "Progress details",
-          subtitle: "Workstreams sorted from lowest progress to highest."
+          subtitle: "Projects sorted by risk and lowest workstream progress."
         }
       };
 
-      const groups = productGroupsForMetric(config.source);
       const rows = dashboardMetricRows(config.source, metric);
+      const groups = projectGroupsFromReports(metric === "products" ? config.source : rows);
       panel.hidden = false;
       title.textContent = metric === "products"
         ? `${copy.products.title} (${groups.length})`
@@ -12191,23 +12297,9 @@
       subtitle.textContent = copy[metric]?.subtitle || "Filtered dashboard details.";
 
       if (metric === "products") {
-        list.innerHTML = groups.length ? groups.map(([product, productRows]) => {
-          const riskCount = productRows.filter(isRiskReport).length;
-          const delayedCount = productRows.filter(report => incidentFlags(report).delayed || incidentFlags(report).dueSoon).length;
-          const avg = Math.round(productRows.reduce((sum, report) => sum + Number(report.progress || 0), 0) / productRows.length);
-          return `
-            <div class="report-card">
-              <div class="panel-title">
-                <div>
-                  <span class="product-label">${escapeHtml(product)}</span>
-                  <h3>${escapeHtml(product)}</h3>
-                  <p class="muted small">${productRows.length} workstream${productRows.length === 1 ? "" : "s"} - average progress ${avg}% - ${riskCount} risky - ${delayedCount} schedule delay</p>
-                </div>
-              </div>
-              <div class="report-list">${productRows.map(portfolioDetailCard).join("")}</div>
-            </div>
-          `;
-        }).join("") : `<div class="empty"><strong>No products available</strong>No records match the current filters.</div>`;
+        list.innerHTML = groups.length
+          ? groups.map(group => portfolioProjectGroupCard(group, { attr: "data-health-report", selectedId: selectedPortfolioHealthId, noun: "workstream" })).join("")
+          : `<div class="empty"><strong>No projects available</strong>No records match the current filters.</div>`;
         return;
       }
 
@@ -12235,7 +12327,7 @@
       }
 
       list.innerHTML = rows.length
-        ? rows.map(portfolioDetailCard).join("")
+        ? projectGroupsFromReports(rows).map(group => portfolioProjectGroupCard(group, { attr: "data-health-report", selectedId: selectedPortfolioHealthId, noun: "workstream" })).join("")
         : `<div class="empty"><strong>No details available</strong>No records match this indicator and the current filters.</div>`;
     }
 
@@ -12410,36 +12502,27 @@
       const title = document.getElementById("executiveHealthProjectsTitle");
       const subtitle = document.getElementById("executiveHealthProjectsSubtitle");
       if (!selectedExecutiveHealth) {
-        title.textContent = "Portfolio Workstreams";
+        title.textContent = "Portfolio Projects";
         subtitle.textContent = "Select a delivery health status to focus this list.";
-        target.innerHTML = `<div class="empty"><strong>Select a status</strong>Choose a health card above to focus the workstream list.</div>`;
+        target.innerHTML = `<div class="empty"><strong>Select a status</strong>Choose a health card above to focus the project list.</div>`;
         return;
       }
       const selectedLabel = labels[selectedExecutiveHealth] || selectedExecutiveHealth;
-      title.textContent = `Showing: ${selectedLabel} workstreams`;
-      subtitle.textContent = "Select a workstream card below to view Wins, Blockers, and Next Action.";
+      title.textContent = `Showing: ${selectedLabel} projects`;
+      subtitle.textContent = "Open a project, then select a workstream to view Wins, Blockers, and Next Action.";
       const projectRows = source
         .filter(report => report.health === selectedExecutiveHealth)
         .sort((a, b) =>
           Number(b.impact || 0) - Number(a.impact || 0) ||
           Number(b.progress || 0) - Number(a.progress || 0)
-        )
-        .slice(0, 8);
+        );
+      const projectGroups = projectGroupsFromReports(projectRows).slice(0, 8);
       if (!projectRows.some(report => report.id === selectedExecutiveProjectId)) {
         selectedExecutiveProjectId = null;
       }
-      target.innerHTML = projectRows.length ? projectRows.map(report => `
-        <button class="exec-row interactive ${report.id === selectedExecutiveProjectId ? "selected" : ""}" type="button" data-executive-project="${escapeHtml(report.id)}">
-          <div>
-            <span class="product-label">${escapeHtml(report.product || "No product")}</span>
-            <strong>${escapeHtml(reportTitle(report))}</strong>
-            <p class="muted small">${escapeHtml(reportProductLine(report))} - ${escapeHtml(report.owner || "Unassigned")} - ${escapeHtml(report.product_type || "Legacy")} - ${escapeHtml(report.role)} - Reporting week ${escapeHtml(report.week || "No date")}${reportEndDate(report) ? ` - ${endDateMarkup(report)}` : ""}</p>
-            <p class="muted small">${escapeHtml(report.summary || "No summary captured.")}</p>
-          </div>
-          ${statusStageChips(report, "Status")}
-        </button>
-        ${report.id === selectedExecutiveProjectId ? projectDetailMarkup(report, "project") : ""}
-      `).join("") : `<div class="empty"><strong>No matching workstreams</strong>Try changing Reporting week, Type of product, Role / Portfolio view, or Delivery health.</div>`;
+      target.innerHTML = projectGroups.length
+        ? projectGroups.map(group => portfolioProjectGroupCard(group, { attr: "data-executive-project", selectedId: selectedExecutiveProjectId, noun: "project", maxVisible: 5 })).join("")
+        : `<div class="empty"><strong>No matching projects</strong>Try changing Reporting week, Type of product, Role / Portfolio view, or Delivery health.</div>`;
     }
 
     function projectDetailMarkup(report, noun = "card") {
@@ -12500,21 +12583,9 @@
         <section class="health-group">
           <div class="health-group-heading">
             <h3>${escapeHtml(group)}</h3>
-            <span>${groupReports.length} ${groupReports.length === 1 ? "report" : "reports"}</span>
+            <span>${projectGroupsFromReports(groupReports).length} ${projectGroupsFromReports(groupReports).length === 1 ? "project" : "projects"} / ${groupReports.length} ${groupReports.length === 1 ? "workstream" : "workstreams"}</span>
           </div>
-          ${groupReports.map(r => `
-        <button class="status-row interactive ${r.id === selectedPortfolioHealthId ? "selected" : ""}" type="button" data-health-report="${escapeHtml(r.id)}">
-          <div>
-            <span class="product-label">${escapeHtml(r.product || "No product")}</span>
-            <strong>${escapeHtml(reportTitle(r))}</strong>
-            <p class="muted small">${escapeHtml(reportProductLine(r))} - ${escapeHtml(r.owner || "Unassigned")} - ${escapeHtml(r.role)} - Reported ${escapeHtml(r.week || "No date")}${reportEndDate(r) ? ` - ${endDateMarkup(r, "Due")}` : ""}</p>
-            <p class="muted small">${escapeHtml(r.summary)}</p>
-            <div class="progress"><div class="bar ${healthClass(r)}" style="width:${Number(r.progress || 0)}%"></div></div>
-          </div>
-          ${statusStageChips(r, "Status")}
-        </button>
-        ${r.id === selectedPortfolioHealthId ? projectDetailMarkup(r, "card") : ""}
-          `).join("")}
+          ${projectGroupsFromReports(groupReports).map(project => portfolioProjectGroupCard(project, { attr: "data-health-report", selectedId: selectedPortfolioHealthId, noun: "card", maxVisible: 5 })).join("")}
         </section>
       `).join("") : `<div class="empty"><strong>No reports found</strong>Try changing Reporting week, Type of product, Role / Portfolio view, or Delivery health.</div>`;
     }
