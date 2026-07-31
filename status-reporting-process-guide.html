@@ -457,12 +457,134 @@
           <p><strong>Product:</strong> Survey software</p>
           <p><strong>Workstream:</strong> Client onboarding flow</p>
           <p><strong>Owner:</strong> Nadishani</p>
+          <p><strong>Baseline end date:</strong> 2026-07-26</p>
+          <p><strong>End date:</strong> 2026-07-31</p>
+          <p><strong>Depends on:</strong> DevOps environment access</p>
+          <p><strong>Delay root cause:</strong> Environment</p>
           <p><strong>Stage:</strong> QA Review</p>
           <p><strong>Health:</strong> At Risk</p>
+          <p><strong>Progress:</strong> 70%</p>
+          <p><strong>Milestone:</strong> QA sign-off</p>
           <p><strong>Next action:</strong> DevOps to provide credentials by Wednesday; QA restarts regression after access.</p>
+          <p><strong>Corrective action owner:</strong> DevOps</p>
+          <p><strong>Action target date:</strong> 2026-07-24</p>
+          <p><strong>Decision needed:</strong> Confirm whether release can move without the optional reporting widget.</p>
           <p>Resultado: o dashboard consegue mostrar risco, prazo, owner, action queue e impacto.</p>
         </div>
       </div>
+    </section>
+
+    <section class="card">
+      <h2>Como o exemplo aparece nos dashboards</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Campo preenchido</th>
+            <th>Leitura gerada</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Product = Survey software</td>
+            <td>Conta como produto ativo e entra no Weekly Project Brief.</td>
+          </tr>
+          <tr>
+            <td>Feature/workstream = Client onboarding flow</td>
+            <td>Acompanha uma entrega especifica sem duplicar o produto.</td>
+          </tr>
+          <tr>
+            <td>Baseline end date + End date</td>
+            <td>Calcula se a entrega esta Ahead of Schedule, On Time, Minor Delay ou Major Delay.</td>
+          </tr>
+          <tr>
+            <td>Delay root cause + Depends on</td>
+            <td>Mostra causa de atraso, dependencia e possivel critical path.</td>
+          </tr>
+          <tr>
+            <td>Stage + Progress</td>
+            <td>Explica maturidade da entrega e evita progresso sem contexto.</td>
+          </tr>
+          <tr>
+            <td>Blocker/risk + Risk impact + Priority</td>
+            <td>Prioriza o item em Executive View, Incidents & Delays e Action Items.</td>
+          </tr>
+          <tr>
+            <td>Next action + Corrective action owner + Action target date</td>
+            <td>Cria uma acao gerenciavel, com responsavel e prazo.</td>
+          </tr>
+          <tr>
+            <td>Decision needed</td>
+            <td>Entra na fila de decisoes para Manager Meeting e Executive View.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h2>Exemplos de classificacao de prazo</h2>
+      <div class="grid two">
+        <div>
+          <span class="pill green">Ahead of Schedule</span>
+          <p><strong>Baseline end date:</strong> 2026-08-07</p>
+          <p><strong>End date:</strong> 2026-07-30</p>
+          <p>Interpretacao: a data atual foi antecipada. Nao deve aparecer como postponed.</p>
+        </div>
+        <div>
+          <span class="pill green">Delivered</span>
+          <p><strong>Stage:</strong> Completed</p>
+          <p><strong>Progress:</strong> 100%</p>
+          <p>Interpretacao: quando o stage esta Completed, o workstream deve ser considerado entregue.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Exemplos de replanejamento de data</h2>
+      <p>
+        Sempre que a data mudar, preencha <strong>Baseline end date</strong>,
+        <strong>End date</strong>, <strong>Date change reason</strong> e, se houver atraso,
+        <strong>Delay root cause</strong>. Isso separa atraso real de replanejamento aprovado.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Situacao</th>
+            <th>Como preencher</th>
+            <th>Leitura esperada</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Atraso real</strong></td>
+            <td>
+              Baseline: 2026-07-26<br>
+              End date: 2026-08-02<br>
+              Reason: QA regression could not start because credentials were not available.<br>
+              Root cause: Environment
+            </td>
+            <td>Aparece em Incidents & Delays e Action Items com causa operacional clara.</td>
+          </tr>
+          <tr>
+            <td><strong>Replanejamento aprovado</strong></td>
+            <td>
+              Baseline: 2026-07-26<br>
+              End date: 2026-08-09<br>
+              Reason: Leadership approved moving this delivery after production issue resolution.<br>
+              Decision needed: No decision pending; new date already approved.
+            </td>
+            <td>Mudanca de prazo explicada como decisao aprovada, nao atraso sem controle.</td>
+          </tr>
+          <tr>
+            <td><strong>Entrega antecipada</strong></td>
+            <td>
+              Baseline: 2026-08-07<br>
+              End date: 2026-07-30<br>
+              Reason: Development finished earlier after reusing the existing component library.
+            </td>
+            <td>Deve aparecer como Ahead of Schedule, nao Postponed.</td>
+          </tr>
+        </tbody>
+      </table>
     </section>
 
     <section class="card">

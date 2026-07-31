@@ -386,6 +386,64 @@ Conexao:
 - Explica mudancas de prazo para reunioes de gestao.
 - Ajuda a separar atraso real de replanejamento saudavel.
 
+### Como Preencher Replanejamento De Data
+
+Sempre que mudar a data, preencha estes campos juntos:
+
+| Campo | Como preencher |
+| --- | --- |
+| Baseline end date | A data original combinada antes da mudanca. |
+| End date | A nova data esperada de entrega. |
+| Date change reason | Por que a data mudou. |
+| Delay root cause | A causa principal, quando a mudanca representa atraso. |
+| Decision needed | A decisao que precisa ser tomada, se depender de lideranca, cliente ou outro time. |
+
+Regra:
+
+- Se `End date` ficou depois do `Baseline end date`, explique se e atraso real ou replanejamento aprovado.
+- Se `End date` ficou antes do `Baseline end date`, isso e entrega antecipada e deve aparecer como `Ahead of Schedule`.
+- Se a data mudou por decisao de escopo, prioridade ou dependencia externa, explique isso em `Date change reason`.
+- Se a data mudou porque algo bloqueou a entrega, preencha tambem `Delay root cause`, `Blocker/risk`, `Corrective action owner` e `Action target date`.
+
+Exemplo de atraso real:
+
+| Campo | Valor |
+| --- | --- |
+| Baseline end date | 2026-07-26 |
+| End date | 2026-08-02 |
+| Date change reason | QA regression could not start because environment credentials were not available. |
+| Delay root cause | Environment |
+| Blocker/risk | DevOps credentials are blocking regression. |
+| Corrective action owner | DevOps |
+| Action target date | 2026-07-24 |
+
+Leitura esperada: atraso com causa operacional clara. Deve aparecer em Incidents & Delays e Action Items.
+
+Exemplo de replanejamento aprovado:
+
+| Campo | Valor |
+| --- | --- |
+| Baseline end date | 2026-07-26 |
+| End date | 2026-08-09 |
+| Date change reason | Leadership approved moving this delivery after the production issue resolution. |
+| Delay root cause | Priority change |
+| Decision needed | No decision pending; new date already approved. |
+| Action status | In Progress |
+
+Leitura esperada: existe mudanca de prazo, mas a narrativa mostra que foi uma decisao aprovada, nao apenas atraso sem controle.
+
+Exemplo de entrega antecipada:
+
+| Campo | Valor |
+| --- | --- |
+| Baseline end date | 2026-08-07 |
+| End date | 2026-07-30 |
+| Date change reason | Development finished earlier than planned after reusing the existing component library. |
+| Health | On Track |
+| Stage | Release |
+
+Leitura esperada: `Ahead of Schedule`. Nao deve ser marcado como postponed.
+
 ### Corrective Action Owner
 
 Pessoa responsavel por resolver o blocker ou conduzir a acao corretiva.
@@ -628,21 +686,74 @@ Problema: esse report nao gera metrica confiavel. Nao da para saber produto, res
 | Role | Product Manager |
 | Reporting week | 2026-07-20 - 2026-07-24 |
 | Start date | 2026-07-08 |
+| Baseline end date | 2026-07-26 |
 | End date | 2026-07-31 |
+| Depends on | DevOps environment access |
+| Delay root cause | Environment |
+| Date change reason | QA regression moved because credentials were not available on time. |
 | Health | At Risk |
 | Progress | 70 |
 | Stage | QA Review |
+| Milestone | QA sign-off |
 | Summary | QA completed first validation. Two defects remain open and environment credentials are blocking final regression. |
 | Win | Client approved the revised onboarding workflow. |
 | Blocker/risk | DevOps credentials are missing, blocking QA regression. |
 | Next action | DevOps to provide credentials by Wednesday; QA to restart regression after access is confirmed. |
-| Delay root cause | Environment |
 | Corrective action owner | DevOps |
 | Action target date | 2026-07-24 |
 | Action status | Open |
+| Decision needed | Confirm whether release can move without the optional reporting widget. |
+| Risk impact | High |
+| Time to solve | Medium |
 | Priority | High |
 
 Resultado: o dashboard consegue mostrar risco, prazo, owner, stage, next action e impacto.
+
+### Como Esse Exemplo Alimenta O Dashboard
+
+| Informacao do report | Leitura gerada |
+| --- | --- |
+| Product = Survey software | O produto entra na contagem de projetos ativos e no Weekly Project Brief. |
+| Feature/workstream = Client onboarding flow | O dashboard acompanha essa entrega como um workstream unico, sem duplicar o produto. |
+| Baseline end date 2026-07-26 + End date 2026-07-31 | O sistema entende que houve atraso versus plano original. |
+| Delay root cause = Environment | Incidents & Delays consegue agrupar a causa do atraso. |
+| Depends on = DevOps environment access | Delivery Timeline mostra dependencia e possivel critical path. |
+| Stage = QA Review + Progress = 70 | A leitura fica coerente: esta avancado, mas ainda nao entregue. |
+| Blocker/risk + Risk impact = High | Executive View e Action Items priorizam o item. |
+| Corrective action owner = DevOps + Action target date = 2026-07-24 | A fila de acoes mostra quem precisa agir e ate quando. |
+| Decision needed preenchido | Manager Meeting mostra que existe decisao de lideranca/cliente/time. |
+
+### Exemplo De Entrega Adiantada
+
+| Campo | Valor |
+| --- | --- |
+| Product | Zinergy |
+| Feature/workstream | Phase 1 completion and production readiness |
+| Baseline end date | 2026-08-07 |
+| End date | 2026-07-30 |
+| Stage | Release |
+| Progress | 90 |
+| Health | On Track |
+| Summary | Production checklist is nearly complete and the team expects to finish earlier than the original plan. |
+| Next action | Confirm production validation and prepare release notes by Friday. |
+
+Resultado esperado: o sistema deve mostrar `Ahead of Schedule`, nao `Postponed`, porque a data atual foi antecipada em relacao ao baseline.
+
+### Exemplo De Workstream Entregue
+
+| Campo | Valor |
+| --- | --- |
+| Product | ALPHA Sales Platform |
+| Feature/workstream | Sync/First Meeting with DEVs |
+| Stage | Completed |
+| Progress | 100 |
+| Health | On Track |
+| End date | 2026-07-10 |
+| Summary | The handoff was completed and the team has the information required for the next sprint. |
+| Win | Engineering and PM aligned on the sprint structure. |
+| Next action | No delivery action required; monitor next sprint intake. |
+
+Resultado esperado: quando `Stage = Completed`, o workstream deve ser considerado entregue/delivered.
 
 ## Cadencia Semanal Recomendada
 
