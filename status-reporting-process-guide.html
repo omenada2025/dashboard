@@ -292,9 +292,104 @@
             <td>Calcula Ahead of Schedule, On Time, Minor Delay e Major Delay.</td>
           </tr>
           <tr>
+            <td><strong>Baseline end date</strong></td>
+            <td>Data original combinada antes de mudancas de prazo.</td>
+            <td>Compara plano original versus data atual e evita falsa leitura de postponed.</td>
+          </tr>
+          <tr>
+            <td><strong>Depends on</strong></td>
+            <td>Dependencia que pode bloquear ou atrasar a entrega.</td>
+            <td>Alimenta Delivery Timeline, critical path e leitura de bloqueios.</td>
+          </tr>
+          <tr>
+            <td><strong>Milestone</strong></td>
+            <td>Marco principal da entrega, como QA sign-off ou release ready.</td>
+            <td>Ajuda a explicar evolucao sem depender apenas de percentual.</td>
+          </tr>
+          <tr>
             <td><strong>Next action</strong></td>
             <td>Quem faz o que ate quando.</td>
             <td>Alimenta action queue e decisoes de gestao.</td>
+          </tr>
+          <tr>
+            <td><strong>Corrective action owner</strong></td>
+            <td>Responsavel por resolver o blocker, atraso ou follow-up.</td>
+            <td>Cria accountability no Action Items.</td>
+          </tr>
+          <tr>
+            <td><strong>Action target date</strong></td>
+            <td>Data alvo da proxima acao ou acao corretiva.</td>
+            <td>Permite cobrar follow-up e identificar acoes vencidas.</td>
+          </tr>
+          <tr>
+            <td><strong>Action status</strong></td>
+            <td>Status da acao: Open, In Progress, Waiting ou Done.</td>
+            <td>Mostra se a acao saiu do papel.</td>
+          </tr>
+          <tr>
+            <td><strong>Decision needed</strong></td>
+            <td>Decisao necessaria para desbloquear ou acelerar.</td>
+            <td>Alimenta Executive View, Manager Meeting e decision queue.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h2>Mapa de conexao: campo para indicador</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Campo</th>
+            <th>Indicador gerado</th>
+            <th>Pagina impactada</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Product + Feature / workstream</td>
+            <td>Projetos ativos, workstreams, briefing por produto</td>
+            <td>Portfolio Dashboard, Weekly Project Brief, Manager Meeting</td>
+          </tr>
+          <tr>
+            <td>Owner + Role</td>
+            <td>Workload, accountability, feedback individual</td>
+            <td>Work Balance, Owner Feedback, Send Weekly Feedback</td>
+          </tr>
+          <tr>
+            <td>Reporting week</td>
+            <td>Comparacao semanal e historico</td>
+            <td>Todos os dashboards semanais</td>
+          </tr>
+          <tr>
+            <td>Start date + Baseline end date + End date</td>
+            <td>Ahead of Schedule, On Time, Minor Delay, Major Delay</td>
+            <td>Delivery Timeline, Incidents & Delays, Executive View</td>
+          </tr>
+          <tr>
+            <td>Depends on + Delay root cause</td>
+            <td>Critical path e tendencias de causa raiz</td>
+            <td>Delivery Timeline, Incidents & Delays</td>
+          </tr>
+          <tr>
+            <td>Stage + Progress</td>
+            <td>Stage mix, delivered workstreams e maturidade da entrega</td>
+            <td>Portfolio Dashboard, Delivery Timeline, Project Review</td>
+          </tr>
+          <tr>
+            <td>Blocker/Risk + Risk impact + Priority</td>
+            <td>Risco executivo e ranking de atencao</td>
+            <td>Executive View, Report Quality Review, Action Items</td>
+          </tr>
+          <tr>
+            <td>Next action + Corrective action owner + Action target date + Action status</td>
+            <td>Action queue e follow-up gerencial</td>
+            <td>Action Items, Manager Meeting, Owner Feedback</td>
+          </tr>
+          <tr>
+            <td>Decision needed</td>
+            <td>Fila de decisoes para lideranca</td>
+            <td>Executive View, Manager Meeting</td>
           </tr>
         </tbody>
       </table>

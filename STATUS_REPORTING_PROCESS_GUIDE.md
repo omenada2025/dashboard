@@ -30,7 +30,51 @@ Use sempre esta logica:
 | Health | Confianca de entrega. | On Track, In Progress, At Risk, Paused |
 | Progress | Percentual real de conclusao do workstream. | 70% |
 | End date | Data atual esperada de entrega. | 2026-07-31 |
+| Baseline end date | Data original combinada para comparar mudancas de prazo. | 2026-07-28 |
+| Depends on | Dependencia que pode bloquear ou atrasar a entrega. | API credentials |
+| Milestone | Marco da entrega usado para leitura executiva. | QA sign-off |
 | Next action | O que precisa acontecer agora. | QA to finish regression by Friday |
+| Corrective action owner | Responsavel por resolver blocker, atraso ou acao corretiva. | DevOps |
+| Action target date | Data alvo da acao corretiva/proxima acao. | 2026-07-24 |
+| Action status | Situacao da acao aberta. | Open, In Progress, Waiting, Done |
+| Decision needed | Decisao que precisa ser tomada para desbloquear ou acelerar. | Approve scope reduction |
+
+## Como Os Campos Se Conectam Aos Indicadores
+
+Pense no formulario como um sistema conectado. Cada campo alimenta uma leitura diferente:
+
+| Campo preenchido | O que ele responde | Onde aparece |
+| --- | --- | --- |
+| Product | Qual produto/projeto esta sendo acompanhado? | Portfolio Dashboard, Executive View, Weekly Project Brief, Manager Meeting |
+| Feature / workstream | Qual entrega especifica esta em andamento? | Workstream Health, Delivery Timeline, Status Center |
+| Owner | Quem e responsavel pelo status e follow-up? | Work Balance, Owner Feedback, Send Weekly Feedback |
+| Participants | Quem esta envolvido sem ser responsavel final? | Status Center, historico do report |
+| Type of product | E produto legado ou novo? | Filtros, product mix, portfolio segmentation |
+| Role | O trabalho e de Product Manager ou UI/UX? | Work Balance, filtros executivos, carga por time |
+| Reporting week | A qual semana o status pertence? | Todos os dashboards semanais, feedback semanal, historico |
+| Start date | Quando a entrega comecou? | Cycle time, timeline, contexto de atraso |
+| Baseline end date | Qual era a data original prometida? | Schedule movement, date change logic |
+| End date | Qual e a data atual esperada? | Delayed, due soon, ahead of schedule, on time |
+| Date change reason | Por que o prazo mudou? | Report History, schedule analysis, manager review |
+| Depends on | Qual dependencia pode travar a entrega? | Delivery Timeline, critical path, Incident & Delays |
+| Delay root cause | Qual e a causa principal do atraso? | Incident Report, root cause trends, action queue |
+| Health | A entrega esta saudavel, em progresso, em risco ou pausada? | Portfolio Dashboard, Executive View, health mix |
+| Progress | Quanto foi concluido? | Average progress, product brief, owner performance |
+| Stage | Onde o workstream esta no fluxo? | Stage Mix, Delivery Timeline, delivered workstreams |
+| Milestone | Qual marco esta sendo acompanhado? | Delivery Timeline, project talk track |
+| Summary | O que mudou nesta semana? | Project brief, report cards, executive narrative |
+| Win | Qual conquista deve ser comunicada? | Weekly Project Brief, Manager Meeting, Owner Feedback |
+| Blocker or risk | O que pode impedir a entrega? | Incidents & Delays, Action Items, risk radar |
+| Next action | O que precisa acontecer agora? | Action Items, feedback semanal, executive decision queue |
+| Corrective action owner | Quem deve resolver o problema? | Action queue, accountability, coaching feedback |
+| Action target date | Ate quando a acao precisa acontecer? | Action queue, overdue actions, management follow-up |
+| Action status | A acao esta aberta, em andamento, esperando ou concluida? | Action Items, weekly follow-up |
+| Decision needed | Que decisao precisa de lideranca/cliente/time? | Executive View, Manager Meeting, decision queue |
+| Risk impact | Qual o impacto se o risco acontecer? | Incident severity, executive prioritization |
+| Time to solve | Quanto tempo estimado para resolver? | Risk prioritization, action planning |
+| Priority | Qual urgencia do item? | Executive View, Report Quality Review, Action Items |
+
+Se um campo fica vazio, a pagina que depende dele perde qualidade. Exemplo: sem `End date`, o sistema nao sabe se o workstream esta atrasado. Sem `Next action`, o report vira apenas uma descricao, nao uma acao gerenciavel.
 
 ## Regra Principal
 
@@ -129,6 +173,12 @@ Regra:
 
 Use a data em que o workstream realmente comecou. Isso ajuda a medir tempo de ciclo.
 
+Conexao:
+
+- Ajuda a entender ha quanto tempo o workstream esta ativo.
+- Da contexto para progresso baixo em atividades antigas.
+- Apoia leitura de ciclo de entrega na timeline.
+
 ### End Date
 
 Use a data atual esperada de entrega. Este campo e essencial para:
@@ -143,6 +193,22 @@ Use a data atual esperada de entrega. Este campo e essencial para:
 
 Se o end date estiver vazio, a ferramenta nao consegue calcular o status de prazo corretamente.
 
+### Baseline End Date
+
+Use a data original prometida ou planejada antes de qualquer mudanca.
+
+Conexao:
+
+- Compara plano original versus data atual.
+- Ajuda a identificar mudanca real de prazo.
+- Evita classificar como `Postponed` quando a data foi antecipada.
+
+Exemplo:
+
+- Baseline end date: `2026-08-07`
+- End date atualizado: `2026-07-30`
+- Interpretacao: entrega antecipada, portanto `Ahead of Schedule`.
+
 ### Depends On
 
 Use quando o workstream depende de outro trabalho, time, sistema, cliente ou decisao.
@@ -154,6 +220,31 @@ Exemplos:
 - Depends on: `API credentials`
 
 Isso ajuda a identificar caminho critico.
+
+Conexao:
+
+- Alimenta Delivery Timeline.
+- Ajuda a detectar critical path.
+- Mostra por que um workstream aparentemente ativo nao avanca.
+
+### Milestone
+
+Use milestone para indicar o marco principal da entrega.
+
+Exemplos:
+
+- `Requirements approved`
+- `Design signed off`
+- `Dev handoff complete`
+- `QA sign-off`
+- `Client implementation`
+- `Release ready`
+
+Conexao:
+
+- Ajuda a explicar progresso sem depender apenas de percentual.
+- Melhora a narrativa executiva.
+- Mostra em que checkpoint o projeto esta na Delivery Timeline.
 
 ### Health
 
@@ -272,6 +363,12 @@ Exemplos:
 - `Resource availability`
 - `Technical issue`
 
+Conexao:
+
+- Alimenta Incidents & Delays.
+- Ajuda a gerar tendencias de causa raiz.
+- Permite mostrar se os atrasos sao causados por cliente, tecnologia, ambiente, dependencia ou escopo.
+
 ### Date Change Reason
 
 Use quando a data de entrega mudar. A ferramenta diferencia:
@@ -283,15 +380,31 @@ Use quando a data de entrega mudar. A ferramenta diferencia:
 
 Se a data foi antecipada, nao classifique como postponed.
 
+Conexao:
+
+- Aparece no historico do report.
+- Explica mudancas de prazo para reunioes de gestao.
+- Ajuda a separar atraso real de replanejamento saudavel.
+
 ### Corrective Action Owner
 
 Pessoa responsavel por resolver o blocker ou conduzir a acao corretiva.
 
 Pode ser diferente do owner do report.
 
+Conexao:
+
+- Alimenta accountability no Action Items.
+- Ajuda a identificar quem precisa agir, mesmo quando o owner do report nao e quem resolve.
+
 ### Action Target Date
 
 Data esperada para concluir a proxima acao. Sem essa data, o action queue perde forca.
+
+Conexao:
+
+- Permite cobrar follow-up.
+- Ajuda a priorizar acoes vencidas ou proximas do prazo.
 
 ### Action Status
 
@@ -302,6 +415,11 @@ Use para acompanhar a execucao da proxima acao:
 - `Waiting`
 - `Done`
 
+Conexao:
+
+- Mostra se a acao saiu do papel.
+- Evita que o mesmo blocker apareca toda semana sem progresso.
+
 ### Decision Needed
 
 Use quando lideranca, cliente ou outro time precisa decidir algo.
@@ -309,6 +427,50 @@ Use quando lideranca, cliente ou outro time precisa decidir algo.
 Bom:
 
 - `Need CEO approval to pause legacy migration and redirect team to production defects.`
+
+Conexao:
+
+- Alimenta Executive View e Manager Meeting.
+- Deve ser usado quando o problema nao pode ser resolvido apenas pelo owner.
+
+### Risk Impact
+
+Use para indicar o tamanho do impacto se o risco acontecer.
+
+Exemplos:
+
+- `Low`: impacto pequeno, sem afetar entrega principal.
+- `Medium`: pode afetar data, qualidade ou escopo.
+- `High`: pode afetar cliente, release, receita, dependencia critica ou equipe executiva.
+
+Conexao:
+
+- Ajuda a priorizar riscos na visao executiva.
+- Distingue pequenos problemas de riscos que precisam de decisao.
+
+### Time To Solve
+
+Use para indicar o esforco ou tempo esperado para resolver o blocker.
+
+Exemplos:
+
+- `Short`: pode ser resolvido rapidamente.
+- `Medium`: precisa de acompanhamento.
+- `Long`: pode impactar planejamento, equipe ou data.
+
+Conexao:
+
+- Ajuda a decidir se precisa de escalacao.
+- Ajuda a planejar follow-up semanal.
+
+### Priority
+
+Use para indicar urgencia.
+
+Conexao:
+
+- Alimenta ranking de Report Quality Review.
+- Destaca itens criticos em Executive View e Action Items.
 
 ## Como O Dashboard Calcula Status Do Projeto
 
@@ -511,16 +673,18 @@ Resultado: o dashboard consegue mostrar risco, prazo, owner, stage, next action 
 | Workstreams | Feature/workstream |
 | Delivered workstreams | Stage = Completed |
 | Stage mix | Stage |
-| Schedule delay | Start date, end date, date changes |
+| Schedule delay | Start date, baseline end date, end date, date changes |
 | Ahead of Schedule | End date antecipado |
 | On Time | End date dentro do prazo |
 | Minor/Major Delay | End date atrasado |
 | Blocker concentration | Blocker/risk + product |
-| Action queue | Next action + action owner + action status |
+| Action queue | Next action + corrective action owner + action target date + action status |
 | Owner workload | Owner + workstreams |
 | Report quality | Campos faltando ou genericos |
 | Weekly feedback | Owner + report quality + risks + actions |
 | Project brief | Product + stage + health + progress + actions |
+| Critical path | Depends on + delay root cause + end date |
+| Decision queue | Decision needed + priority + risk impact |
 
 ## Regra De Ouro Para Reuniao De Status
 
@@ -536,4 +700,3 @@ Para falar sobre um produto na reuniao, use este roteiro:
 8. Decisao: precisa de lideranca?
 
 Se o report nao responde essas perguntas, ele precisa ser melhorado antes de entrar na reuniao.
-
