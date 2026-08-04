@@ -1786,12 +1786,15 @@
 
     .load-more-row {
       display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
       justify-content: center;
       margin-top: 16px;
     }
 
     .load-more-row .btn {
-      min-width: min(260px, 100%);
+      min-width: min(160px, 100%);
     }
 
     .project-talk-card {
@@ -4802,9 +4805,8 @@
       week: "",
       role: "all"
     };
-    const TALK_TRACK_INITIAL_LIMIT = 8;
-    const TALK_TRACK_LOAD_STEP = 8;
-    let talkTrackVisibleCount = TALK_TRACK_INITIAL_LIMIT;
+    const TALK_TRACK_PAGE_SIZE = 4;
+    let talkTrackPage = 0;
     const ownerFeedbackFilters = {
       owner: "all",
       product: "all",
@@ -8104,17 +8106,23 @@
           <span class="muted small">${escapeHtml(card.note)}</span>
         </div>
       `).join("");
-      const visibleNarratives = narratives.slice(0, talkTrackVisibleCount);
+      const totalPages = Math.max(1, Math.ceil(narratives.length / TALK_TRACK_PAGE_SIZE));
+      talkTrackPage = Math.min(Math.max(0, talkTrackPage), totalPages - 1);
+      const startIndex = talkTrackPage * TALK_TRACK_PAGE_SIZE;
+      const visibleNarratives = narratives.slice(startIndex, startIndex + TALK_TRACK_PAGE_SIZE);
       projectCards.innerHTML = narratives.length
         ? visibleNarratives.map(talkTrackCardMarkup).join("")
         : `<div class="empty"><strong>No project talk track yet</strong>Adjust filters or add reports to generate visual project cards.</div>`;
       if (loadMore) {
-        const remaining = Math.max(0, narratives.length - visibleNarratives.length);
-        loadMore.innerHTML = remaining
-          ? `<button class="btn soft" type="button" id="loadMoreTalkTrackProjects">Load ${Math.min(TALK_TRACK_LOAD_STEP, remaining)} more projects (${remaining} remaining)</button>`
-          : narratives.length > TALK_TRACK_INITIAL_LIMIT
-            ? `<span class="muted small">All ${narratives.length} project cards are visible.</span>`
-            : "";
+        const firstVisible = narratives.length ? startIndex + 1 : 0;
+        const lastVisible = Math.min(startIndex + TALK_TRACK_PAGE_SIZE, narratives.length);
+        loadMore.innerHTML = narratives.length > TALK_TRACK_PAGE_SIZE
+          ? `
+            <button class="btn soft" type="button" id="talkTrackPrevPage" ${talkTrackPage === 0 ? "disabled" : ""}>Previous</button>
+            <span class="muted small">Page ${talkTrackPage + 1} of ${totalPages} - showing ${firstVisible}-${lastVisible} of ${narratives.length} projects</span>
+            <button class="btn soft" type="button" id="talkTrackNextPage" ${talkTrackPage >= totalPages - 1 ? "disabled" : ""}>Next</button>
+          `
+          : "";
       }
     }
 
@@ -13742,11 +13750,13 @@
     });
 
     document.addEventListener("click", event => {
-      const loadMoreTalkTrackButton = event.target.closest("#loadMoreTalkTrackProjects");
-      if (!loadMoreTalkTrackButton) return;
-      talkTrackVisibleCount += TALK_TRACK_LOAD_STEP;
+      const prevTalkTrackButton = event.target.closest("#talkTrackPrevPage");
+      const nextTalkTrackButton = event.target.closest("#talkTrackNextPage");
+      if (!prevTalkTrackButton && !nextTalkTrackButton) return;
+      if (prevTalkTrackButton?.disabled || nextTalkTrackButton?.disabled) return;
+      talkTrackPage += nextTalkTrackButton ? 1 : -1;
       renderProjectTalkTrack();
-      logUserAction("project_talk_track_load_more", { visible_count: talkTrackVisibleCount }, { target_type: "project_talk_track", target_id: "load_more" });
+      logUserAction("project_talk_track_page_changed", { page: talkTrackPage + 1 }, { target_type: "project_talk_track", target_id: "pagination" });
     });
 
     document.getElementById("createUserForm").addEventListener("submit", async event => {
@@ -14437,28 +14447,28 @@
 
     document.getElementById("talkTrackOwnerFilter").addEventListener("change", event => {
       talkTrackFilters.owner = event.target.value;
-      talkTrackVisibleCount = TALK_TRACK_INITIAL_LIMIT;
+      talkTrackPage = 0;
       logFilterChange("project_talk_track", "owner", event.target.value);
       renderProjectTalkTrack();
     });
 
     document.getElementById("talkTrackProductFilter").addEventListener("change", event => {
       talkTrackFilters.product = event.target.value;
-      talkTrackVisibleCount = TALK_TRACK_INITIAL_LIMIT;
+      talkTrackPage = 0;
       logFilterChange("project_talk_track", "project", event.target.value);
       renderProjectTalkTrack();
     });
 
     document.getElementById("talkTrackWeekFilter").addEventListener("change", event => {
       talkTrackFilters.week = event.target.value;
-      talkTrackVisibleCount = TALK_TRACK_INITIAL_LIMIT;
+      talkTrackPage = 0;
       logFilterChange("project_talk_track", "date", event.target.value);
       renderProjectTalkTrack();
     });
 
     document.getElementById("talkTrackRoleFilter").addEventListener("change", event => {
       talkTrackFilters.role = event.target.value;
-      talkTrackVisibleCount = TALK_TRACK_INITIAL_LIMIT;
+      talkTrackPage = 0;
       logFilterChange("project_talk_track", "role", event.target.value);
       renderProjectTalkTrack();
     });
