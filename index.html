@@ -1784,6 +1784,16 @@
       gap: 14px;
     }
 
+    .load-more-row {
+      display: flex;
+      justify-content: center;
+      margin-top: 16px;
+    }
+
+    .load-more-row .btn {
+      min-width: min(260px, 100%);
+    }
+
     .project-talk-card {
       display: grid;
       gap: 12px;
@@ -3181,6 +3191,7 @@
             </div>
           </div>
           <div class="project-talk-grid" id="talkTrackProjectCards"></div>
+          <div class="load-more-row" id="talkTrackLoadMore"></div>
         </div>
       </section>
 
@@ -4791,6 +4802,9 @@
       week: "",
       role: "all"
     };
+    const TALK_TRACK_INITIAL_LIMIT = 8;
+    const TALK_TRACK_LOAD_STEP = 8;
+    let talkTrackVisibleCount = TALK_TRACK_INITIAL_LIMIT;
     const ownerFeedbackFilters = {
       owner: "all",
       product: "all",
@@ -8071,6 +8085,7 @@
     function renderProjectTalkTrack() {
       const cards = document.getElementById("talkTrackCards");
       const projectCards = document.getElementById("talkTrackProjectCards");
+      const loadMore = document.getElementById("talkTrackLoadMore");
       if (!cards || !projectCards) return;
       fillSelect("talkTrackProductFilter", reports.map(report => report.product), "All projects", talkTrackFilters.product);
       fillSelect("talkTrackOwnerFilter", uniqueOwners(), "All owners", talkTrackFilters.owner);
@@ -8089,9 +8104,18 @@
           <span class="muted small">${escapeHtml(card.note)}</span>
         </div>
       `).join("");
+      const visibleNarratives = narratives.slice(0, talkTrackVisibleCount);
       projectCards.innerHTML = narratives.length
-        ? narratives.map(talkTrackCardMarkup).join("")
+        ? visibleNarratives.map(talkTrackCardMarkup).join("")
         : `<div class="empty"><strong>No project talk track yet</strong>Adjust filters or add reports to generate visual project cards.</div>`;
+      if (loadMore) {
+        const remaining = Math.max(0, narratives.length - visibleNarratives.length);
+        loadMore.innerHTML = remaining
+          ? `<button class="btn soft" type="button" id="loadMoreTalkTrackProjects">Load ${Math.min(TALK_TRACK_LOAD_STEP, remaining)} more projects (${remaining} remaining)</button>`
+          : narratives.length > TALK_TRACK_INITIAL_LIMIT
+            ? `<span class="muted small">All ${narratives.length} project cards are visible.</span>`
+            : "";
+      }
     }
 
     function projectBriefMeetingOverviewMarkup(items, narratives, filters) {
@@ -10807,6 +10831,7 @@
     const HEAVY_RENDER_VIEWS = new Set([
       "managementReview",
       "weeklyProjectBrief",
+      "projectTalkTrack",
       "reportAnalysis",
       "ownerFeedback",
       "actionItems",
@@ -13716,6 +13741,14 @@
       logout();
     });
 
+    document.addEventListener("click", event => {
+      const loadMoreTalkTrackButton = event.target.closest("#loadMoreTalkTrackProjects");
+      if (!loadMoreTalkTrackButton) return;
+      talkTrackVisibleCount += TALK_TRACK_LOAD_STEP;
+      renderProjectTalkTrack();
+      logUserAction("project_talk_track_load_more", { visible_count: talkTrackVisibleCount }, { target_type: "project_talk_track", target_id: "load_more" });
+    });
+
     document.getElementById("createUserForm").addEventListener("submit", async event => {
       event.preventDefault();
       await createUserFromForm(event.currentTarget);
@@ -14404,24 +14437,28 @@
 
     document.getElementById("talkTrackOwnerFilter").addEventListener("change", event => {
       talkTrackFilters.owner = event.target.value;
+      talkTrackVisibleCount = TALK_TRACK_INITIAL_LIMIT;
       logFilterChange("project_talk_track", "owner", event.target.value);
       renderProjectTalkTrack();
     });
 
     document.getElementById("talkTrackProductFilter").addEventListener("change", event => {
       talkTrackFilters.product = event.target.value;
+      talkTrackVisibleCount = TALK_TRACK_INITIAL_LIMIT;
       logFilterChange("project_talk_track", "project", event.target.value);
       renderProjectTalkTrack();
     });
 
     document.getElementById("talkTrackWeekFilter").addEventListener("change", event => {
       talkTrackFilters.week = event.target.value;
+      talkTrackVisibleCount = TALK_TRACK_INITIAL_LIMIT;
       logFilterChange("project_talk_track", "date", event.target.value);
       renderProjectTalkTrack();
     });
 
     document.getElementById("talkTrackRoleFilter").addEventListener("change", event => {
       talkTrackFilters.role = event.target.value;
+      talkTrackVisibleCount = TALK_TRACK_INITIAL_LIMIT;
       logFilterChange("project_talk_track", "role", event.target.value);
       renderProjectTalkTrack();
     });
