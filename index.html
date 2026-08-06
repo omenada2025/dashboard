@@ -4806,7 +4806,9 @@
       role: "all"
     };
     const TALK_TRACK_PAGE_SIZE = 4;
+    const DEFAULT_PAGE_SIZE = 4;
     let talkTrackPage = 0;
+    const paginationState = {};
     const ownerFeedbackFilters = {
       owner: "all",
       product: "all",
@@ -4831,6 +4833,40 @@
     let reportHistoryDate = "";
     let reportAuditLoadingId = "";
     const reportAuditLogsById = new Map();
+
+    function pageStateFor(key, total, pageSize = DEFAULT_PAGE_SIZE) {
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      const page = Math.min(Math.max(Number(paginationState[key] || 0), 0), totalPages - 1);
+      paginationState[key] = page;
+      const start = page * pageSize;
+      const end = Math.min(start + pageSize, total);
+      return { key, page, totalPages, pageSize, total, start, end };
+    }
+
+    function pagedItems(items, key, pageSize = DEFAULT_PAGE_SIZE) {
+      const pager = pageStateFor(key, items.length, pageSize);
+      return { pager, items: items.slice(pager.start, pager.end) };
+    }
+
+    function paginationControlsMarkup(key, pager, noun = "items") {
+      if (!pager.total || pager.total <= pager.pageSize) return "";
+      return `
+        <div class="load-more-row pagination-row">
+          <span class="muted small">Showing ${pager.start + 1}-${pager.end} of ${pager.total} ${escapeHtml(noun)}</span>
+          <div class="report-actions">
+            <button class="btn soft" type="button" data-page-prev="${escapeHtml(key)}" ${pager.page === 0 ? "disabled" : ""}>Previous</button>
+            <span class="muted small">Page ${pager.page + 1} of ${pager.totalPages}</span>
+            <button class="btn soft" type="button" data-page-next="${escapeHtml(key)}" ${pager.page >= pager.totalPages - 1 ? "disabled" : ""}>Next</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function paginatedListMarkup(items, key, renderItem, emptyMarkup, noun = "items", pageSize = DEFAULT_PAGE_SIZE) {
+      if (!items.length) return emptyMarkup;
+      const page = pagedItems(items, key, pageSize);
+      return `${page.items.map(renderItem).join("")}${paginationControlsMarkup(key, page.pager, noun)}`;
+    }
 
     function loadReports() {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -7238,8 +7274,8 @@
       refreshEditQualityCheck();
     }
 
-    function renderAnalysisList(items) {
-      return items.map(({ report, analysis, rank }) => `
+    function renderAnalysisList(items, pageKey = "analysisList") {
+      return paginatedListMarkup(items, pageKey, ({ report, analysis, rank }) => `
         <div class="report-card">
           <div class="panel-title">
             <div>
@@ -7262,7 +7298,7 @@
             <div><strong>Lesson learned</strong><p class="muted small">${escapeHtml(analysis.lessons[0] || "This report is clear enough to support decisions.")}</p></div>
           </div>
         </div>
-      `).join("");
+      `, `<div class="empty"><strong>No report analysis</strong>No reports match the current filters.</div>`, "reports");
     }
 
     function weeklyMetricsNarrative(items, filters = analysisFilters) {
@@ -8232,7 +8268,7 @@
         if (overview) overview.innerHTML = projectBriefMeetingOverviewMarkup(items, narratives, filters);
         if (attention) attention.innerHTML = projectBriefAttentionListMarkup(narratives);
         if (text) text.value = managementWeeklyProjectBriefTextFromNarratives(narratives, filters);
-        list.innerHTML = narratives.length ? narratives.map(project => `
+        list.innerHTML = paginatedListMarkup(narratives, "weeklyProjectBriefNarratives", project => `
         <details class="report-card">
           <summary class="panel-title">
             <div>
@@ -8254,7 +8290,7 @@
             <div><strong>Win</strong><p class="muted small">${escapeHtml(project.win)}</p></div>
           </div>
         </details>
-        `).join("") : `<div class="empty"><strong>No project briefs</strong>No reports match the current filters.</div>`;
+        `, `<div class="empty"><strong>No project briefs</strong>No reports match the current filters.</div>`, "project briefs");
       }, 0);
     }
 
@@ -8684,7 +8720,7 @@
       title.textContent = `${copy.title} (${rows.length})`;
       subtitle.textContent = copy.subtitle;
       list.innerHTML = rows.length
-        ? renderAnalysisList(rows)
+        ? renderAnalysisList(rows, `analysisDrilldown-${selectedAnalysisMetric || "all"}`)
         : `<div class="empty"><strong>No matching reports</strong>No reports match this card and the current filters.</div>`;
     }
 
@@ -8734,7 +8770,7 @@
         ? `${activeCopy.title}: ${activeItems.length} of ${items.length} report${items.length === 1 ? "" : "s"} shown. ${needsAction} need action, ${needsRefinement} need improvement, ${clear} look clear.`
         : "No reports match the current analysis filters.";
       list.innerHTML = activeItems.length
-        ? renderAnalysisList(activeItems)
+        ? renderAnalysisList(activeItems, selectedAnalysisMetric ? `analysisActive-${selectedAnalysisMetric}` : "analysisActive")
         : `<div class="empty"><strong>No reports to analyze</strong>Adjust filters or add status reports to populate this view.</div>`;
     }
 
@@ -8920,7 +8956,7 @@
           <button class="btn soft" type="button" data-owner-feedback-metric="reviewed">Show all owners</button>
         </div>
         <div class="report-list owner-feedback-insight-list">
-          ${metricRows.length ? metricRows.slice(0, 5).map(row => `
+          ${paginatedListMarkup(metricRows, `ownerFeedbackInsight-${metric}`, row => `
             <div class="report-card">
               <div class="panel-title">
                 <div>
@@ -8932,7 +8968,7 @@
               <p class="muted small"><strong>Coaching focus:</strong> ${escapeHtml(row.recommendation)}</p>
               <p class="muted small"><strong>Start with:</strong> ${escapeHtml(row.nextFocus)}</p>
             </div>
-          `).join("") : `<div class="empty"><strong>${escapeHtml(copy.empty)}</strong>Change filters or review the full owner queue below.</div>`}
+          `, `<div class="empty"><strong>${escapeHtml(copy.empty)}</strong>Change filters or review the full owner queue below.</div>`, "owners")}
         </div>
       `;
     }
@@ -8970,7 +9006,7 @@
       summary.textContent = rows.length
         ? `${rows.length} owner${rows.length === 1 ? "" : "s"} reviewed. ${needsAction} need focused follow-up. Click an owner card to use the feedback.`
         : "No owner feedback matches the current filters.";
-      list.innerHTML = rows.length ? rows.map(row => {
+      list.innerHTML = paginatedListMarkup(rows, "ownerFeedbackList", row => {
         const email = ownerEmailForName(row.owner);
         const feedback = ownerFeedbackText(row);
         const mailto = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent("Weekly status feedback")}&body=${encodeURIComponent(feedback)}`;
@@ -9006,7 +9042,7 @@
             </div>
           </div>
         `;
-      }).join("") : `<div class="empty"><strong>No owner feedback yet</strong>Adjust filters or add status reports to generate owner feedback.</div>`;
+      }, `<div class="empty"><strong>No owner feedback yet</strong>Adjust filters or add status reports to generate owner feedback.</div>`, "owners");
     }
 
     function actionItemsFromAnalysis(items) {
@@ -9120,7 +9156,7 @@
       summary.textContent = actions.length
         ? `${activeActionCard.label}: ${actions.length} action item${actions.length === 1 ? "" : "s"} generated from ${items.length} report${items.length === 1 ? "" : "s"}.`
         : "No action items match the current filters.";
-      list.innerHTML = actions.length ? actions.map(action => `
+      list.innerHTML = paginatedListMarkup(actions, `actionItems-${actionItemFilters.type || "all"}`, action => `
         <div class="report-card">
           <div class="panel-title">
             <div>
@@ -9140,7 +9176,7 @@
             <div><strong>End date</strong><p class="muted small">${action.report.end_date ? endDateMarkup(action.report) : "No end date captured."}</p></div>
           </div>
         </div>
-      `).join("") : `<div class="empty"><strong>No action items</strong>No blockers, missing next actions, escalations, or schedule recovery items match the current filters.</div>`;
+      `, `<div class="empty"><strong>No action items</strong>No blockers, missing next actions, escalations, or schedule recovery items match the current filters.</div>`, "action items");
     }
 
     function selectedWeeklyOwnerLabel() {
@@ -9775,9 +9811,13 @@
       panel.hidden = false;
       title.textContent = `${selected.owner} workstreams`;
       subtitle.textContent = `${selected.role} - ${rows.length} workstream${rows.length === 1 ? "" : "s"} across ${selected.products.size} project${selected.products.size === 1 ? "" : "s"}.`;
-      list.innerHTML = rows.length
-        ? rows.map(workloadDetailCard).join("")
-        : `<div class="empty"><strong>No workstreams found</strong>This owner has no matching PM or UI/UX workstreams.</div>`;
+      list.innerHTML = paginatedListMarkup(
+        rows,
+        `workloadDetail-${selectedWorkloadKey || "selected"}`,
+        workloadDetailCard,
+        `<div class="empty"><strong>No workstreams found</strong>This owner has no matching PM or UI/UX workstreams.</div>`,
+        "workstreams"
+      );
     }
 
     function renderWorkBalance() {
@@ -9814,7 +9854,7 @@
         selectedWorkloadKey = "";
       }
 
-      ownershipTarget.innerHTML = ownershipRows.length ? ownershipRows.map(item => `
+      ownershipTarget.innerHTML = paginatedListMarkup(ownershipRows, "workBalanceOwners", item => `
         <button class="report-card interactive workload-card ${workloadKey(item.role, item.owner) === selectedWorkloadKey ? "selected" : ""}" type="button" data-workload-owner="${escapeHtml(item.owner)}" data-workload-role="${escapeHtml(item.role)}">
           <header>
             <div>
@@ -9837,7 +9877,7 @@
           <p class="muted small"><strong>PM recommendation:</strong> ${escapeHtml(workloadRecommendation(item, item.role === "UI/UX" ? uxAverage : pmAverage))}</p>
           <span class="muted small">Click to view workstreams</span>
         </button>
-      `).join("") : `<div class="empty"><strong>No workload yet</strong>Add status reports with PM or UI/UX roles to populate this view.</div>`;
+      `, `<div class="empty"><strong>No workload yet</strong>Add status reports with PM or UI/UX roles to populate this view.</div>`, "owners");
       renderWorkloadDetail(ownershipRows);
     }
 
@@ -9858,7 +9898,7 @@
         target.innerHTML = `<div class="empty"><strong>No managed users yet</strong>Use the Create User form above to add users. Default system users are hidden from this list.</div>`;
         return;
       }
-      target.innerHTML = managedUsers.map(user => `
+      target.innerHTML = paginatedListMarkup(managedUsers, "userManagementUsers", user => `
         <div class="report-card user-card">
           <header>
             <div>
@@ -9892,7 +9932,7 @@
             <button class="btn danger" type="button" data-delete-user="${escapeHtml(user.username)}" ${user.username === currentUser?.username ? "disabled" : ""}>Delete user</button>
           </div>
         </div>
-      `).join("");
+      `, `<div class="empty"><strong>No managed users yet</strong>Use the Create User form above to add users. Default system users are hidden from this list.</div>`, "users");
       renderWorkBalance();
     }
 
@@ -9969,7 +10009,7 @@
         return;
       }
 
-      list.innerHTML = rows.map(row => {
+      list.innerHTML = paginatedListMarkup(rows, "userLogRows", row => {
         const details = parseUserLogDetails(row);
         const detailPreview = Object.entries(details)
           .filter(([key, value]) => value !== null && value !== "" && !["user_agent"].includes(key))
@@ -9995,7 +10035,7 @@
             ${detailPreview ? `<div class="report-card-detail"><div class="user-log-json">${escapeHtml(detailPreview)}</div></div>` : ""}
           </div>
         `;
-      }).join("");
+      }, `<div class="empty"><strong>No user log activity found</strong>${escapeHtml(userLogLoadMessage)}</div>`, "events");
     }
 
     async function refreshUserLog() {
@@ -13757,6 +13797,18 @@
       talkTrackPage += nextTalkTrackButton ? 1 : -1;
       renderProjectTalkTrack();
       logUserAction("project_talk_track_page_changed", { page: talkTrackPage + 1 }, { target_type: "project_talk_track", target_id: "pagination" });
+    });
+
+    document.addEventListener("click", event => {
+      const prevButton = event.target.closest("[data-page-prev]");
+      const nextButton = event.target.closest("[data-page-next]");
+      if (!prevButton && !nextButton) return;
+      const button = prevButton || nextButton;
+      if (button.disabled) return;
+      const key = prevButton ? prevButton.dataset.pagePrev : nextButton.dataset.pageNext;
+      paginationState[key] = Math.max(0, Number(paginationState[key] || 0) + (nextButton ? 1 : -1));
+      renderAllSafely("pagination");
+      logUserAction("page_changed", { key, page: Number(paginationState[key] || 0) + 1 }, { target_type: "pagination", target_id: key });
     });
 
     document.getElementById("createUserForm").addEventListener("submit", async event => {

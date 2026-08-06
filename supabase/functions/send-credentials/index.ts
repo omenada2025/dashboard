@@ -14,6 +14,7 @@ type InvitePayload = {
   loginUrl?: string;
   subject?: string;
   message?: string;
+  htmlMessage?: string;
 };
 
 function jsonResponse(body: Record<string, unknown>, status = 200) {
@@ -78,7 +79,10 @@ function htmlEmail(payload: Required<InvitePayload>) {
   `;
 }
 
-function htmlFeedbackEmail(displayName: string, message: string) {
+function htmlFeedbackEmail(displayName: string, message: string, htmlMessage?: string) {
+  if (htmlMessage) {
+    return htmlMessage;
+  }
   return `
     <div style="font-family:Arial,sans-serif;line-height:1.5;color:#17212b">
       <h2>Omena Consulting weekly feedback</h2>
@@ -108,6 +112,7 @@ Deno.serve(async (request) => {
       const displayName = payload.displayName || payload.username || "User";
       const subject = payload.subject || "Omena Consulting weekly status feedback";
       const message = payload.message || "";
+      const htmlMessage = payload.htmlMessage || "";
 
       if (!to || !message) {
         return jsonResponse({ error: "Missing required feedback fields" }, 400);
@@ -129,7 +134,7 @@ Deno.serve(async (request) => {
           from: { email: fromEmail, name: fromName },
           content: [
             { type: "text/plain", value: message },
-            { type: "text/html", value: htmlFeedbackEmail(displayName, message) },
+            { type: "text/html", value: htmlFeedbackEmail(displayName, message, htmlMessage) },
           ],
         }),
       });
@@ -157,6 +162,7 @@ Deno.serve(async (request) => {
       loginUrl: payload.loginUrl || "",
       subject: payload.subject || "",
       message: payload.message || "",
+      htmlMessage: payload.htmlMessage || "",
     };
 
     if (!requiredPayload.to || !requiredPayload.username || !requiredPayload.password || !requiredPayload.loginUrl) {
