@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Omena Consulting - Product Governance Guide</title>
+  <style>
+    :root {
+      --ink: #12202f; --muted: #617187; --line: #d7e1eb; --soft: #f4f8fb;
+      --blue: #0f5574; --green: #16845f; --amber: #c98216; --red: #b51f4a;
+      --shadow: 0 18px 45px rgba(18, 32, 47, 0.10);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0; font-family: Inter, "Segoe UI", Arial, sans-serif; color: var(--ink);
+      background:
+        linear-gradient(rgba(214, 225, 235, 0.55) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(214, 225, 235, 0.55) 1px, transparent 1px), #edf3f8;
+      background-size: 24px 24px;
+    }
+    .shell { max-width: 1080px; margin: 0 auto; padding: 32px 18px 64px; }
+    .hero, .card, .callout {
+      background: rgba(255, 255, 255, 0.94); border: 1px solid var(--line);
+      border-radius: 22px; box-shadow: var(--shadow);
+    }
+    .hero { padding: 32px; margin-bottom: 20px; }
+    .eyebrow {
+      display: inline-flex; padding: 7px 12px; border-radius: 999px; background: #e8f4fa;
+      color: var(--blue); font-weight: 800; font-size: 12px; letter-spacing: .08em; text-transform: uppercase;
+    }
+    h1 { font-size: clamp(30px, 5vw, 50px); line-height: 1.05; margin: 18px 0 12px; }
+    h2 { font-size: 24px; margin: 0 0 12px; }
+    h3 { font-size: 17px; margin: 22px 0 8px; }
+    p, li { color: var(--muted); line-height: 1.6; }
+    p { margin: 0 0 12px; }
+    ul, ol { margin: 8px 0 14px; padding-left: 22px; }
+    li { margin-bottom: 7px; }
+    strong { color: var(--ink); }
+    .lede { color: var(--ink); font-size: 18px; max-width: 850px; }
+    .card { padding: 24px; margin-bottom: 18px; }
+    .card.blue { border-top: 5px solid var(--blue); }
+    .card.green { border-top: 5px solid var(--green); }
+    .card.amber { border-top: 5px solid var(--amber); }
+    .card.red { border-top: 5px solid var(--red); }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+    .mini { padding: 18px; background: var(--soft); border: 1px solid var(--line); border-radius: 16px; }
+    .mini h3 { margin-top: 0; }
+    table {
+      width: 100%; border-collapse: collapse; margin: 14px 0; background: white;
+      border: 1px solid var(--line); border-radius: 16px; overflow: hidden;
+    }
+    th, td { text-align: left; vertical-align: top; padding: 13px 14px; border-bottom: 1px solid var(--line); line-height: 1.45; }
+    th { background: #edf6fb; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+    tr:last-child td { border-bottom: 0; }
+    .callout { padding: 18px 20px; margin: 16px 0; border-left: 5px solid var(--blue); }
+    .callout.amber { border-left-color: var(--amber); }
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+    .btn {
+      display: inline-flex; padding: 10px 14px; border-radius: 12px; border: 1px solid var(--line);
+      background: white; color: var(--ink); text-decoration: none; font-weight: 700; font-size: 14px;
+    }
+    .btn.primary { background: var(--blue); border-color: var(--blue); color: white; }
+    code {
+      font-family: Consolas, "Segoe UI Mono", monospace; font-size: 12px;
+      background: #edf4f8; color: #245c78; padding: 2px 6px; border-radius: 6px;
+    }
+    .footer { margin-top: 28px; color: var(--muted); font-size: 13px; text-align: center; }
+    @media (max-width: 760px) {
+      .grid { grid-template-columns: 1fr; }
+      .hero, .card { padding: 22px; }
+      .table-wrap { overflow-x: auto; }
+    }
+    @media print {
+      body { background: white; }
+      .hero, .card, .callout { box-shadow: none; }
+      .actions { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <span class="eyebrow">Omena Consulting · Full Operating Guide</span>
+      <h1>Product Governance Guide</h1>
+      <p class="lede">How Product Managers and System Analysts turn weekly status updates into reliable product governance information, connecting product reality, delivery evidence, decisions, execution, and release learning.</p>
+      <div class="actions">
+        <a class="btn primary" href="https://omenada2025.github.io/omenaconsulting/">Open dashboard</a>
+        <a class="btn" href="product-governance-module-manual.html">Module manual</a>
+      </div>
+    </header>
+
+    <section class="card blue">
+      <h2>Purpose</h2>
+      <p>Product Manager and System Analyst represent the same accountable <strong>Owner</strong> responsibility in this process. UI/UX remains a contributing functional role.</p>
+      <p>A report is not only a narrative: every field supports a dashboard metric, governance gate, or management action.</p>
+    </section>
+
+    <section class="card green">
+      <h2>Governance Lifecycle</h2>
+      <ol>
+        <li><strong>Discover</strong> — Identify the product, stakeholders, business problem, scope, and current context.</li>
+        <li><strong>Baseline</strong> — Document the AS-IS product, workflows, rules, permissions, integrations, known issues, and delivery dates.</li>
+        <li><strong>Assess</strong> — Classify gaps, bugs, change requests, configuration issues, risks, and dependencies. Confirm impact and evidence.</li>
+        <li><strong>Define MSP</strong> — Establish the Minimum Sellable Product or minimum viable delivery scope and measurable acceptance criteria.</li>
+        <li><strong>Prioritize</strong> — Rank work by customer value, risk, dependency, urgency, and implementation effort.</li>
+        <li><strong>Define TO-BE</strong> — Describe the approved future state, workflow, behavior, data, and user outcome.</li>
+        <li><strong>Build</strong> — Implement prioritized scope and maintain traceability to the approved item.</li>
+        <li><strong>Validate</strong> — Complete functional, UI/UX, integration, regression, and stakeholder validation with referenced evidence.</li>
+        <li><strong>Release / Learn</strong> — Release the validated change, monitor results, capture lessons, and rebaseline product documentation.</li>
+      </ol>
+    </section>
+
+    <section class="card amber">
+      <h2>Responsibility Model</h2>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Responsibility</th><th>Accountable role</th><th>Expected behavior</th></tr></thead>
+        <tbody>
+          <tr><td>Product or workstream ownership</td><td>Product Manager or System Analyst</td><td>Own context, evidence, dates, decisions, acceptance criteria, and weekly status.</td></tr>
+          <tr><td>Experience contribution</td><td>UI/UX</td><td>Provide validated designs, usability evidence, and experience acceptance criteria.</td></tr>
+          <tr><td>Governance oversight</td><td>Admin, Master admin, or Role Manager</td><td>Review evidence quality, approve gates, monitor gaps, and manage portfolio standards.</td></tr>
+          <tr><td>Leadership decision</td><td>Approver or leadership owner</td><td>Approve, reject, or condition a gate based on evidence and business risk.</td></tr>
+        </tbody>
+      </table></div>
+      <div class="callout"><p>Each workstream must have one accountable Owner. Participants may contribute, but they do not replace ownership.</p></div>
+    </section>
+
+    <section class="card">
+      <h2>How Status Fields Connect</h2>
+      <div class="grid">
+        <div class="mini">
+          <h3>Product context</h3>
+          <ul>
+            <li><strong>Product</strong> groups related workstreams.</li>
+            <li><strong>Feature / workstream</strong> identifies the exact activity.</li>
+            <li><strong>Owner</strong> is the accountable Product Manager or System Analyst.</li>
+            <li><strong>Participants</strong> are optional contributors.</li>
+            <li><strong>Functional role</strong> identifies Product Management, System Analysis, or UI/UX.</li>
+          </ul>
+        </div>
+        <div class="mini">
+          <h3>Governance control</h3>
+          <ul>
+            <li><strong>Classification:</strong> Bug, Gap, Change Request, Configuration Issue, or Investigation.</li>
+            <li><strong>Lifecycle phase</strong> locates the item in governance.</li>
+            <li><strong>Evidence status:</strong> Missing, Partial, Available, or Validated.</li>
+            <li><strong>Evidence reference</strong> links the supporting document, test, design, ticket, or decision.</li>
+            <li><strong>Gate status:</strong> Not Ready, Ready for Review, Approved, Approved with Conditions, or Rejected.</li>
+          </ul>
+        </div>
+        <div class="mini">
+          <h3>Timing and delivery</h3>
+          <ul>
+            <li>Reporting week, start date, baseline end date, and current end date.</li>
+            <li>Date change reason and delay root cause.</li>
+            <li>Dependencies, delivery stage, progress, and next milestone.</li>
+          </ul>
+        </div>
+        <div class="mini">
+          <h3>Decision-ready update</h3>
+          <ul>
+            <li>Summary, measurable win, blocker or risk.</li>
+            <li>Next action, corrective action owner, target date, and action status.</li>
+            <li>Decision needed: approval, trade-off, escalation, or leadership choice.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="callout amber"><p><strong>Control rule:</strong> an approved gate requires validated evidence. A gate under review or already decided requires an evidence reference.</p></div>
+    </section>
+
+    <section class="card blue">
+      <h2>Practical Scenario: Delivery Date Replanning</h2>
+      <p><strong>Situation:</strong> The original approved end date is August 14. Integration testing reveals a vendor dependency, and delivery is reforecast to August 28.</p>
+      <ul>
+        <li>Baseline end date: <code>2026-08-14</code></li>
+        <li>End date: <code>2026-08-28</code></li>
+        <li>Delay root cause: <code>Vendor or third party</code></li>
+        <li>Date change reason: payment provider certification was unavailable in the planned test window; the revised date was approved August 12.</li>
+        <li>Depends on: payment certification workstream; Health: At Risk.</li>
+        <li>Next action: complete certification testing and confirm production readiness, with a named owner and checkpoint.</li>
+        <li>Evidence: certification ticket, meeting decision, or approval link; status Available or Validated.</li>
+        <li>Gate: Approved with Conditions when leadership accepts the replan with explicit conditions.</li>
+      </ul>
+      <div class="callout"><p>Do not overwrite the baseline date with the new target. Keeping both lets the system calculate schedule movement and distinguish a real replan from an early delivery.</p></div>
+    </section>
+
+    <section class="card green">
+      <h2>Additional Practical Scenarios</h2>
+      <div class="grid">
+        <div class="mini"><h3>Bug discovered during validation</h3><p>Classification: Bug · Phase: Validate · Evidence: defect ticket and failed test · Gate: Not Ready until resolved and retested · Health: At Risk when release is affected.</p></div>
+        <div class="mini"><h3>New stakeholder request</h3><p>Classification: Change Request · Phase: Assess · Evidence: request, impact analysis, and acceptance criteria · Gate: Ready for Review once scope, cost, and schedule impact are known.</p></div>
+        <div class="mini"><h3>Current-state information is incomplete</h3><p>Classification: Investigation or Gap · Phase: Baseline · Evidence: Partial · Gate: Not Ready · Next: complete AS-IS workflow, integration, or business-rule discovery.</p></div>
+        <div class="mini"><h3>Delivery completed</h3><p>Stage: Completed · Progress: 100% · Evidence: Validated · Gate: Approved · Phase: Release / Learn · Record the measurable result and lesson learned.</p></div>
+      </div>
+    </section>
+
+    <section class="card red">
+      <h2>Quality Validation Before Saving</h2>
+      <p>The application blocks saving when critical governance information is invalid and warns when the report is usable but incomplete.</p>
+      <ul>
+        <li>Product, workstream, Owner, reporting week, stage, classification, lifecycle phase, evidence status, gate status, and summary are required.</li>
+        <li>Approved gates must have Validated evidence; reviewed or decided gates need an evidence reference.</li>
+        <li>Risky or critical reports must explain the blocker and decision needed.</li>
+        <li>A next action should include a corrective owner and target date.</li>
+        <li>A changed delivery date should preserve the baseline and explain the reason; a delay should identify its root cause.</li>
+        <li>Completed work should use Completed stage and 100% progress.</li>
+        <li>Duplicate workstreams for the same Owner and reporting week are flagged.</li>
+      </ul>
+    </section>
+
+    <section class="card amber">
+      <h2>Governance Artifacts</h2>
+      <div class="grid">
+        <ul>
+          <li>Product Reality Assessment</li>
+          <li>Application/Feature Inventory and Application Map</li>
+          <li>AS-IS Functional Specification</li>
+          <li>Business Rules, Workflow, and Roles &amp; Permissions catalogues</li>
+          <li>Data &amp; Integration Map</li>
+        </ul>
+        <ul>
+          <li>Known Issues, Gap, and Risk registers</li>
+          <li>Product Readiness Assessment</li>
+          <li>MSP Definition and Prioritized Product Backlog</li>
+          <li>TO-BE Product Definition</li>
+        </ul>
+      </div>
+      <p>Artifacts should move from Missing to Draft, In Review, Validated, or Outdated. A validated artifact is reusable evidence for governance items and gate decisions.</p>
+    </section>
+
+    <section class="card blue">
+      <h2>Weekly Operating Rhythm</h2>
+      <ol>
+        <li>Update the product artifact or governance item when reality, scope, or evidence changes.</li>
+        <li>Submit one status per active workstream for the reporting week.</li>
+        <li>Resolve quality-check blockers before saving.</li>
+        <li>Review Report Quality and Action Items for missing ownership, dates, evidence, and decisions.</li>
+        <li>Use Product Governance to review lifecycle phase, readiness, and gate status.</li>
+        <li>Present product-level progress, risks, dependencies, and decisions in the manager meeting.</li>
+        <li>After release, capture the result and rebaseline product documentation.</li>
+      </ol>
+    </section>
+
+    <section class="card green">
+      <h2>Definition of a Reliable Product Status</h2>
+      <p>A product status is reliable when leadership can answer without asking for more context:</p>
+      <ul>
+        <li>What is being delivered, who owns it, and what changed this week?</li>
+        <li>Where is it in the delivery and governance lifecycle?</li>
+        <li>What evidence supports the reported state?</li>
+        <li>Is the current date different from the approved baseline, and why?</li>
+        <li>What dependency, risk, or decision could change delivery?</li>
+        <li>What happens next, who owns it, and by when?</li>
+        <li>What gate must be passed before the next lifecycle phase?</li>
+      </ul>
+    </section>
+
+    <p class="footer">Omena Consulting · Product Governance Guide · August 2026</p>
+  </main>
+</body>
+</html>
