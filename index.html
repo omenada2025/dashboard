@@ -6,7 +6,8 @@
   <meta http-equiv="Cache-Control" content="no-store, max-age=0" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <meta name="dashboard-build" content="2026-08-14-progressive-intake-traceability-p0" />
+  <meta name="dashboard-build" content="2026-08-14-p1-scope-governance-meeting-access-mobile-capacity" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231f5874'/%3E%3Ctext x='32' y='41' text-anchor='middle' font-family='Arial,sans-serif' font-size='28' font-weight='700' fill='white'%3EPU%3C/text%3E%3C/svg%3E" />
   <title>Omena Consulting Dashboard</title>
   <style>
     :root {
@@ -629,6 +630,44 @@
     .report-filter-bar {
       grid-template-columns: repeat(auto-fit, minmax(min(160px, 100%), 1fr));
     }
+
+    .global-scope {
+      position: sticky;
+      top: 12px;
+      z-index: 24;
+      display: grid;
+      grid-template-columns: minmax(150px, .8fr) repeat(3, minmax(150px, 1fr)) auto;
+      gap: 10px;
+      align-items: end;
+      margin-bottom: 16px;
+      padding: 12px 14px;
+      border: 1px solid rgba(186, 215, 229, .92);
+      border-radius: 16px;
+      background: rgba(240, 247, 250, .96);
+      box-shadow: var(--shadow-soft);
+      backdrop-filter: blur(10px);
+    }
+
+    .global-scope-title { align-self: center; }
+    .global-scope-title strong, .global-scope-title small { display: block; }
+    .global-scope label { font-size: 12px; }
+    .global-scope ~ .view .filter-bar { top: 118px; }
+    .active-filter-summary { grid-column: 1 / -1; display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
+    .active-filter-summary .chip { margin: 0; }
+    .mobile-more-control { display: none; }
+    .meeting-mode {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .meeting-mode .btn { min-height: 62px; text-align: left; line-height: 1.3; }
+    .meeting-mode .btn small { display:block; margin-top:4px; color:var(--muted); font-weight:600; }
+    .permission-matrix { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:10px; }
+    .permission-card { border:1px solid var(--line); border-radius:14px; padding:14px; background:var(--surface-soft); }
+    .permission-card ul { margin:10px 0 0; padding-left:18px; color:var(--muted); font-size:12px; line-height:1.65; }
+    .decision-history { display:grid; gap:8px; margin-top:12px; }
+    .decision-history-item { border-left:3px solid var(--accent); padding:8px 10px; background:var(--surface-soft); border-radius:0 10px 10px 0; }
 
     .status-workspace {
       align-items: start;
@@ -2401,25 +2440,20 @@
       }
       .brand { margin-bottom: 12px; }
       .brand .muted { display: none; }
-      .tabs {
-        display: flex;
-        gap: 8px;
-        margin-bottom: 10px;
-        overflow-x: auto;
-        overflow-y: hidden;
-        padding-right: 0;
-        padding-bottom: 8px;
-        scrollbar-gutter: auto;
-      }
+      .tabs { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)) minmax(120px, 1fr); gap:8px; margin-bottom:10px; padding:0; }
       .nav-section { display: none !important; }
       .tab,
       body.role-manager-profile .tab {
-        width: auto;
-        min-width: max-content;
+        display:none;
+        width: 100%;
+        min-width: 0;
         min-height: 38px;
-        white-space: nowrap;
+        white-space: normal;
         padding: 9px 12px;
       }
+      .tab[data-mobile-primary]:not([hidden]) { display:block; }
+      .mobile-more-control { display:block; min-width:0; }
+      .mobile-more-control select { height:100%; min-height:38px; padding:8px 10px; }
       .signed-in-card,
       body.role-manager-profile .signed-in-card {
         margin-top: 0;
@@ -2435,6 +2469,10 @@
       .signed-in-meta { margin-left: auto; }
       .side-actions { position: static; margin-top: 22px; }
       main { margin-left: 0; width: 100%; padding: 18px; }
+      .global-scope { position:static; grid-template-columns:repeat(3, minmax(0, 1fr)); }
+      .global-scope-title, .active-filter-summary { grid-column:1 / -1; }
+      .global-scope ~ .view .filter-bar { top: 12px; }
+      .permission-matrix { grid-template-columns:1fr; }
       .summary-grid, .two-col, .three-col, .exec-grid, .exec-metrics, .health-stack, .form-grid, .filter-bar, .health-toolbar, .health-detail-grid, .report-card-detail, .timeline-scale, .delivery-row, .project-talk-mini-grid { grid-template-columns: 1fr; }
       .timeline-scale-track {
         display: none;
@@ -2472,6 +2510,9 @@
         position: static;
         padding: 12px;
       }
+      .global-scope { grid-template-columns:1fr; padding:12px; }
+      .global-scope-title, .active-filter-summary { grid-column:auto; }
+      .meeting-mode { grid-template-columns:1fr 1fr; }
       .top-actions,
       .form-actions,
       .detail-actions,
@@ -2562,13 +2603,13 @@
       </div>
       <nav class="tabs" aria-label="Primary">
         <div class="nav-section">Start</div>
-        <button class="tab active" data-view="home" title="See this week's work and next actions">This Week</button>
+        <button class="tab active" data-view="home" data-mobile-primary title="See this week's work and next actions">This Week</button>
         <div class="nav-section" data-hide-executive-admin>My Work</div>
         <button class="tab" data-view="myDashboard" data-hide-executive-admin title="Personal dashboard for your workstreams, dates, risks, and next actions">My Dashboard</button>
         <button class="tab" data-view="reports" data-master-only>Update Reports</button>
         <div class="nav-section">Portfolio</div>
-        <button class="tab" data-view="dashboard" title="Portfolio health, workstreams, dates, risks, wins, blockers, and next actions">Portfolio Dashboard</button>
-        <button class="tab" data-view="executive" title="Leadership summary focused on attention items and decisions">Executive View</button>
+        <button class="tab" data-view="dashboard" data-mobile-primary title="Portfolio health, workstreams, dates, risks, wins, blockers, and next actions">Portfolio Dashboard</button>
+        <button class="tab" data-view="executive" data-mobile-primary title="Leadership summary focused on attention items and decisions">Executive View</button>
         <button class="tab" data-view="timeline" data-master-only title="Delivery timeline, dependencies, milestones, and schedule progress">Delivery Timeline</button>
         <button class="tab" data-view="incidents" title="Major delays, minor delays, blockers, at-risk, and critical workstreams">Incidents & Delays</button>
         <div class="nav-section">Governance &amp; Reviews</div>
@@ -2579,13 +2620,16 @@
         <button class="tab" data-view="ownerFeedback" data-role-manager-only>Coaching Feedback</button>
         <button class="tab" data-view="actionItems" data-role-manager-only>Action Items</button>
         <button class="tab" data-view="weeklyReview" data-role-manager-only>Send Weekly Feedback</button>
-        <button class="tab" data-view="workload" data-role-manager-only>Work Balance</button>
-        <button class="tab" data-view="governance" data-governance-access>Product Governance</button>
+        <button class="tab" data-view="workload" data-role-manager-only>Capacity &amp; Support</button>
+        <button class="tab" data-view="governance" data-mobile-primary data-governance-access>Product Governance</button>
         <div class="nav-section" data-role-manager-only>Admin</div>
         <button class="tab" data-view="sourceProjects" data-role-manager-only>Project Source List</button>
         <button class="tab" data-view="users" data-role-manager-only>User Access</button>
         <button class="tab" data-view="userLog" data-role-manager-only>User Log</button>
         <button class="tab" data-view="workflow" data-role-manager-only title="End-to-end workflow guide for using the dashboard">Workflow Guide</button>
+        <label class="mobile-more-control" aria-label="More destinations">
+          <select id="mobileMoreNav"><option value="">More...</option></select>
+        </label>
       </nav>
       <div class="signed-in-card" id="signedInCard" hidden>
         <div class="signed-in-eyebrow">Signed in as</div>
@@ -2597,6 +2641,17 @@
     </aside>
 
     <main>
+      <section class="global-scope" id="globalScope" aria-label="Persistent dashboard scope">
+        <div class="global-scope-title">
+          <strong>Global scope</strong>
+          <small class="muted">Persists across workspaces</small>
+        </div>
+        <label>Week<select id="globalWeekFilter"><option value="all">All weeks</option></select></label>
+        <label>Product<select id="globalProductFilter"><option value="all">All products</option></select></label>
+        <label>Owner<select id="globalOwnerFilter"><option value="all">All owners</option></select></label>
+        <button class="btn" type="button" id="clearGlobalScope">Clear all</button>
+        <div class="active-filter-summary" id="activeFilterSummary"></div>
+      </section>
       <section class="view active" id="home">
         <div class="header">
           <div>
@@ -2952,7 +3007,7 @@
           </div>
           <div class="guide-card theme-green">
             <strong>Decision ready</strong>
-            <p class="muted small">Next Actions and Owner Performance are prepared for follow-up meetings.</p>
+            <p class="muted small">Next Actions and capacity/support signals are prepared for follow-up meetings.</p>
           </div>
         </div>
 
@@ -3059,8 +3114,8 @@
           <div class="panel">
             <div class="panel-title">
               <div>
-                <h3>Owner Performance</h3>
-                <p class="muted small">Progress and attention points by owner.</p>
+                <h3>Capacity and support signals</h3>
+                <p class="muted small">Operational workload and support indicators by owner; not an individual performance rating.</p>
               </div>
             </div>
             <div class="exec-list" id="executiveOwners"></div>
@@ -3174,11 +3229,17 @@
                 <label>Item status<select name="status" required></select></label>
                 <label>Priority<select name="priority"><option>Normal</option><option>High</option><option>Critical</option></select></label>
                 <label>Evidence reference<input name="evidence_reference" placeholder="SharePoint, Jira, Figma, test, or approval link" /></label>
+                <label>Decision approver<input name="decision_approver" placeholder="Person accountable for this decision" /></label>
+                <label>Decision date<input name="decision_date" type="date" /></label>
+                <label>Valid until<input name="decision_valid_until" type="date" /></label>
+                <label class="full">Decision rationale<textarea name="decision_rationale" rows="3" placeholder="Why this gate decision is justified"></textarea></label>
+                <label class="full">Open conditions<textarea name="decision_conditions" rows="3" placeholder="Required for approval with conditions"></textarea></label>
                 <label>Current state<textarea name="current_state" rows="3" placeholder="What is true today?"></textarea></label>
                 <label>Target state<textarea name="target_state" rows="3" placeholder="What outcome is expected?"></textarea></label>
                 <label>Acceptance criteria<textarea name="acceptance_criteria" rows="3" placeholder="How will completion be verified?"></textarea></label>
                 <label>Decision / impact<textarea name="decision_impact" rows="3" placeholder="Decision required, impact, and consequence"></textarea></label>
               </div>
+              <div class="decision-history" id="governanceDecisionHistory"></div>
               <div id="governanceTraceability"></div>
               <div class="inline-message" id="governanceMessage" hidden></div>
               <div class="form-actions">
@@ -3206,6 +3267,14 @@
             <p class="muted">A presentation-ready view of portfolio progress, project updates, delivery risks, owner workload, decisions needed, wins, and weekly trends.</p>
           </div>
           <button class="btn" type="button" data-logout>Logout</button>
+        </div>
+
+        <div class="meeting-mode" aria-label="Meeting workflow">
+          <button class="btn soft" type="button" data-jump="weeklyProjectBrief"><strong>1. Agenda</strong><small>Generate the meeting brief</small></button>
+          <button class="btn soft" type="button" data-jump="managementReview"><strong>2. Decisions</strong><small>Capture management direction</small></button>
+          <button class="btn soft" type="button" data-jump="actionItems"><strong>3. Actions</strong><small>Assign accountable follow-up</small></button>
+          <button class="btn soft" type="button" data-jump="weeklyReview"><strong>4. Summary</strong><small>Send personalized feedback</small></button>
+          <button class="btn soft" type="button" data-jump="workload"><strong>5. Follow-up</strong><small>Track capacity and support</small></button>
         </div>
 
         <div class="guide-grid">
@@ -3848,10 +3917,16 @@
         <div class="header">
           <div>
             <span class="page-kicker">Capacity view</span>
-            <h2>Work Balance</h2>
-            <p class="muted">See how many projects and workstreams each PM and UI/UX owner is carrying.</p>
+            <h2>Capacity and support signals</h2>
+            <p class="muted">Review workload signals that may indicate where support is needed. Counts are operational context, not individual performance ratings.</p>
           </div>
           <button class="btn" type="button" data-logout>Logout</button>
+        </div>
+
+        <div class="inline-message info">
+          These signals use current live status reports and may be incomplete. Delivery load is separate from report quality.
+          Correct ownership or source data before using this view for staffing decisions.
+          <button class="btn soft" type="button" data-jump="reports">Review source reports</button>
         </div>
 
         <div class="guide-grid">
@@ -3903,6 +3978,15 @@
           <button class="btn" type="button" data-logout>Logout</button>
         </div>
 
+        <div class="panel">
+          <div class="panel-title"><div><h3>Access by responsibility</h3><p class="muted small">Role names describe the work each profile can perform.</p></div></div>
+          <div class="permission-matrix">
+            <div class="permission-card"><strong>Portfolio Viewer</strong><span class="chip blue">Read + governance</span><ul><li>View portfolio, executive and incident dashboards</li><li>Create and edit governance records</li><li>Cannot edit weekly reports or administer access</li></ul></div>
+            <div class="permission-card"><strong>Reporting Editor</strong><span class="chip green">Create + edit</span><ul><li>Includes portfolio visibility</li><li>Create and edit weekly reports and timelines</li><li>Cannot administer users or manager operations</li></ul></div>
+            <div class="permission-card"><strong>Operations &amp; Access Manager</strong><span class="chip amber">Full operations</span><ul><li>Review, approve and run meeting workflows</li><li>Manage reports, feedback and follow-up</li><li>Administer access and audit activity</li></ul></div>
+          </div>
+        </div>
+
         <div class="guide-grid">
           <div class="guide-card">
             <strong>1. Create user</strong>
@@ -3937,9 +4021,9 @@
             <label>
               Initial role
               <select name="role">
-                <option value="admin">Admin - dashboards, incidents, and governance</option>
-                <option value="roles">Role Manager - full access and users</option>
-              <option value="master">Master admin - dashboards, incidents, update reports, and governance</option>
+                <option value="admin">Portfolio Viewer - dashboards, incidents, and governance</option>
+                <option value="roles">Operations & Access Manager - full operations and users</option>
+              <option value="master">Reporting Editor - dashboards, reports, timeline, and governance</option>
               </select>
             </label>
             <label>
@@ -4945,9 +5029,9 @@
       { username: "master", displayName: "Master Admin", role: "master", password: "master2026", active: true }
     ];
     const ROLE_LABELS = {
-      admin: "Admin",
-      roles: "Role Manager",
-      master: "Master admin"
+      admin: "Portfolio Viewer",
+      roles: "Operations & Access Manager",
+      master: "Reporting Editor"
     };
     let reports = [];
     let selectedReportId = null;
@@ -5019,6 +5103,7 @@
       week: "",
       start: "",
       end: "",
+      product: "all",
       productType: "all",
       owner: "all",
       role: "all",
@@ -5052,6 +5137,14 @@
       health: "all",
       role: "all"
     };
+    const GLOBAL_SCOPE_KEY = "omena-dashboard-global-scope-v1";
+    let globalScope = (() => {
+      try {
+        return { week: "all", product: "all", owner: "all", ...JSON.parse(localStorage.getItem(GLOBAL_SCOPE_KEY) || "{}") };
+      } catch {
+        return { week: "all", product: "all", owner: "all" };
+      }
+    })();
     const incidentFilters = {
       period: "monthly",
       week: "",
@@ -5125,6 +5218,65 @@
     let reportHistoryDate = "";
     let reportAuditLoadingId = "";
     const reportAuditLogsById = new Map();
+
+    function globalScopedFilters() {
+      return [
+        dashboardFilters, myDashboardFilters, incidentFilters, timelineFilters, analysisFilters,
+        managementFilters, projectBriefFilters, talkTrackFilters, ownerFeedbackFilters,
+        actionItemFilters, weeklyReviewFilters
+      ];
+    }
+
+    function applyGlobalScope() {
+      const week = globalScope.week || "all";
+      const product = globalScope.product || "all";
+      const owner = globalScope.owner || "all";
+      globalScopedFilters().forEach(filters => {
+        if ("week" in filters) {
+          if (week === "all" && "period" in filters) {
+            filters.period = "monthly";
+            filters.week = mondayForDate();
+          } else {
+            filters.week = week;
+          }
+        }
+        if ("product" in filters) filters.product = product;
+        if ("owner" in filters) filters.owner = owner;
+        if (week !== "all" && "period" in filters) filters.period = "weekly";
+      });
+      reportFilters.owner = owner;
+      reportFilters.week = week === "all" ? "" : week;
+      localStorage.setItem(GLOBAL_SCOPE_KEY, JSON.stringify(globalScope));
+    }
+
+    function renderGlobalScope() {
+      const weekSelect = document.getElementById("globalWeekFilter");
+      const productSelect = document.getElementById("globalProductFilter");
+      const ownerSelect = document.getElementById("globalOwnerFilter");
+      if (!weekSelect || !productSelect || !ownerSelect) return;
+      fillSelect("globalWeekFilter", [...new Set(reports.map(report => cleanText(report.week)).filter(Boolean))].sort().reverse(), "All weeks", globalScope.week || "all");
+      fillSelect("globalProductFilter", uniqueProducts(reports.map(report => report.product)), "All products", globalScope.product || "all");
+      fillSelect("globalOwnerFilter", uniqueOwners(), "All owners", globalScope.owner || "all");
+      const active = [
+        globalScope.week !== "all" ? `Week: ${reportingFieldLabel(globalScope.week)}` : "",
+        globalScope.product !== "all" ? `Product: ${globalScope.product}` : "",
+        globalScope.owner !== "all" ? `Owner: ${globalScope.owner}` : ""
+      ].filter(Boolean);
+      document.getElementById("activeFilterSummary").innerHTML = active.length
+        ? `<span class="muted small">Active filters:</span>${active.map(value => `<span class="chip blue">${escapeHtml(value)}</span>`).join("")}`
+        : `<span class="muted small">No global filters active. Local filters only refine the current workspace.</span>`;
+      renderMobileNavigation();
+    }
+
+    function renderMobileNavigation() {
+      const select = document.getElementById("mobileMoreNav");
+      if (!select) return;
+      const active = getActiveView();
+      const options = [...document.querySelectorAll(".tab[data-view]")]
+        .filter(tab => !tab.hidden && !tab.hasAttribute("data-mobile-primary"))
+        .map(tab => `<option value="${escapeHtml(tab.dataset.view)}" ${tab.dataset.view === active ? "selected" : ""}>${escapeHtml(tab.textContent.trim())}</option>`);
+      select.innerHTML = `<option value="">More...</option>${options.join("")}`;
+    }
 
     function pageStateFor(key, total, pageSize = DEFAULT_PAGE_SIZE) {
       const totalPages = Math.max(1, Math.ceil(total / pageSize));
@@ -7070,7 +7222,7 @@
         }
         if (user.active === false) {
           if (message) {
-            message.textContent = "This user is inactive. Contact a Role Manager.";
+            message.textContent = "This user is inactive. Contact an Operations & Access Manager.";
             message.hidden = false;
           }
           return;
@@ -7146,14 +7298,14 @@
 
     function requireMasterAdmin(action = "manage reports") {
       if (canManageReports()) return true;
-      alert(`${ROLE_LABELS[currentProfile] || "Admin"} profile cannot ${action}. Use Master admin or Role Manager for report management.`);
+      alert(`${ROLE_LABELS[currentProfile] || "Portfolio Viewer"} cannot ${action}. Reporting Editor or Operations & Access Manager permission is required.`);
       switchView("home");
       return false;
     }
 
     function requireRoleManager(action = "manage roles") {
       if (canManageRoles()) return true;
-      alert(`${ROLE_LABELS[currentProfile] || "Admin"} profile cannot ${action}. Use Role Manager for access management.`);
+      alert(`${ROLE_LABELS[currentProfile] || "Portfolio Viewer"} cannot ${action}. Operations & Access Manager permission is required.`);
       switchView("home");
       return false;
     }
@@ -7360,13 +7512,19 @@
         target_state: cleanText(item.target_state ?? item.to_be),
         acceptance_criteria: cleanText(item.acceptance_criteria),
         decision_impact: cleanText(item.decision_impact ?? item.impact_summary),
+        decision_approver: normalizePersonDisplay(item.decision_approver || ""),
+        decision_date: cleanText(item.decision_date),
+        decision_rationale: cleanText(item.decision_rationale),
+        decision_conditions: cleanText(item.decision_conditions),
+        decision_valid_until: cleanText(item.decision_valid_until),
+        decision_history: Array.isArray(item.decision_history) ? item.decision_history : [],
         created_at: item.created_at || new Date().toISOString(),
         updated_at: item.updated_at || new Date().toISOString()
       };
     }
 
-    function governancePayload(item) {
-      return {
+    function governancePayload(item, includeDecisionTrail = true) {
+      const payload = {
         id: item.id,
         product: item.product,
         workstream: item.workstream || null,
@@ -7386,6 +7544,17 @@
         impact_summary: item.decision_impact || null,
         updated_at: new Date().toISOString()
       };
+      if (includeDecisionTrail) {
+        Object.assign(payload, {
+          decision_approver: item.decision_approver || null,
+          decision_date: item.decision_date || null,
+          decision_rationale: item.decision_rationale || null,
+          decision_conditions: item.decision_conditions || null,
+          decision_valid_until: item.decision_valid_until || null,
+          decision_history: item.decision_history || []
+        });
+      }
+      return payload;
     }
 
     function governanceProducts() {
@@ -7501,6 +7670,21 @@
       element.className = message ? `form-message ${tone}` : "form-message";
     }
 
+    function renderGovernanceDecisionHistory(item = null) {
+      const target = document.getElementById("governanceDecisionHistory");
+      if (!target) return;
+      const history = item?.decision_history || [];
+      target.innerHTML = history.length
+        ? `<strong>Decision history</strong>${[...history].reverse().map(entry => `
+            <div class="decision-history-item">
+              <strong>${escapeHtml(entry.from || "Not set")} → ${escapeHtml(entry.to || "Not set")}</strong>
+              <small>${escapeHtml(entry.approver || "Unknown approver")} · ${escapeHtml(entry.date || "")}</small>
+              ${entry.rationale ? `<p class="muted small">${escapeHtml(entry.rationale)}</p>` : ""}
+              ${entry.conditions ? `<p class="muted small"><strong>Conditions:</strong> ${escapeHtml(entry.conditions)}</p>` : ""}
+            </div>`).join("")}`
+        : `<div class="inline-message info">Decision history starts when the gate status changes.</div>`;
+    }
+
     function clearGovernanceForm() {
       const form = document.getElementById("governanceForm");
       if (!form) return;
@@ -7521,6 +7705,7 @@
         status: "Open"
       });
       showGovernanceMessage();
+      renderGovernanceDecisionHistory();
       renderProductGovernance();
     }
 
@@ -7533,13 +7718,14 @@
       setSelectOptions(form.elements.product, governanceProducts(), item.product, "Select product");
       populateGovernanceFormOptions(form, item);
       populateGovernanceReportOptions(form, item.source_report_id);
-      ["workstream", "title", "priority", "evidence_reference", "current_state", "target_state", "acceptance_criteria", "decision_impact"].forEach(name => {
+      ["workstream", "title", "priority", "evidence_reference", "decision_approver", "decision_date", "decision_rationale", "decision_conditions", "decision_valid_until", "current_state", "target_state", "acceptance_criteria", "decision_impact"].forEach(name => {
         if (form.elements[name]) form.elements[name].value = item[name] || "";
       });
       setPeoplePickerValue(form, "owner", item.owner || "");
       document.getElementById("governanceFormTitle").textContent = "Edit governance item";
       document.getElementById("deleteGovernanceItem").hidden = false;
       showGovernanceMessage();
+      renderGovernanceDecisionHistory(item);
       renderProductGovernance();
       form.scrollIntoView({ behavior: "smooth", block: "start" });
     }
@@ -7556,6 +7742,14 @@
       if (item.gate_status === "Approved" && item.evidence_status !== "Validated") {
         errors.push("An approved gate requires Validated evidence.");
       }
+      if (["Approved", "Approved with Conditions", "Rejected"].includes(item.gate_status)) {
+        if (!item.decision_approver) errors.push("Record who made the gate decision.");
+        if (!item.decision_date) errors.push("Record the decision date.");
+        if (!item.decision_rationale) errors.push("Add the decision rationale.");
+      }
+      if (item.gate_status === "Approved with Conditions" && !item.decision_conditions) {
+        errors.push("Approval with conditions requires the open conditions.");
+      }
       if (item.status === "Delivered" && item.gate_status !== "Approved") {
         errors.push("Delivered items require an Approved gate.");
       }
@@ -7568,6 +7762,26 @@
       const values = Object.fromEntries(new FormData(form).entries());
       values.owner = pickerFormValue(form, "owner") || cleanText(values.owner || "");
       const existing = governanceItems.find(item => item.id === cleanText(values.id));
+      if (["Approved", "Approved with Conditions", "Rejected"].includes(values.gate_status)) {
+        values.decision_approver ||= currentUser?.displayName || currentUser?.username || "";
+        values.decision_date ||= new Date().toISOString().slice(0, 10);
+      }
+      const decisionGate = ["Approved", "Approved with Conditions", "Rejected"].includes(values.gate_status);
+      const gateChanged = (!existing && decisionGate) || (existing && existing.gate_status !== values.gate_status);
+      if (gateChanged) {
+        values.decision_history = [
+          ...(existing.decision_history || []),
+          {
+            from: existing?.gate_status || "Created",
+            to: values.gate_status,
+            approver: values.decision_approver || currentUser?.displayName || currentUser?.username || "Unknown",
+            date: values.decision_date || new Date().toISOString().slice(0, 10),
+            rationale: values.decision_rationale || "",
+            conditions: values.decision_conditions || "",
+            recorded_at: new Date().toISOString()
+          }
+        ];
+      }
       const item = normalizeGovernanceItem({ ...existing, ...values, id: cleanText(values.id) || crypto.randomUUID(), updated_at: new Date().toISOString() });
       const errors = governanceValidation(item);
       if (errors.length) {
@@ -7580,10 +7794,19 @@
       try {
         let saved = item;
         if (governanceCloudAvailable) {
-          const result = existing
-            ? await supabaseTableRequest("governance_items", `?id=eq.${encodeURIComponent(item.id)}`, { method: "PATCH", body: governancePayload(item) })
-            : await supabaseTableRequest("governance_items", "", { method: "POST", body: governancePayload(item) });
+          let result;
+          try {
+            result = existing
+              ? await supabaseTableRequest("governance_items", `?id=eq.${encodeURIComponent(item.id)}`, { method: "PATCH", body: governancePayload(item) })
+              : await supabaseTableRequest("governance_items", "", { method: "POST", body: governancePayload(item) });
+          } catch (error) {
+            if (!/decision_|schema cache|column/i.test(String(error?.message || error))) throw error;
+            result = existing
+              ? await supabaseTableRequest("governance_items", `?id=eq.${encodeURIComponent(item.id)}`, { method: "PATCH", body: governancePayload(item, false) })
+              : await supabaseTableRequest("governance_items", "", { method: "POST", body: governancePayload(item, false) });
+          }
           if (Array.isArray(result) && result[0]) saved = normalizeGovernanceItem({ ...result[0], source_report_id: item.source_report_id });
+          saved = normalizeGovernanceItem({ ...saved, ...item, updated_at: saved.updated_at || item.updated_at });
         }
         const index = governanceItems.findIndex(entry => entry.id === item.id);
         if (index >= 0) governanceItems[index] = saved;
@@ -7698,7 +7921,7 @@
 
     async function loadGovernanceData() {
       governanceItems = loadLocalGovernanceArray(GOVERNANCE_ITEMS_KEY).map(normalizeGovernanceItem);
-      const localSourceById = new Map(governanceItems.map(item => [item.id, item.source_report_id]));
+      const localById = new Map(governanceItems.map(item => [item.id, item]));
       productArtifacts = loadLocalGovernanceArray(PRODUCT_ARTIFACTS_KEY);
       try {
         const [items, artifacts] = await Promise.all([
@@ -7706,7 +7929,20 @@
           supabaseTableRequest("product_artifacts", "?select=*&order=updated_at.desc")
         ]);
         governanceItems = Array.isArray(items)
-          ? items.map(item => normalizeGovernanceItem({ ...item, source_report_id: item.source_report_id || localSourceById.get(item.id) }))
+          ? items.map(item => {
+              const local = localById.get(item.id) || {};
+              return normalizeGovernanceItem({
+                ...local,
+                ...item,
+                source_report_id: item.source_report_id || local.source_report_id,
+                decision_approver: item.decision_approver || local.decision_approver,
+                decision_date: item.decision_date || local.decision_date,
+                decision_rationale: item.decision_rationale || local.decision_rationale,
+                decision_conditions: item.decision_conditions || local.decision_conditions,
+                decision_valid_until: item.decision_valid_until || local.decision_valid_until,
+                decision_history: item.decision_history || local.decision_history
+              });
+            })
           : governanceItems;
         productArtifacts = Array.isArray(artifacts) ? artifacts : productArtifacts;
         governanceCloudAvailable = true;
@@ -10845,9 +11081,9 @@
             <label class="user-role-control">
               Assigned role
               <select data-role-user="${escapeHtml(user.username)}">
-                <option value="admin" ${user.role === "admin" ? "selected" : ""}>Admin - dashboards, incidents, and governance</option>
-                <option value="roles" ${user.role === "roles" ? "selected" : ""}>Role Manager - full access and users</option>
-              <option value="master" ${user.role === "master" ? "selected" : ""}>Master admin - dashboards, incidents, update reports, and governance</option>
+                <option value="admin" ${user.role === "admin" ? "selected" : ""}>Portfolio Viewer - dashboards, incidents, and governance</option>
+                <option value="roles" ${user.role === "roles" ? "selected" : ""}>Operations & Access Manager - full operations and users</option>
+              <option value="master" ${user.role === "master" ? "selected" : ""}>Reporting Editor - dashboards, reports, timeline, and governance</option>
               </select>
             </label>
           </header>
@@ -12010,6 +12246,7 @@
       document.querySelectorAll(".view").forEach(view => view.classList.toggle("active", view.id === id));
       const activeTab = id === "intake" ? "reports" : id;
       document.querySelectorAll(".tab").forEach(tab => tab.classList.toggle("active", tab.dataset.view === activeTab));
+      renderMobileNavigation();
       logUserAction("view_opened", { view: id }, { target_type: "view", target_id: id });
       renderActiveViewDeferred(`switch to ${id}`);
     }
@@ -12541,6 +12778,7 @@
     function getDashboardReports() {
       return reports.filter(report =>
         matchesDateFilter(report.week, dashboardFilters) &&
+        (dashboardFilters.product === "all" || canonicalText(report.product) === canonicalText(dashboardFilters.product)) &&
         (dashboardFilters.productType === "all" || report.product_type === dashboardFilters.productType) &&
         reportHasPerson(report.owner, dashboardFilters.owner) &&
         (dashboardFilters.role === "all" || report.role === dashboardFilters.role) &&
@@ -14733,6 +14971,7 @@
 
     function renderAll() {
       const activeView = getActiveView();
+      renderGlobalScope();
       const renderers = {
         home: renderHome,
         dashboard: renderDashboardView,
@@ -16242,6 +16481,27 @@
       renderArtifactChecklist(event.target.value);
     });
     document.getElementById("saveGovernanceArtifacts")?.addEventListener("click", saveProductArtifacts);
+    ["globalWeekFilter", "globalProductFilter", "globalOwnerFilter"].forEach(id => {
+      document.getElementById(id)?.addEventListener("change", event => {
+        const key = id === "globalWeekFilter" ? "week" : id === "globalProductFilter" ? "product" : "owner";
+        globalScope[key] = event.target.value || "all";
+        applyGlobalScope();
+        logFilterChange("global_scope", key, globalScope[key]);
+        renderAllSafely(`global ${key} filter`);
+      });
+    });
+    document.getElementById("clearGlobalScope")?.addEventListener("click", () => {
+      globalScope = { week: "all", product: "all", owner: "all" };
+      applyGlobalScope();
+      renderAllSafely("clear global scope");
+    });
+    document.getElementById("mobileMoreNav")?.addEventListener("change", event => {
+      if (!event.target.value) return;
+      navigateToView(event.target.value);
+      event.target.value = "";
+    });
+    applyGlobalScope();
+    renderGlobalScope();
     (async () => {
       await syncUsersWithCloud();
       restoreSession();
