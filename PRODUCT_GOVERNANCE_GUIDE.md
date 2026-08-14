@@ -55,7 +55,7 @@ Each workstream must have one accountable Owner. Participants may contribute, bu
 
 ### Governance control
 
-- **Governance classification** explains what kind of item is being managed: Bug, Gap, Change Request, Configuration Issue, or Investigation.
+- **Governance classification** explains what kind of item is being managed: Bug, Gap, Change Request, Configuration Issue, Investigation, Enhancement, Risk, or Usability Issue.
 - **Lifecycle phase** shows where the item is in the product or UI/UX lifecycle, based on Functional role.
 - **Evidence status** shows whether supporting evidence is Missing, Partial, Available, or Validated.
 - **Evidence reference** links or names the document, approval, test result, meeting decision, design, ticket, or analysis supporting the update.
