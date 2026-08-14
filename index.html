@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-store, max-age=0" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <meta name="dashboard-build" content="2026-08-14-p1-scope-governance-meeting-access-mobile-capacity" />
+  <meta name="dashboard-build" content="2026-08-14-p2-empty-states-taxonomy-accessibility" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231f5874'/%3E%3Ctext x='32' y='41' text-anchor='middle' font-family='Arial,sans-serif' font-size='28' font-weight='700' fill='white'%3EPU%3C/text%3E%3C/svg%3E" />
   <title>Omena Consulting Dashboard</title>
   <style>
@@ -62,6 +62,23 @@
     body.login-required .app { display: none; }
 
     button, input, select, textarea { font: inherit; }
+
+    :where(button, input, select, textarea, a[href], [tabindex]):focus-visible {
+      outline: 3px solid rgba(47, 111, 143, .45);
+      outline-offset: 3px;
+    }
+
+    .sr-only {
+      position: fixed;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
 
     .login-screen {
       min-height: 100vh;
@@ -2412,6 +2429,76 @@
       margin-bottom: 5px;
     }
 
+    .empty[data-empty-kind] {
+      display: grid;
+      justify-items: center;
+      gap: 8px;
+    }
+
+    .empty[data-empty-kind]::before {
+      content: attr(data-empty-label);
+      display: inline-flex;
+      border-radius: 999px;
+      padding: 4px 8px;
+      background: var(--blue-soft);
+      color: var(--accent-strong);
+      font-size: 11px;
+      font-weight: 850;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    .empty[data-empty-kind="no-results"]::before {
+      background: var(--amber-soft);
+      color: #80520f;
+    }
+
+    .empty[data-empty-kind="error"]::before {
+      background: var(--red-soft);
+      color: var(--red);
+    }
+
+    .empty-actions {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .glossary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .glossary-item {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+      background: var(--soft);
+    }
+
+    .glossary-item strong,
+    .glossary-item span {
+      display: block;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+      }
+    }
+
+    @media (pointer: coarse) {
+      :where(button, input, select, textarea, a.btn) {
+        min-height: 44px;
+      }
+    }
+
     @media (max-width: 1240px) {
       .two-col,
       .exec-grid,
@@ -2550,6 +2637,9 @@
       .empty {
         padding: 20px 14px;
       }
+      .glossary-grid {
+        grid-template-columns: 1fr;
+      }
     }
     .governance-layout { display:grid; grid-template-columns:minmax(0, 1.05fr) minmax(360px, .95fr); gap:16px; align-items:start; }
     .governance-card { border:1px solid var(--line); border-radius:18px; padding:16px; background:var(--surface); cursor:pointer; }
@@ -2606,7 +2696,7 @@
         <button class="tab active" data-view="home" data-mobile-primary title="See this week's work and next actions">This Week</button>
         <div class="nav-section" data-hide-executive-admin>My Work</div>
         <button class="tab" data-view="myDashboard" data-hide-executive-admin title="Personal dashboard for your workstreams, dates, risks, and next actions">My Dashboard</button>
-        <button class="tab" data-view="reports" data-master-only>Update Reports</button>
+        <button class="tab" data-view="reports" data-master-only>Weekly Updates</button>
         <div class="nav-section">Portfolio</div>
         <button class="tab" data-view="dashboard" data-mobile-primary title="Portfolio health, workstreams, dates, risks, wins, blockers, and next actions">Portfolio Dashboard</button>
         <button class="tab" data-view="executive" data-mobile-primary title="Leadership summary focused on attention items and decisions">Executive View</button>
@@ -2614,8 +2704,8 @@
         <button class="tab" data-view="incidents" title="Major delays, minor delays, blockers, at-risk, and critical workstreams">Incidents & Delays</button>
         <div class="nav-section">Governance &amp; Reviews</div>
         <button class="tab" data-view="managementReview" data-role-manager-only>Manager Meeting</button>
-        <button class="tab" data-view="projectTalkTrack" data-role-manager-only>Project Talk Track</button>
-        <button class="tab" data-view="weeklyProjectBrief" data-role-manager-only>Weekly Project Review</button>
+        <button class="tab" data-view="projectTalkTrack" data-role-manager-only>Product Talk Track</button>
+        <button class="tab" data-view="weeklyProjectBrief" data-role-manager-only>Weekly Product Review</button>
         <button class="tab" data-view="reportAnalysis" data-role-manager-only>Report Quality Review</button>
         <button class="tab" data-view="ownerFeedback" data-role-manager-only>Coaching Feedback</button>
         <button class="tab" data-view="actionItems" data-role-manager-only>Action Items</button>
@@ -2623,7 +2713,7 @@
         <button class="tab" data-view="workload" data-role-manager-only>Capacity &amp; Support</button>
         <button class="tab" data-view="governance" data-mobile-primary data-governance-access>Product Governance</button>
         <div class="nav-section" data-role-manager-only>Admin</div>
-        <button class="tab" data-view="sourceProjects" data-role-manager-only>Project Source List</button>
+        <button class="tab" data-view="sourceProjects" data-role-manager-only>Product Source List</button>
         <button class="tab" data-view="users" data-role-manager-only>User Access</button>
         <button class="tab" data-view="userLog" data-role-manager-only>User Log</button>
         <button class="tab" data-view="workflow" data-role-manager-only title="End-to-end workflow guide for using the dashboard">Workflow Guide</button>
@@ -2641,6 +2731,7 @@
     </aside>
 
     <main>
+      <div class="sr-only" id="appLiveRegion" role="status" aria-live="polite" aria-atomic="true"></div>
       <section class="global-scope" id="globalScope" aria-label="Persistent dashboard scope">
         <div class="global-scope-title">
           <strong>Global scope</strong>
@@ -2694,7 +2785,7 @@
             <p class="muted" id="dashboardSubtitle">Review the active product portfolio, filter by week, product type, owner, role, and health, then click workstream cards to open wins, blockers, and next actions in context.</p>
           </div>
           <div class="top-actions">
-            <button class="btn primary" data-jump="reports" data-master-only>Open Update Reports</button>
+            <button class="btn primary" data-jump="reports" data-master-only>Open Weekly Updates</button>
             <button class="btn" type="button" data-logout>Logout</button>
           </div>
         </div>
@@ -2934,7 +3025,7 @@
             <div class="panel-title">
               <div>
                 <h3>My Workstreams</h3>
-                <p class="muted small">Click Update to open the selected report in Update Reports.</p>
+                <p class="muted small">Click Update to open the selected report in Weekly Updates.</p>
               </div>
             </div>
             <div class="report-list compact-list" id="myWorkstreamList"></div>
@@ -2950,7 +3041,7 @@
             <p class="muted">Use this map to understand what each workspace does, who owns it, and where to go next. Available actions adapt to your assigned profile.</p>
           </div>
           <div class="top-actions">
-            <button class="btn primary" data-jump="reports" data-master-only>Open Update Reports</button>
+            <button class="btn primary" data-jump="reports" data-master-only>Open Weekly Updates</button>
             <button class="btn" type="button" data-logout>Logout</button>
           </div>
         </div>
@@ -2958,7 +3049,7 @@
         <div class="guide-grid">
           <div class="guide-card theme-blue">
             <strong>1. Capture work</strong>
-            <p class="muted small">Source projects and weekly status reports create the operating record.</p>
+            <p class="muted small">Source products and weekly updates create the operating record.</p>
           </div>
           <div class="guide-card theme-green">
             <strong>2. Review signals</strong>
@@ -2981,6 +3072,23 @@
           </div>
           <div class="report-list" id="workflowStepList"></div>
         </div>
+
+        <div class="panel">
+          <div class="panel-title">
+            <div>
+              <h3>Product language</h3>
+              <p class="muted small">Use these terms consistently in screens, meetings, exports, and support conversations. English is the product's primary operational language.</p>
+            </div>
+          </div>
+          <div class="glossary-grid">
+            <div class="glossary-item"><strong>Product</strong><span class="muted small">The portfolio-level offering. Avoid “project” when referring to the product itself.</span></div>
+            <div class="glossary-item"><strong>Workstream</strong><span class="muted small">A track of delivery within a product, owned and reported independently.</span></div>
+            <div class="glossary-item"><strong>Weekly update</strong><span class="muted small">The status record submitted for one product workstream and reporting week.</span></div>
+            <div class="glossary-item"><strong>Functional role</strong><span class="muted small">The contributor's operating responsibility, such as Product Manager or UI/UX.</span></div>
+            <div class="glossary-item"><strong>Delivery health</strong><span class="muted small">On Track, In Progress, At Risk, or Paused; always pair color with text.</span></div>
+            <div class="glossary-item"><strong>Governance gate</strong><span class="muted small">A readiness decision supported by evidence, approver, rationale, and conditions.</span></div>
+          </div>
+        </div>
       </section>
 
       <section class="view executive-stage" id="executive">
@@ -2991,7 +3099,7 @@
             <p class="muted" id="executiveSubtitle">A focused view for portfolio health, risky workstreams, owner follow-up, delivery dates, and the next actions that need leadership attention.</p>
           </div>
           <div class="top-actions">
-            <button class="btn primary" data-jump="reports" data-master-only>Open Update Reports</button>
+            <button class="btn primary" data-jump="reports" data-master-only>Open Weekly Updates</button>
             <button class="btn" type="button" data-logout>Logout</button>
           </div>
         </div>
@@ -2999,7 +3107,7 @@
         <div class="guide-grid">
           <div class="guide-card theme-blue">
             <strong>Health first</strong>
-            <p class="muted small">Start with Project Health Summary to focus the portfolio by project before opening workstreams.</p>
+            <p class="muted small">Start with Product Health Summary to focus the portfolio by product before opening workstreams.</p>
           </div>
           <div class="guide-card theme-amber">
             <strong>Attention list</strong>
@@ -3084,19 +3192,19 @@
           <div class="panel">
             <div class="panel-title">
               <div>
-                <h3>Project Health Summary</h3>
-                <p class="muted small">Click a status, then open a project and select a workstream to view Wins, Blockers, and Next Action.</p>
+                <h3>Product Health Summary</h3>
+                <p class="muted small">Click a status, then open a product and select a workstream to view Wins, Blockers, and Next Action.</p>
               </div>
             </div>
             <div class="health-stack" id="executiveHealth"></div>
             <div class="executive-health-title">
               <div>
-                <h3 id="executiveHealthProjectsTitle">Projects Needing Attention</h3>
-                <p class="muted small" id="executiveHealthProjectsSubtitle">Highest-priority projects are shown first.</p>
+                <h3 id="executiveHealthProjectsTitle">Products Needing Attention</h3>
+                <p class="muted small" id="executiveHealthProjectsSubtitle">Highest-priority products are shown first.</p>
               </div>
             </div>
             <div class="executive-health-projects" id="executiveHealthProjects">
-              <div class="empty"><strong>Select a status</strong>Select a delivery health status to show matching projects.</div>
+              <div class="empty"><strong>Select a status</strong>Select a delivery health status to show matching products.</div>
             </div>
           </div>
           <div class="panel">
@@ -3136,8 +3244,8 @@
         <div class="header">
           <div>
             <span class="page-kicker">Source portfolio</span>
-            <h2>Project Source List</h2>
-            <p class="muted">Import and review the SharePoint project source list before comparing it with dashboard status reports.</p>
+            <h2>Product Source List</h2>
+            <p class="muted">Import and review the SharePoint product source list before comparing it with dashboard weekly updates.</p>
           </div>
           <div class="top-actions">
             <a class="btn primary" id="sourceProjectLink" target="_blank" rel="noopener">Open source workbook</a>
@@ -3156,7 +3264,7 @@
           </div>
           <div class="guide-card theme-amber">
             <strong>3. Review gaps</strong>
-            <p class="muted small">Compare source projects with weekly reports to spot missing updates.</p>
+            <p class="muted small">Compare source products with weekly updates to spot missing updates.</p>
           </div>
         </div>
 
@@ -3180,8 +3288,8 @@
         <div class="panel">
           <div class="panel-title">
             <div>
-              <h3>Source project list</h3>
-              <p class="muted small" id="sourceProjectSummary">No imported source projects yet.</p>
+              <h3>Source product list</h3>
+              <p class="muted small" id="sourceProjectSummary">No imported source products yet.</p>
             </div>
           </div>
           <div class="report-list" id="sourceProjectList"></div>
@@ -3413,7 +3521,7 @@
         <div class="header">
           <div>
             <span class="page-kicker">Visual meeting board</span>
-            <h2>Project Talk Track</h2>
+            <h2>Product Talk Track</h2>
             <p class="muted">A fast, visual page for speaking about every active product in the manager meeting without reading long report text.</p>
           </div>
           <button class="btn" type="button" data-logout>Logout</button>
@@ -3482,7 +3590,7 @@
         <div class="header">
           <div>
             <span class="page-kicker">Weekly status report</span>
-            <h2>Weekly Project Review</h2>
+            <h2>Weekly Product Review</h2>
             <p class="muted">Use this meeting-ready view to explain each active product: current status, weekly progress, risks, decisions, and next focus.</p>
           </div>
           <button class="btn" type="button" data-logout>Logout</button>
@@ -4212,8 +4320,8 @@
           <div class="panel">
             <div class="panel-title">
               <div>
-                <h3>Project Indicators</h3>
-                <p class="muted small">Grouped by project. Highest delayed and critical counts appear first.</p>
+                <h3>Product Indicators</h3>
+                <p class="muted small">Grouped by product. Highest delayed and critical counts appear first.</p>
               </div>
             </div>
             <div class="report-list" id="incidentProjectList"></div>
@@ -4238,7 +4346,7 @@
             <p class="muted" id="timelineSubtitle">Track workstreams by start date, end date, milestone, dependency, and schedule status. Use it like a lightweight Gantt view for delivery follow-up.</p>
           </div>
           <div class="top-actions">
-            <button class="btn primary" data-jump="reports" type="button">Open Update Reports</button>
+            <button class="btn primary" data-jump="reports" type="button">Open Weekly Updates</button>
             <button class="btn" type="button" data-logout>Logout</button>
           </div>
         </div>
@@ -4348,7 +4456,7 @@
             <p class="muted">Capture one feature or workstream update for a product. After saving, dashboards, report history, date alerts, and exports update automatically.</p>
           </div>
           <div class="top-actions">
-            <button class="btn" data-jump="reports" type="button">Back to Update Reports</button>
+            <button class="btn" data-jump="reports" type="button">Back to Weekly Updates</button>
             <button class="btn" type="button" data-logout>Logout</button>
           </div>
         </div>
@@ -4646,7 +4754,7 @@
         <div class="header">
           <div>
             <span class="page-kicker">Status center</span>
-            <h2>Update Reports</h2>
+            <h2>Weekly Updates</h2>
             <p class="muted">Create new weekly updates, review submitted reports, edit saved details, export data, and audit history from one workspace.</p>
           </div>
           <div class="top-actions">
@@ -5310,6 +5418,55 @@
       if (!items.length) return emptyMarkup;
       const page = pagedItems(items, key, pageSize);
       return `${page.items.map(renderItem).join("")}${paginationControlsMarkup(key, page.pager, noun)}`;
+    }
+
+    function emptyStateMarkup({
+      kind = "initial",
+      title,
+      description,
+      primaryLabel = "",
+      primaryAction = "",
+      secondaryLabel = "",
+      secondaryAction = ""
+    }) {
+      const labels = {
+        initial: "Get started",
+        "no-results": "No results",
+        error: "Something went wrong"
+      };
+      const action = (label, value, primary = false) => label && value
+        ? `<button class="btn ${primary ? "primary" : ""}" type="button" data-empty-action="${escapeHtml(value)}">${escapeHtml(label)}</button>`
+        : "";
+      const actions = [
+        action(primaryLabel, primaryAction, true),
+        action(secondaryLabel, secondaryAction)
+      ].filter(Boolean).join("");
+      return `
+        <div class="empty" data-empty-kind="${escapeHtml(kind)}" data-empty-label="${escapeHtml(labels[kind] || labels.initial)}">
+          <strong>${escapeHtml(title)}</strong>
+          <span>${escapeHtml(description)}</span>
+          ${actions ? `<div class="empty-actions">${actions}</div>` : ""}
+        </div>
+      `;
+    }
+
+    function announce(message) {
+      const region = document.getElementById("appLiveRegion");
+      if (!region) return;
+      region.textContent = "";
+      window.setTimeout(() => { region.textContent = message; }, 20);
+    }
+
+    function clearActiveViewFilters() {
+      const activeView = document.querySelector(".view.active");
+      if (!activeView) return;
+      activeView.querySelectorAll("select").forEach(select => {
+        const allOption = [...select.options].find(option => option.value === "all");
+        if (!allOption || select.value === "all") return;
+        select.value = "all";
+        select.dispatchEvent(new Event("change", { bubbles: true }));
+      });
+      announce("Filters cleared. Results updated.");
     }
 
     function loadReports() {
@@ -6131,6 +6288,8 @@
 
     function renderPeoplePicker(picker) {
       const name = picker.dataset.name;
+      const controlId = picker.dataset.controlId || `picker-${crypto.randomUUID()}`;
+      picker.dataset.controlId = controlId;
       const multiple = picker.dataset.multiple === "true";
       const placeholder = picker.dataset.placeholder || (multiple ? "Select people" : "Select person");
       const selected = (picker.dataset.selected || "")
@@ -6144,11 +6303,11 @@
       const selectedTitle = selected.length ? selected.join(" / ") : placeholder;
       picker.innerHTML = `
         <input type="hidden" name="${escapeHtml(name)}" value="${escapeHtml(multiple ? selected.join(" / ") : (selected[0] || ""))}" />
-        <button class="people-picker-btn" type="button" aria-haspopup="listbox" aria-expanded="false" title="${escapeHtml(selectedTitle)}">
+        <button class="people-picker-btn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="${escapeHtml(controlId)}" aria-label="${escapeHtml(`${picker.dataset.label || "Person"}: ${selectedTitle}`)}" title="${escapeHtml(selectedTitle)}">
           <span>${escapeHtml(selectedText)}</span>
         </button>
-        <div class="people-menu" hidden>
-          <input type="text" class="picker-search" data-picker-search placeholder="Type to search ${escapeHtml((picker.dataset.label || "people").toLowerCase())}" />
+        <div class="people-menu" id="${escapeHtml(controlId)}" hidden>
+          <input type="text" class="picker-search" data-picker-search aria-label="Search ${escapeHtml((picker.dataset.label || "people").toLowerCase())}" placeholder="Type to search ${escapeHtml((picker.dataset.label || "people").toLowerCase())}" />
           <div class="people-options" role="listbox" aria-label="${escapeHtml(picker.dataset.label || "People")}">
             ${people.map(person => {
               const checked = selected.some(value => canonicalText(value) === canonicalText(person));
@@ -6200,15 +6359,17 @@
 
     function renderProductPicker(picker) {
       const selected = cleanText(picker.dataset.selected || "");
+      const controlId = picker.dataset.controlId || `picker-${crypto.randomUUID()}`;
+      picker.dataset.controlId = controlId;
       const selectedTitle = selected || picker.dataset.placeholder || "Select product";
       const values = uniqueProducts([selected, ...productDirectory()].filter(Boolean));
       picker.innerHTML = `
         <input type="hidden" name="${escapeHtml(picker.dataset.name || "product")}" value="${escapeHtml(selected)}" />
-        <button class="people-picker-btn" type="button" aria-haspopup="listbox" aria-expanded="false" title="${escapeHtml(selectedTitle)}">
+        <button class="people-picker-btn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="${escapeHtml(controlId)}" aria-label="Product: ${escapeHtml(selectedTitle)}" title="${escapeHtml(selectedTitle)}">
           <span>${escapeHtml(selectedTitle)}</span>
         </button>
-        <div class="people-menu" hidden>
-          <input type="text" class="picker-search" data-picker-search placeholder="Type to search products" />
+        <div class="people-menu" id="${escapeHtml(controlId)}" hidden>
+          <input type="text" class="picker-search" data-picker-search aria-label="Search products" placeholder="Type to search products" />
           <div class="people-options" role="listbox" aria-label="${escapeHtml(picker.dataset.label || "Products")}">
             ${values.map(product => `
               <label class="people-option" data-search-text="${escapeHtml(canonicalText(product))}">
@@ -6257,15 +6418,17 @@
 
     function renderDependencyPicker(picker) {
       const selected = cleanText(picker.dataset.selected || "");
+      const controlId = picker.dataset.controlId || `picker-${crypto.randomUUID()}`;
+      picker.dataset.controlId = controlId;
       const selectedTitle = selected || picker.dataset.placeholder || "Select dependency";
       const values = uniqueProducts([selected, ...dependencyDirectory()].filter(Boolean));
       picker.innerHTML = `
         <input type="hidden" name="${escapeHtml(picker.dataset.name || "dependency")}" value="${escapeHtml(selected)}" />
-        <button class="people-picker-btn" type="button" aria-haspopup="listbox" aria-expanded="false" title="${escapeHtml(selectedTitle)}">
+        <button class="people-picker-btn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="${escapeHtml(controlId)}" aria-label="Dependency: ${escapeHtml(selectedTitle)}" title="${escapeHtml(selectedTitle)}">
           <span>${escapeHtml(selectedTitle)}</span>
         </button>
-        <div class="people-menu" hidden>
-          <input type="text" class="picker-search" data-picker-search placeholder="Type to search dependencies" />
+        <div class="people-menu" id="${escapeHtml(controlId)}" hidden>
+          <input type="text" class="picker-search" data-picker-search aria-label="Search dependencies" placeholder="Type to search dependencies" />
           <div class="people-options" role="listbox" aria-label="${escapeHtml(picker.dataset.label || "Dependencies")}">
             <label class="people-option" data-search-text="no dependency">
               <input type="radio" name="${escapeHtml(picker.dataset.name || "dependency")}_choice" value="" ${!selected ? "checked" : ""}>
@@ -7440,7 +7603,7 @@
       const missing = rows.length - matched;
       const highPriority = rows.filter(row => /high|critical|urgent/i.test(row.priority)).length;
       const cardData = [
-        ["Source projects", rows.length, "blue", "Imported from workbook copy/paste"],
+        ["Source products", rows.length, "blue", "Imported from workbook copy/paste"],
         ["Owners", owners.size, "green", "People accountable in source"],
         ["Missing reports", missing, missing ? "red" : "green", "No matching dashboard status found"],
         ["High priority", highPriority, highPriority ? "amber" : "green", "Priority marked high/critical/urgent"]
@@ -7453,8 +7616,8 @@
         </div>
       `).join("");
       summary.textContent = rows.length
-        ? `${rows.length} source project${rows.length === 1 ? "" : "s"} imported. ${matched} matched to dashboard reports, ${missing} need review.`
-        : "No imported source projects yet. Open the SharePoint workbook, copy the table, and paste it above.";
+        ? `${rows.length} source product${rows.length === 1 ? "" : "s"} imported. ${matched} matched to weekly updates, ${missing} need review.`
+        : "No imported source products yet. Open the SharePoint workbook, copy the table, and paste it above.";
       list.innerHTML = rows.length ? rows.map(row => {
         const matchedStatus = sourceProjectHasReport(row);
         return `
@@ -7475,7 +7638,13 @@
             <p class="muted small">${escapeHtml(row.notes || "No notes captured from source.")}</p>
           </div>
         `;
-      }).join("") : `<div class="empty"><strong>No source projects imported</strong>Open the SharePoint workbook, copy the table including headers, then paste and import it here.</div>`;
+      }).join("") : emptyStateMarkup({
+        kind: "initial",
+        title: "No source products imported",
+        description: "Open the SharePoint workbook, copy the table including headers, then paste and import it here.",
+        primaryLabel: "Open source workbook",
+        primaryAction: "open-source-workbook"
+      });
     }
 
     function loadLocalGovernanceArray(key) {
@@ -7843,7 +8012,13 @@
       const container = document.getElementById("governanceArtifactChecklist");
       if (!container) return;
       if (!product) {
-        container.innerHTML = `<div class="empty"><strong>Select a product</strong>Choose a product to review its required evidence pack.</div>`;
+        container.innerHTML = emptyStateMarkup({
+          kind: "initial",
+          title: "Select a product",
+          description: "Choose a product to review and link its required evidence pack.",
+          primaryLabel: "Choose product",
+          primaryAction: "focus-governance-product"
+        });
         return;
       }
       const byType = new Map(productArtifacts.filter(item => canonicalText(item.product) === canonicalText(product)).map(item => [item.artifact_type, item]));
@@ -7910,7 +8085,15 @@
           <span><span class="product-label">${escapeHtml(item.product)} · ${escapeHtml(shortEntityRef("GOV", item.id))}</span><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.workstream || "No workstream")} - ${escapeHtml(item.owner || "Unassigned")} (${escapeHtml(item.functional_role)})${reportsForGovernanceItem(item)[0] ? ` · Source ${escapeHtml(shortEntityRef("RPT", reportsForGovernanceItem(item)[0].id))}` : ""}</small></span>
           <span class="governance-item-signals"><span class="chip ${item.priority === "Critical" ? "red" : item.priority === "High" ? "amber" : "blue"}">${escapeHtml(item.priority)}</span><span class="chip ${item.evidence_status === "Validated" ? "green" : "amber"}">${escapeHtml(item.evidence_status)}</span><span class="chip ${item.gate_status === "Approved" ? "green" : item.gate_status === "Rejected" ? "red" : "gray"}">${escapeHtml(item.gate_status)}</span></span>
         </button>
-      `).join("") : `<div class="empty"><strong>No governance items yet</strong>Create the first classified gap, change, bug, configuration issue, or investigation.</div>`;
+      `).join("") : emptyStateMarkup({
+        kind: "initial",
+        title: "No governance items yet",
+        description: "Create the first classified gap, change, bug, configuration issue, or investigation.",
+        primaryLabel: "Create governance item",
+        primaryAction: "create-governance",
+        secondaryLabel: "Open weekly updates",
+        secondaryAction: "open-weekly-updates"
+      });
       setSelectOptions(form.elements.product, governanceProducts(), form.elements.product.value, "Select product");
       populateGovernanceReportOptions(form, form.elements.source_report_id.value);
       populateGovernanceFormOptions(form);
@@ -9884,7 +10067,15 @@
       subtitle.textContent = copy.subtitle;
       list.innerHTML = rows.length
         ? renderAnalysisList(rows, `analysisDrilldown-${selectedAnalysisMetric || "all"}`)
-        : `<div class="empty"><strong>No matching reports</strong>No reports match this card and the current filters.</div>`;
+        : emptyStateMarkup({
+          kind: "no-results",
+          title: "No matching weekly updates",
+          description: "No weekly updates match this card and the current filters.",
+          primaryLabel: "Clear filters",
+          primaryAction: "clear-filters",
+          secondaryLabel: "Add weekly update",
+          secondaryAction: "add-weekly-update"
+        });
     }
 
     function openAnalysisMetric(metric) {
@@ -9934,7 +10125,15 @@
         : "No reports match the current analysis filters.";
       list.innerHTML = activeItems.length
         ? renderAnalysisList(activeItems, selectedAnalysisMetric ? `analysisActive-${selectedAnalysisMetric}` : "analysisActive")
-        : `<div class="empty"><strong>No reports to analyze</strong>Adjust filters or add status reports to populate this view.</div>`;
+        : emptyStateMarkup({
+          kind: reports.length ? "no-results" : "initial",
+          title: reports.length ? "No weekly updates match" : "No weekly updates to analyze",
+          description: reports.length ? "Clear the current filters to restore the review queue." : "Add a weekly update to populate report quality review.",
+          primaryLabel: reports.length ? "Clear filters" : "Add weekly update",
+          primaryAction: reports.length ? "clear-filters" : "add-weekly-update",
+          secondaryLabel: reports.length ? "Add weekly update" : "View workflow example",
+          secondaryAction: reports.length ? "add-weekly-update" : "view-workflow"
+        });
     }
 
     function copyTextToClipboard(text) {
@@ -15012,8 +15211,15 @@
         activeSection?.querySelector(".view-render-error")?.remove();
         if (activeSection) {
           const message = document.createElement("div");
-          message.className = "inline-message danger view-render-error";
-          message.textContent = "This page could not finish loading. Refresh the data or change the filters, then try again.";
+          message.className = "view-render-error";
+          message.setAttribute("role", "alert");
+          message.innerHTML = emptyStateMarkup({
+            kind: "error",
+            title: "This page could not finish loading",
+            description: "Retry the view. If the problem continues, refresh the dashboard and confirm the data connection.",
+            primaryLabel: "Retry",
+            primaryAction: "retry-view"
+          });
           const header = activeSection.querySelector(".page-hero, .panel, .card, h1");
           if (header?.parentNode) {
             header.parentNode.insertBefore(message, header.nextSibling);
@@ -15021,6 +15227,7 @@
             activeSection.prepend(message);
           }
         }
+        announce("This page could not finish loading.");
         setSyncStatus("Saved to Supabase; refresh the page if the view looks stale");
       }
     }
@@ -15199,6 +15406,27 @@
       btn.addEventListener("click", () => {
         safeNavigateToView(btn.dataset.jump, "shortcut navigation");
       });
+    });
+
+    document.addEventListener("click", event => {
+      const emptyAction = event.target.closest("[data-empty-action]");
+      if (!emptyAction) return;
+      const action = emptyAction.dataset.emptyAction;
+      if (action === "clear-filters") clearActiveViewFilters();
+      if (action === "add-weekly-update" || action === "open-weekly-updates") safeNavigateToView(action === "add-weekly-update" ? "intake" : "reports", "empty state action");
+      if (action === "view-workflow") safeNavigateToView("workflow", "empty state example");
+      if (action === "open-source-workbook") document.getElementById("sourceProjectLink")?.click();
+      if (action === "retry-view") renderAllSafely("empty state retry");
+      if (action === "create-governance") {
+        const field = document.querySelector("#governanceForm input:not([type='hidden']), #governanceForm select");
+        field?.scrollIntoView({ behavior: "smooth", block: "center" });
+        field?.focus();
+      }
+      if (action === "focus-governance-product") {
+        const field = document.getElementById("governanceArtifactProduct");
+        field?.scrollIntoView({ behavior: "smooth", block: "center" });
+        field?.focus();
+      }
     });
 
     document.addEventListener("click", event => {
@@ -15406,6 +15634,8 @@
         updateProductPickerSelection(picker, product, { keepOpen: false });
         picker.querySelector(".people-menu").hidden = true;
         picker.querySelector(".people-picker-btn").setAttribute("aria-expanded", "false");
+        picker.querySelector(".people-picker-btn").focus();
+        announce(`Product ${product} selected.`);
         return;
       }
 
@@ -15418,6 +15648,8 @@
         updateDependencyPickerSelection(picker, dependency, { keepOpen: false });
         picker.querySelector(".people-menu").hidden = true;
         picker.querySelector(".people-picker-btn").setAttribute("aria-expanded", "false");
+        picker.querySelector(".people-picker-btn").focus();
+        announce(`Dependency ${dependency} selected.`);
         return;
       }
 
@@ -15428,12 +15660,16 @@
           updateProductPickerSelection(picker, option.value);
           picker.querySelector(".people-menu").hidden = true;
           picker.querySelector(".people-picker-btn").setAttribute("aria-expanded", "false");
+          picker.querySelector(".people-picker-btn").focus();
+          announce(`Product ${option.value} selected.`);
           return;
         }
         if (picker.matches("[data-dependency-picker]")) {
           updateDependencyPickerSelection(picker, option.value);
           picker.querySelector(".people-menu").hidden = true;
           picker.querySelector(".people-picker-btn").setAttribute("aria-expanded", "false");
+          picker.querySelector(".people-picker-btn").focus();
+          announce(option.value ? `Dependency ${option.value} selected.` : "Dependency cleared.");
           return;
         }
         const selected = picker.dataset.multiple === "true"
@@ -15443,7 +15679,9 @@
         if (picker.dataset.multiple !== "true") {
           picker.querySelector(".people-menu").hidden = true;
           picker.querySelector(".people-picker-btn").setAttribute("aria-expanded", "false");
+          picker.querySelector(".people-picker-btn").focus();
         }
+        announce(picker.dataset.multiple === "true" ? `${selected.length} people selected.` : `${option.value} selected.`);
         return;
       }
 
@@ -15461,6 +15699,53 @@
       const menu = search.closest(".people-menu");
       if (!menu) return;
       filterPickerOptions(menu, search.value);
+    });
+
+    document.addEventListener("keydown", event => {
+      const picker = event.target.closest("[data-people-picker], [data-product-picker], [data-dependency-picker]");
+      if (!picker) return;
+      const menu = picker.querySelector(".people-menu");
+      const button = picker.querySelector(".people-picker-btn");
+      if (event.key === "Escape" && menu && !menu.hidden) {
+        event.preventDefault();
+        menu.hidden = true;
+        button?.setAttribute("aria-expanded", "false");
+        button?.focus();
+        announce("Picker closed.");
+        return;
+      }
+      if ((event.key === "ArrowDown" || event.key === "Enter") && event.target === button && menu?.hidden) {
+        event.preventDefault();
+        button.click();
+        return;
+      }
+      if (event.key === "ArrowDown" && event.target.matches("[data-picker-search]")) {
+        const firstOption = menu?.querySelector(".people-option:not([hidden]) input");
+        if (firstOption) {
+          event.preventDefault();
+          firstOption.focus();
+        }
+      }
+      if (event.key === "Enter" && event.target.matches("[data-new-person], [data-new-product], [data-new-dependency]")) {
+        event.preventDefault();
+        picker.querySelector("[data-add-person], [data-add-product], [data-add-dependency]")?.click();
+      }
+    });
+
+    document.querySelectorAll(".inline-message").forEach(message => {
+      message.setAttribute("role", message.classList.contains("danger") ? "alert" : "status");
+      message.setAttribute("aria-live", message.classList.contains("danger") ? "assertive" : "polite");
+    });
+
+    document.addEventListener("invalid", event => {
+      event.target?.setAttribute?.("aria-invalid", "true");
+      announce(`Check ${event.target?.labels?.[0]?.textContent?.trim() || "the highlighted field"}.`);
+    }, true);
+
+    document.addEventListener("input", event => {
+      if (event.target?.matches?.("input, select, textarea") && event.target.checkValidity?.()) {
+        event.target.removeAttribute("aria-invalid");
+      }
     });
 
     document.getElementById("statusForm").addEventListener("submit", async event => {
