@@ -92,6 +92,61 @@ function htmlFeedbackEmail(displayName: string, message: string, htmlMessage?: s
   `;
 }
 
+async function sendEmail(options: {
+  to: string;
+  displayName: string;
+  subject: string;
+  text: string;
+  html: string;
+}) {
+  const resendApiKey = Deno.env.get("RESEND_API_KEY");
+  if (resendApiKey) {
+    const fromEmail = Deno.env.get("RESEND_FROM_EMAIL") || Deno.env.get("SENDGRID_FROM_EMAIL");
+    if (!fromEmail) throw new Error("Missing RESEND_FROM_EMAIL");
+
+    return {
+      provider: "Resend",
+      response: await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${resendApiKey}`,
+          "Content-Type": "application/json",
+          "User-Agent": "omena-supabase-email/1.0",
+        },
+        body: JSON.stringify({
+          from: `${Deno.env.get("RESEND_FROM_NAME") || "Omena Consulting"} <${fromEmail}>`,
+          to: [options.to],
+          subject: options.subject,
+          text: options.text,
+          html: options.html,
+        }),
+      }),
+    };
+  }
+
+  const sendgridApiKey = requiredEnv("SENDGRID_API_KEY");
+  const fromEmail = requiredEnv("SENDGRID_FROM_EMAIL");
+  const fromName = Deno.env.get("SENDGRID_FROM_NAME") || "Omena Consulting";
+  return {
+    provider: "SendGrid",
+    response: await fetch("https://api.sendgrid.com/v3/mail/send", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${sendgridApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        personalizations: [{ to: [{ email: options.to, name: options.displayName }], subject: options.subject }],
+        from: { email: fromEmail, name: fromName },
+        content: [
+          { type: "text/plain", value: options.text },
+          { type: "text/html", value: options.html },
+        ],
+      }),
+    }),
+  };
+}
+
 Deno.serve(async (request) => {
   if (request.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -102,9 +157,6 @@ Deno.serve(async (request) => {
   }
 
   try {
-    const sendgridApiKey = requiredEnv("SENDGRID_API_KEY");
-    const fromEmail = requiredEnv("SENDGRID_FROM_EMAIL");
-    const fromName = Deno.env.get("SENDGRID_FROM_NAME") || "Omena Consulting";
     const payload = await request.json() as InvitePayload;
 
     if (payload.mode === "feedback") {
@@ -118,30 +170,17 @@ Deno.serve(async (request) => {
         return jsonResponse({ error: "Missing required feedback fields" }, 400);
       }
 
-      const response = await fetch("https://api.sendgrid.com/v3/mail/send", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${sendgridApiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          personalizations: [
-            {
-              to: [{ email: to, name: displayName }],
-              subject,
-            },
-          ],
-          from: { email: fromEmail, name: fromName },
-          content: [
-            { type: "text/plain", value: message },
-            { type: "text/html", value: htmlFeedbackEmail(displayName, message, htmlMessage) },
-          ],
-        }),
+      const { provider, response } = await sendEmail({
+        to,
+        displayName,
+        subject,
+        text: message,
+        html: htmlFeedbackEmail(displayName, message, htmlMessage),
       });
 
       if (!response.ok) {
         const detail = await response.text();
-        return jsonResponse({ error: "SendGrid rejected the email request", detail }, response.status);
+        return jsonResponse({ error: `${provider} rejected the email request`, detail }, response.status);
       }
 
       return jsonResponse({
@@ -169,30 +208,17 @@ Deno.serve(async (request) => {
       return jsonResponse({ error: "Missing required invite fields" }, 400);
     }
 
-    const response = await fetch("https://api.sendgrid.com/v3/mail/send", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${sendgridApiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        personalizations: [
-          {
-            to: [{ email: requiredPayload.to, name: requiredPayload.displayName }],
-            subject: "Omena Consulting access",
-          },
-        ],
-        from: { email: fromEmail, name: fromName },
-        content: [
-          { type: "text/plain", value: textEmail(requiredPayload) },
-          { type: "text/html", value: htmlEmail(requiredPayload) },
-        ],
-      }),
+    const { provider, response } = await sendEmail({
+      to: requiredPayload.to,
+      displayName: requiredPayload.displayName,
+      subject: "Omena Consulting access",
+      text: textEmail(requiredPayload),
+      html: htmlEmail(requiredPayload),
     });
 
     if (!response.ok) {
       const detail = await response.text();
-      return jsonResponse({ error: "SendGrid rejected the email request", detail }, response.status);
+      return jsonResponse({ error: `${provider} rejected the email request`, detail }, response.status);
     }
 
     return jsonResponse({

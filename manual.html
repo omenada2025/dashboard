@@ -556,7 +556,54 @@
     </section>
 
     <section class="section panel">
-      <h2>11. Best Practices</h2>
+      <h2>11. Product Governance Workflow</h2>
+      <p>Product Managers and System Analysts share the same accountable <strong>Owner</strong> responsibility. Each weekly report should connect delivery activity to governance evidence and a decision gate.</p>
+      <ol>
+        <li><strong>Discover:</strong> identify product context, stakeholders, problem, and scope.</li>
+        <li><strong>Baseline:</strong> document AS-IS workflows, rules, permissions, integrations, issues, and approved dates.</li>
+        <li><strong>Assess:</strong> classify bugs, gaps, change requests, configuration issues, investigations, risks, and dependencies.</li>
+        <li><strong>Define MSP and prioritize:</strong> agree the minimum sellable scope, acceptance criteria, value, urgency, and effort.</li>
+        <li><strong>Define TO-BE:</strong> describe the approved future workflow and expected outcome.</li>
+        <li><strong>Build and validate:</strong> implement the approved scope and reference test, design, integration, or stakeholder evidence.</li>
+        <li><strong>Release and learn:</strong> release validated work, capture results and lessons, then rebaseline documentation.</li>
+      </ol>
+      <div class="callout">
+        <strong>Governance rule:</strong> Approved and Approved with Conditions gates require Validated evidence. Ready for Review or any decided gate also requires an evidence reference.
+      </div>
+
+      <h3>How the fields work together</h3>
+      <table>
+        <thead><tr><th>Field group</th><th>What it controls</th><th>Good reporting pattern</th></tr></thead>
+        <tbody>
+          <tr><td>Product, workstream, Owner, role</td><td>Portfolio grouping and accountability</td><td>One accountable Product Manager or System Analyst Owner; participants remain contributors.</td></tr>
+          <tr><td>Classification, lifecycle, evidence, gate</td><td>Governance traceability and readiness</td><td>Classify the item, identify its phase, reference supporting evidence, and set the gate honestly.</td></tr>
+          <tr><td>Baseline, end date, root cause, date-change reason</td><td>Schedule performance and replan history</td><td>Keep the original baseline and explain every approved movement to the current forecast.</td></tr>
+          <tr><td>Summary, win, blocker, next action</td><td>Management narrative and action queue</td><td>Explain what changed, why it matters, what is blocked, and what happens next.</td></tr>
+          <tr><td>Action owner, target date, action status, decision</td><td>Follow-up and escalation</td><td>Name a person, date the checkpoint, update its status, and state the required decision.</td></tr>
+          <tr><td>Stage, progress, milestone</td><td>Delivery position and movement</td><td>Use the real stage, measurable completion, and next meaningful checkpoint. Completed means delivered.</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Practical date-replanning example</h3>
+      <p>If an approved August 14 delivery moves to August 28 because payment-provider certification is unavailable:</p>
+      <ul>
+        <li>Keep <strong>Baseline end date</strong> as August 14 and update <strong>End date</strong> to August 28.</li>
+        <li>Select <strong>Vendor or third party</strong> as the root cause.</li>
+        <li>Explain who approved the movement and why in <strong>Date change reason</strong>.</li>
+        <li>Reference the certification ticket or approval as evidence.</li>
+        <li>Assign the corrective action, owner, and next checkpoint.</li>
+        <li>Use <strong>Approved with Conditions</strong> only when the evidence is validated and the approval conditions are explicit.</li>
+      </ul>
+
+      <h3>Other practical examples</h3>
+      <ul>
+        <li><strong>Bug during validation:</strong> classification Bug, phase Validate, failed-test evidence, gate Not Ready until fixed and retested.</li>
+        <li><strong>New request:</strong> classification Change Request, phase Assess, impact analysis and acceptance criteria, then a decision to approve, defer, or reject.</li>
+        <li><strong>Incomplete current state:</strong> classification Investigation or Gap, phase Baseline, Partial evidence, gate Not Ready.</li>
+        <li><strong>Delivered work:</strong> stage Completed, progress 100%, Validated evidence, Approved gate, phase Release / Learn.</li>
+      </ul>
+
+      <h2>12. Best Practices</h2>
       <ul class="checklist">
         <li>Use one clear owner per report.</li>
         <li>Keep participants separate from the owner.</li>

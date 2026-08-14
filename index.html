@@ -2382,6 +2382,23 @@
         padding: 20px 14px;
       }
     }
+    .governance-layout { display:grid; grid-template-columns:minmax(0, 1.05fr) minmax(360px, .95fr); gap:16px; align-items:start; }
+    .governance-card { border:1px solid var(--line); border-radius:18px; padding:16px; background:var(--surface); cursor:pointer; }
+    .governance-card + .governance-card { margin-top:10px; }
+    .governance-card.selected { border-color:var(--accent); box-shadow:0 0 0 2px rgba(20, 93, 122, .12); }
+    .governance-card header { display:flex; justify-content:space-between; gap:12px; align-items:flex-start; }
+    .governance-card h4 { margin:5px 0; }
+    .governance-meta { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+    .governance-item { width:100%; border:1px solid var(--line); border-radius:14px; padding:12px; background:var(--surface); text-align:left; display:flex; justify-content:space-between; gap:12px; align-items:flex-start; cursor:pointer; }
+    .governance-item + .governance-item { margin-top:8px; }
+    .governance-item:hover { border-color:var(--accent); background:var(--surface-soft); }
+    .governance-item.selected { border-color:var(--accent); box-shadow:0 0 0 2px rgba(20, 93, 122, .12); }
+    .governance-item-signals { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:6px; }
+    .artifact-checklist { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:10px; margin-top:14px; }
+    .artifact-check { display:flex; gap:8px; align-items:flex-start; border:1px solid var(--line); border-radius:12px; padding:10px; background:var(--surface-soft); }
+    .artifact-check input { width:auto; margin-top:3px; }
+    @media (max-width:1100px) { .governance-layout { grid-template-columns:1fr; } .artifact-checklist { grid-template-columns:repeat(2, minmax(0, 1fr)); } }
+    @media (max-width:680px) { .artifact-checklist { grid-template-columns:1fr; } }
   </style>
 </head>
 <body class="login-required">
@@ -2435,6 +2452,7 @@
         <button class="tab" data-view="actionItems" data-role-manager-only>Action Items</button>
         <button class="tab" data-view="weeklyReview" data-role-manager-only>Send Weekly Feedback</button>
         <button class="tab" data-view="workload" data-role-manager-only>Work Balance</button>
+        <button class="tab" data-view="governance" data-role-manager-only>Product Governance</button>
         <div class="nav-section" data-role-manager-only>Admin</div>
         <button class="tab" data-view="sourceProjects" data-role-manager-only>Project Source List</button>
         <button class="tab" data-view="users" data-role-manager-only>User Access</button>
@@ -2984,6 +3002,69 @@
             </div>
           </div>
           <div class="report-list" id="sourceProjectList"></div>
+        </div>
+      </section>
+
+      <section class="view" id="governance" data-role-manager-view>
+        <div class="header">
+          <div>
+            <span class="page-kicker">Governance control</span>
+            <h2>Product Governance</h2>
+            <p class="muted">Connect weekly status reporting to lifecycle phases, evidence, decision gates, and accountable ownership.</p>
+          </div>
+          <button class="btn" type="button" data-logout>Logout</button>
+        </div>
+
+        <div class="guide-grid">
+          <div class="guide-card theme-blue"><strong>1. Classify the work</strong><p class="muted small">Separate bugs, gaps, change requests, configuration issues, and investigations.</p></div>
+          <div class="guide-card theme-green"><strong>2. Validate evidence</strong><p class="muted small">Attach the reference that proves requirements, acceptance, testing, or approval.</p></div>
+          <div class="guide-card theme-amber"><strong>3. Control the gate</strong><p class="muted small">Approve movement only when the evidence is available and the accountable owner is clear.</p></div>
+        </div>
+
+        <div class="grid summary-grid" id="governanceMetrics"></div>
+
+        <div class="governance-layout">
+          <div class="panel">
+            <div class="panel-title"><div><h3>Governance register</h3><p class="muted small">Select an item to edit it, or create a new governance decision record.</p></div></div>
+            <div id="governanceItemList"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-title"><div><h3 id="governanceFormTitle">Create governance item</h3><p class="muted small">Product Manager and System Analyst share the accountable Owner responsibility.</p></div></div>
+            <form id="governanceForm">
+              <input type="hidden" name="id" />
+              <div class="form-grid">
+                <label>Product<select name="product" required></select></label>
+                <label>Workstream<input name="workstream" required placeholder="Feature, workstream, or decision" /></label>
+                <label>Governance title<input name="title" required placeholder="Decision or control point" /></label>
+                <label>Owner<input name="owner" required placeholder="Accountable owner" /></label>
+                <label>Functional responsibility<select name="functional_role" required></select></label>
+                <label>Classification<select name="classification" required></select></label>
+                <label>Lifecycle phase<select name="lifecycle_phase" required></select></label>
+                <label>Evidence status<select name="evidence_status" required></select></label>
+                <label>Gate status<select name="gate_status" required></select></label>
+                <label>Item status<select name="status" required></select></label>
+                <label>Priority<select name="priority"><option>Normal</option><option>High</option><option>Critical</option></select></label>
+                <label>Evidence reference<input name="evidence_reference" placeholder="SharePoint, Jira, Figma, test, or approval link" /></label>
+                <label>Current state<textarea name="current_state" rows="3" placeholder="What is true today?"></textarea></label>
+                <label>Target state<textarea name="target_state" rows="3" placeholder="What outcome is expected?"></textarea></label>
+                <label>Acceptance criteria<textarea name="acceptance_criteria" rows="3" placeholder="How will completion be verified?"></textarea></label>
+                <label>Decision / impact<textarea name="decision_impact" rows="3" placeholder="Decision required, impact, and consequence"></textarea></label>
+              </div>
+              <div class="inline-message" id="governanceMessage" hidden></div>
+              <div class="form-actions">
+                <button class="btn" type="button" id="clearGovernanceItem">Clear</button>
+                <button class="btn danger" type="button" id="deleteGovernanceItem" hidden>Delete</button>
+                <button class="btn primary" type="submit">Save governance item</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-top:16px">
+          <div class="panel-title"><div><h3>Minimum evidence checklist</h3><p class="muted small">Track the core artifacts required to move a product or workstream through governance.</p></div></div>
+          <div class="form-grid"><label>Product<select id="governanceArtifactProduct"></select></label></div>
+          <div class="artifact-checklist" id="governanceArtifactChecklist"></div>
+          <div class="form-actions"><button class="btn primary" type="button" id="saveGovernanceArtifacts">Save evidence checklist</button></div>
         </div>
       </section>
 
@@ -4108,12 +4189,18 @@
                   </select>
                 </label>
                 <label>
-                  Role
+                  Functional responsibility
                   <select name="role">
                     <option>Product Manager</option>
+                    <option>System Analyst</option>
                     <option>UI/UX</option>
                   </select>
                 </label>
+                <label>Governance classification<select name="governance_classification" required><option>Bug</option><option>Gap</option><option>Change Request</option><option>Configuration Issue</option><option selected>Investigation</option></select></label>
+                <label>Lifecycle phase<select name="lifecycle_phase" required><option>Discover</option><option>Baseline</option><option>Assess</option><option>Define MSP</option><option>Prioritize</option><option>Define TO-BE</option><option>Build</option><option>Validate</option><option>Release / Learn</option></select></label>
+                <label>Evidence status<select name="evidence_status" required><option selected>Missing</option><option>Partial</option><option>Available</option><option>Validated</option></select></label>
+                <label>Gate status<select name="gate_status" required><option selected>Not Ready</option><option>Ready for Review</option><option>Approved</option><option>Approved with Conditions</option><option>Rejected</option></select></label>
+                <label>Evidence reference<input name="evidence_reference" placeholder="Link to Jira, SharePoint, Figma, test, or approval" /></label>
               </div>
             </div>
             <div class="form-section">
@@ -4416,6 +4503,26 @@
       "Other"
     ];
     const ACTION_STATUS_OPTIONS = ["Open", "In Progress", "Waiting on decision", "Blocked", "Closed"];
+    const FUNCTIONAL_ROLE_OPTIONS = ["Product Manager", "System Analyst", "UI/UX"];
+    const GOVERNANCE_CLASSIFICATION_OPTIONS = ["Bug", "Gap", "Change Request", "Configuration Issue", "Investigation"];
+    const LIFECYCLE_PHASE_OPTIONS = ["Discover", "Baseline", "Assess", "Define MSP", "Prioritize", "Define TO-BE", "Build", "Validate", "Release / Learn"];
+    const EVIDENCE_STATUS_OPTIONS = ["Missing", "Partial", "Available", "Validated"];
+    const GATE_STATUS_OPTIONS = ["Not Ready", "Ready for Review", "Approved", "Approved with Conditions", "Rejected"];
+    const GOVERNANCE_STATUS_OPTIONS = ["Open", "In Review", "Approved", "Delivered", "Archived"];
+    const GOVERNANCE_ARTIFACT_TYPES = [
+      "Product Reality Assessment", "Application/Feature Inventory", "Application Map",
+      "AS-IS Functional Specification", "Business Rules Catalogue", "Workflow Catalogue",
+      "Roles & Permissions Matrix", "Data & Integration Map", "Known Issues Register",
+      "Product Gap Register", "Product Risk Register", "Product Readiness Assessment",
+      "MSP Definition", "Prioritized Product Backlog", "TO-BE Product Definition"
+    ];
+    const GOVERNANCE_ITEMS_KEY = "omena-governance-items-v1";
+    const PRODUCT_ARTIFACTS_KEY = "omena-product-artifacts-v1";
+
+    function optionListMarkup(options = [], selected = "") {
+      const selectedKey = canonicalText(selected);
+      return options.map(option => `<option value="${escapeHtml(option)}" ${canonicalText(option) === selectedKey ? "selected" : ""}>${escapeHtml(option)}</option>`).join("");
+    }
 
     function normalizeActionStatus(value = "Open") {
       const cleanValue = cleanText(value);
@@ -4688,6 +4795,10 @@
     let weeklyReviewSends = [];
     let weeklyReviewSendsLoaded = false;
     let weeklyReviewSendsDisabled = false;
+    let governanceItems = [];
+    let productArtifacts = [];
+    let selectedGovernanceItemId = "";
+    let governanceCloudAvailable = true;
     let userLogLoadMessage = "Open this page or click Refresh log to load activity.";
     const userLogFilters = {
       user: "all",
@@ -5015,6 +5126,12 @@
         action_due_date: report.action_due_date || "",
         decision_needed: report.decision_needed || "",
         action_status: normalizeActionStatus(report.action_status),
+        governance_item_id: report.governance_item_id || "",
+        governance_classification: report.governance_classification || "Investigation",
+        lifecycle_phase: report.lifecycle_phase || "Discover",
+        evidence_status: report.evidence_status || "Missing",
+        evidence_reference: report.evidence_reference || "",
+        gate_status: report.gate_status || "Not Ready",
         history: Array.isArray(report.history) ? report.history.slice(-50) : []
       };
       return btoa(unescape(encodeURIComponent(JSON.stringify(meta))));
@@ -5075,6 +5192,12 @@
         action_due_date: firstValue(row.action_due_date, row.actionDueDate, legacyMeta.action_due_date, legacyMeta.actionDueDate),
         decision_needed: row.decision_needed || row.decisionNeeded || legacyMeta.decision_needed || legacyMeta.decisionNeeded || "",
         action_status: normalizeActionStatus(row.action_status || row.actionStatus || legacyMeta.action_status || legacyMeta.actionStatus || "Open"),
+        governance_item_id: row.governance_item_id || row.governanceItemId || legacyMeta.governance_item_id || "",
+        governance_classification: row.governance_classification || row.governanceClassification || legacyMeta.governance_classification || "Investigation",
+        lifecycle_phase: row.lifecycle_phase || row.lifecyclePhase || legacyMeta.lifecycle_phase || "Discover",
+        evidence_status: row.evidence_status || row.evidenceStatus || legacyMeta.evidence_status || "Missing",
+        evidence_reference: row.evidence_reference || row.evidenceReference || legacyMeta.evidence_reference || "",
+        gate_status: row.gate_status || row.gateStatus || legacyMeta.gate_status || "Not Ready",
         health: row.health || "amber",
         progress: Number(row.progress || 0),
         stage: normalized.stage,
@@ -5125,6 +5248,12 @@
         action_due_date: report.action_due_date || null,
         decision_needed: report.decision_needed || null,
         action_status: normalizeActionStatus(report.action_status),
+        governance_item_id: report.governance_item_id || null,
+        governance_classification: report.governance_classification || "Investigation",
+        lifecycle_phase: report.lifecycle_phase || "Discover",
+        evidence_status: report.evidence_status || "Missing",
+        evidence_reference: report.evidence_reference || null,
+        gate_status: report.gate_status || "Not Ready",
         history: Array.isArray(report.history) ? report.history.slice(-50) : [],
       };
     }
@@ -6758,7 +6887,7 @@
     }
 
     function canAccessView(id) {
-      if (canManageRoles()) return ["home", "dashboard", "executive", "myDashboard", "workflow", "incidents", "timeline", "intake", "reports", "sourceProjects", "managementReview", "projectTalkTrack", "weeklyProjectBrief", "reportAnalysis", "ownerFeedback", "actionItems", "weeklyReview", "workload", "users", "userLog"].includes(id);
+      if (canManageRoles()) return ["home", "dashboard", "executive", "myDashboard", "workflow", "incidents", "timeline", "intake", "reports", "sourceProjects", "governance", "managementReview", "projectTalkTrack", "weeklyProjectBrief", "reportAnalysis", "ownerFeedback", "actionItems", "weeklyReview", "workload", "users", "userLog"].includes(id);
       if (isMasterAdmin()) return ["home", "dashboard", "executive", "myDashboard", "incidents", "timeline", "intake", "reports"].includes(id);
       return ["home", "dashboard", "executive", "incidents"].includes(id);
     }
@@ -6956,6 +7085,310 @@
       }).join("") : `<div class="empty"><strong>No source projects imported</strong>Open the SharePoint workbook, copy the table including headers, then paste and import it here.</div>`;
     }
 
+    function loadLocalGovernanceArray(key) {
+      try {
+        const value = JSON.parse(localStorage.getItem(key) || "[]");
+        return Array.isArray(value) ? value : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function saveGovernanceLocally() {
+      localStorage.setItem(GOVERNANCE_ITEMS_KEY, JSON.stringify(governanceItems));
+      localStorage.setItem(PRODUCT_ARTIFACTS_KEY, JSON.stringify(productArtifacts));
+    }
+
+    function normalizeGovernanceItem(item = {}) {
+      return {
+        id: cleanText(item.id) || crypto.randomUUID(),
+        product: cleanText(item.product),
+        workstream: cleanText(item.workstream),
+        title: cleanText(item.title),
+        owner: normalizePersonDisplay(item.owner || ""),
+        functional_role: FUNCTIONAL_ROLE_OPTIONS.includes(item.functional_role) ? item.functional_role : "Product Manager",
+        classification: GOVERNANCE_CLASSIFICATION_OPTIONS.includes(item.classification) ? item.classification : "Investigation",
+        lifecycle_phase: LIFECYCLE_PHASE_OPTIONS.includes(item.lifecycle_phase) ? item.lifecycle_phase : "Discover",
+        evidence_status: EVIDENCE_STATUS_OPTIONS.includes(item.evidence_status) ? item.evidence_status : "Missing",
+        evidence_reference: cleanText(item.evidence_reference),
+        gate_status: GATE_STATUS_OPTIONS.includes(item.gate_status) ? item.gate_status : "Not Ready",
+        status: GOVERNANCE_STATUS_OPTIONS.includes(item.status) ? item.status : "Open",
+        priority: ["Normal", "High", "Critical"].includes(item.priority) ? item.priority : "Normal",
+        current_state: cleanText(item.current_state ?? item.as_is),
+        target_state: cleanText(item.target_state ?? item.to_be),
+        acceptance_criteria: cleanText(item.acceptance_criteria),
+        decision_impact: cleanText(item.decision_impact ?? item.impact_summary),
+        created_at: item.created_at || new Date().toISOString(),
+        updated_at: item.updated_at || new Date().toISOString()
+      };
+    }
+
+    function governancePayload(item) {
+      return {
+        id: item.id,
+        product: item.product,
+        workstream: item.workstream || null,
+        title: item.title,
+        owner: item.owner || null,
+        functional_role: item.functional_role,
+        classification: item.classification,
+        lifecycle_phase: item.lifecycle_phase,
+        evidence_status: item.evidence_status,
+        evidence_reference: item.evidence_reference || null,
+        gate_status: item.gate_status,
+        status: item.status,
+        priority: item.priority,
+        as_is: item.current_state || null,
+        to_be: item.target_state || null,
+        acceptance_criteria: item.acceptance_criteria || null,
+        impact_summary: item.decision_impact || null,
+        updated_at: new Date().toISOString()
+      };
+    }
+
+    function governanceProducts() {
+      return uniqueProducts([
+        ...PRODUCT_OPTIONS,
+        ...reports.map(report => report.product),
+        ...governanceItems.map(item => item.product),
+        ...productArtifacts.map(item => item.product)
+      ]);
+    }
+
+    function setSelectOptions(select, values, current = "", placeholder = "Select") {
+      if (!select) return;
+      const selected = cleanText(current || select.value);
+      select.innerHTML = `<option value="">${escapeHtml(placeholder)}</option>${values.map(value => `<option value="${escapeHtml(value)}" ${value === selected ? "selected" : ""}>${escapeHtml(value)}</option>`).join("")}`;
+      if (selected && !values.includes(selected)) {
+        select.insertAdjacentHTML("beforeend", `<option value="${escapeHtml(selected)}" selected>${escapeHtml(selected)}</option>`);
+      }
+    }
+
+    function populateGovernanceFormOptions(form, values = {}) {
+      if (!form) return;
+      const selectedValue = (value, currentValue, fallback) => cleanText(value ?? currentValue) || fallback;
+      setSelectOptions(form.elements.functional_role, FUNCTIONAL_ROLE_OPTIONS, selectedValue(values.functional_role, form.elements.functional_role?.value, "Product Manager"), "Select responsibility");
+      setSelectOptions(form.elements.classification, GOVERNANCE_CLASSIFICATION_OPTIONS, selectedValue(values.classification, form.elements.classification?.value, "Investigation"), "Select classification");
+      setSelectOptions(form.elements.lifecycle_phase, LIFECYCLE_PHASE_OPTIONS, selectedValue(values.lifecycle_phase, form.elements.lifecycle_phase?.value, "Discover"), "Select lifecycle phase");
+      setSelectOptions(form.elements.evidence_status, EVIDENCE_STATUS_OPTIONS, selectedValue(values.evidence_status, form.elements.evidence_status?.value, "Missing"), "Select evidence status");
+      setSelectOptions(form.elements.gate_status, GATE_STATUS_OPTIONS, selectedValue(values.gate_status, form.elements.gate_status?.value, "Not Ready"), "Select gate status");
+      setSelectOptions(form.elements.status, GOVERNANCE_STATUS_OPTIONS, selectedValue(values.status, form.elements.status?.value, "Open"), "Select item status");
+    }
+
+    function showGovernanceMessage(message = "", tone = "success") {
+      const element = document.getElementById("governanceMessage");
+      if (!element) return;
+      element.textContent = message;
+      element.className = message ? `form-message ${tone}` : "form-message";
+    }
+
+    function clearGovernanceForm() {
+      const form = document.getElementById("governanceForm");
+      if (!form) return;
+      form.reset();
+      selectedGovernanceItemId = "";
+      form.elements.id.value = "";
+      document.getElementById("governanceFormTitle").textContent = "Create governance item";
+      document.getElementById("deleteGovernanceItem").hidden = true;
+      setSelectOptions(form.elements.product, governanceProducts(), "", "Select product");
+      populateGovernanceFormOptions(form, {
+        functional_role: "Product Manager",
+        classification: "Investigation",
+        lifecycle_phase: "Discover",
+        evidence_status: "Missing",
+        gate_status: "Not Ready",
+        status: "Open"
+      });
+      showGovernanceMessage();
+      renderProductGovernance();
+    }
+
+    function selectGovernanceItem(id) {
+      const item = governanceItems.find(entry => entry.id === id);
+      const form = document.getElementById("governanceForm");
+      if (!item || !form) return;
+      selectedGovernanceItemId = item.id;
+      form.elements.id.value = item.id;
+      setSelectOptions(form.elements.product, governanceProducts(), item.product, "Select product");
+      populateGovernanceFormOptions(form, item);
+      ["workstream", "title", "owner", "priority", "evidence_reference", "current_state", "target_state", "acceptance_criteria", "decision_impact"].forEach(name => {
+        if (form.elements[name]) form.elements[name].value = item[name] || "";
+      });
+      document.getElementById("governanceFormTitle").textContent = "Edit governance item";
+      document.getElementById("deleteGovernanceItem").hidden = false;
+      showGovernanceMessage();
+      renderProductGovernance();
+      form.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function governanceValidation(item) {
+      const errors = [];
+      if (!item.product) errors.push("Select a product.");
+      if (!item.workstream) errors.push("Enter a workstream.");
+      if (!item.title) errors.push("Enter a governance item title.");
+      if (!item.owner) errors.push("Enter the accountable Owner.");
+      if (["Approved", "Approved with Conditions"].includes(item.gate_status) && !item.evidence_reference) {
+        errors.push("Approved gates require an evidence reference.");
+      }
+      if (item.gate_status === "Approved" && item.evidence_status !== "Validated") {
+        errors.push("An approved gate requires Validated evidence.");
+      }
+      if (item.status === "Delivered" && item.gate_status !== "Approved") {
+        errors.push("Delivered items require an Approved gate.");
+      }
+      return errors;
+    }
+
+    async function saveGovernanceItem(event) {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const values = Object.fromEntries(new FormData(form).entries());
+      const existing = governanceItems.find(item => item.id === cleanText(values.id));
+      const item = normalizeGovernanceItem({ ...existing, ...values, id: cleanText(values.id) || crypto.randomUUID(), updated_at: new Date().toISOString() });
+      const errors = governanceValidation(item);
+      if (errors.length) {
+        showGovernanceMessage(errors.join(" "), "danger");
+        return;
+      }
+      const submit = form.querySelector('[type="submit"]');
+      submit.disabled = true;
+      submit.textContent = "Saving...";
+      try {
+        let saved = item;
+        if (governanceCloudAvailable) {
+          const result = existing
+            ? await supabaseTableRequest("governance_items", `?id=eq.${encodeURIComponent(item.id)}`, { method: "PATCH", body: governancePayload(item) })
+            : await supabaseTableRequest("governance_items", "", { method: "POST", body: governancePayload(item) });
+          if (Array.isArray(result) && result[0]) saved = normalizeGovernanceItem(result[0]);
+        }
+        const index = governanceItems.findIndex(entry => entry.id === item.id);
+        if (index >= 0) governanceItems[index] = saved;
+        else governanceItems.unshift(saved);
+        saveGovernanceLocally();
+        selectGovernanceItem(saved.id);
+        showGovernanceMessage(governanceCloudAvailable ? "Governance item saved." : "Saved locally. Cloud sync is unavailable.", governanceCloudAvailable ? "success" : "warning");
+      } catch (error) {
+        console.error("Governance save failed", error);
+        showGovernanceMessage(`Could not save governance item: ${error.message || error}`, "danger");
+      } finally {
+        submit.disabled = false;
+        submit.textContent = "Save governance item";
+      }
+    }
+
+    async function deleteSelectedGovernanceItem() {
+      const item = governanceItems.find(entry => entry.id === selectedGovernanceItemId);
+      if (!item || !confirm(`Delete governance item "${item.title}"?`)) return;
+      try {
+        if (governanceCloudAvailable) {
+          await supabaseTableRequest("governance_items", `?id=eq.${encodeURIComponent(item.id)}`, { method: "DELETE" });
+        }
+        governanceItems = governanceItems.filter(entry => entry.id !== item.id);
+        saveGovernanceLocally();
+        clearGovernanceForm();
+        showGovernanceMessage("Governance item deleted.");
+      } catch (error) {
+        showGovernanceMessage(`Could not delete governance item: ${error.message || error}`, "danger");
+      }
+    }
+
+    function renderArtifactChecklist(product = "") {
+      const container = document.getElementById("governanceArtifactChecklist");
+      if (!container) return;
+      if (!product) {
+        container.innerHTML = `<div class="empty"><strong>Select a product</strong>Choose a product to review its required evidence pack.</div>`;
+        return;
+      }
+      const byType = new Map(productArtifacts.filter(item => canonicalText(item.product) === canonicalText(product)).map(item => [item.artifact_type, item]));
+      container.innerHTML = GOVERNANCE_ARTIFACT_TYPES.map(type => {
+        const artifact = byType.get(type);
+        const checked = artifact && artifact.validation_status !== "Missing";
+        return `<label class="artifact-check"><input type="checkbox" data-artifact-type="${escapeHtml(type)}" ${checked ? "checked" : ""}><span><strong>${escapeHtml(type)}</strong><small>${escapeHtml(artifact?.validation_status || "Missing")}</small></span></label>`;
+      }).join("");
+    }
+
+    async function saveProductArtifacts() {
+      const product = cleanText(document.getElementById("governanceArtifactProduct")?.value);
+      if (!product) {
+        showGovernanceMessage("Select a product before saving its evidence pack.", "danger");
+        return;
+      }
+      const existingByType = new Map(productArtifacts.filter(item => canonicalText(item.product) === canonicalText(product)).map(item => [item.artifact_type, item]));
+      const entries = [...document.querySelectorAll("#governanceArtifactChecklist [data-artifact-type]")].map(input => ({
+        id: existingByType.get(input.dataset.artifactType)?.id || crypto.randomUUID(),
+        product,
+        artifact_type: input.dataset.artifactType,
+        validation_status: input.checked ? "Validated" : "Missing",
+        updated_at: new Date().toISOString()
+      }));
+      try {
+        let saved = entries;
+        if (governanceCloudAvailable) {
+          const result = await supabaseTableRequest("product_artifacts", "?on_conflict=product,artifact_type", {
+            method: "POST",
+            body: entries,
+            prefer: "resolution=merge-duplicates,return=representation"
+          });
+          if (Array.isArray(result)) saved = result;
+        }
+        productArtifacts = productArtifacts.filter(item => canonicalText(item.product) !== canonicalText(product));
+        productArtifacts.push(...saved);
+        saveGovernanceLocally();
+        renderArtifactChecklist(product);
+        renderProductGovernance();
+        showGovernanceMessage(governanceCloudAvailable ? "Evidence pack saved." : "Evidence pack saved locally.", governanceCloudAvailable ? "success" : "warning");
+      } catch (error) {
+        showGovernanceMessage(`Could not save evidence pack: ${error.message || error}`, "danger");
+      }
+    }
+
+    function renderProductGovernance() {
+      const metrics = document.getElementById("governanceMetrics");
+      const list = document.getElementById("governanceItemList");
+      const form = document.getElementById("governanceForm");
+      const artifactProduct = document.getElementById("governanceArtifactProduct");
+      if (!metrics || !list || !form || !artifactProduct) return;
+      const openItems = governanceItems.filter(item => !["Delivered", "Archived"].includes(item.status));
+      const approved = governanceItems.filter(item => item.gate_status === "Approved").length;
+      const evidenceGaps = governanceItems.filter(item => ["Missing", "Partial"].includes(item.evidence_status)).length;
+      const readiness = governanceItems.filter(item => ["Ready for Review", "Approved", "Approved with Conditions"].includes(item.gate_status)).length;
+      metrics.innerHTML = [
+        ["Governance items", governanceItems.length, "blue", `${openItems.length} active`],
+        ["Gate ready", readiness, "green", `${approved} fully approved`],
+        ["Evidence gaps", evidenceGaps, evidenceGaps ? "red" : "green", "Missing or partial evidence"],
+        ["Products covered", new Set(governanceItems.map(item => canonicalText(item.product)).filter(Boolean)).size, "amber", "Governance coverage"]
+      ].map(([label, value, tone, note]) => `<div class="panel metric"><span class="chip ${tone}">${escapeHtml(label)}</span><strong>${value}</strong><span class="muted small">${escapeHtml(note)}</span></div>`).join("");
+      list.innerHTML = governanceItems.length ? governanceItems.map(item => `
+        <button class="governance-item ${item.id === selectedGovernanceItemId ? "selected" : ""}" type="button" data-governance-id="${escapeHtml(item.id)}">
+          <span><span class="product-label">${escapeHtml(item.product)}</span><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.workstream || "No workstream")} - ${escapeHtml(item.owner || "Unassigned")} (${escapeHtml(item.functional_role)})</small></span>
+          <span class="governance-item-signals"><span class="chip ${item.priority === "Critical" ? "red" : item.priority === "High" ? "amber" : "blue"}">${escapeHtml(item.priority)}</span><span class="chip ${item.evidence_status === "Validated" ? "green" : "amber"}">${escapeHtml(item.evidence_status)}</span><span class="chip ${item.gate_status === "Approved" ? "green" : item.gate_status === "Rejected" ? "red" : "gray"}">${escapeHtml(item.gate_status)}</span></span>
+        </button>
+      `).join("") : `<div class="empty"><strong>No governance items yet</strong>Create the first classified gap, change, bug, configuration issue, or investigation.</div>`;
+      setSelectOptions(form.elements.product, governanceProducts(), form.elements.product.value, "Select product");
+      populateGovernanceFormOptions(form);
+      setSelectOptions(artifactProduct, governanceProducts(), artifactProduct.value, "Select product");
+      renderArtifactChecklist(artifactProduct.value);
+    }
+
+    async function loadGovernanceData() {
+      governanceItems = loadLocalGovernanceArray(GOVERNANCE_ITEMS_KEY).map(normalizeGovernanceItem);
+      productArtifacts = loadLocalGovernanceArray(PRODUCT_ARTIFACTS_KEY);
+      try {
+        const [items, artifacts] = await Promise.all([
+          supabaseTableRequest("governance_items", "?select=*&order=updated_at.desc"),
+          supabaseTableRequest("product_artifacts", "?select=*&order=updated_at.desc")
+        ]);
+        governanceItems = Array.isArray(items) ? items.map(normalizeGovernanceItem) : governanceItems;
+        productArtifacts = Array.isArray(artifacts) ? artifacts : productArtifacts;
+        governanceCloudAvailable = true;
+        saveGovernanceLocally();
+      } catch (error) {
+        governanceCloudAvailable = false;
+        console.warn("Governance cloud tables are unavailable; local data will be used.", error);
+      }
+      if (getActiveView() === "governance") renderProductGovernance();
+    }
+
     function reportFilterMatch(report, filters = {}) {
       const ownerFilter = filters.owner || "all";
       const productFilter = filters.product || "all";
@@ -7017,6 +7450,26 @@
       if (!cleanText(report.stage)) {
         gaps.push("Stage is missing.");
         suggestions.push("Select the current workstream stage so leadership can understand where the activity is in the delivery lifecycle.");
+      }
+      if (!cleanText(report.governance_classification)) {
+        gaps.push("Governance classification is missing.");
+        suggestions.push("Classify the item as a bug, gap, change request, configuration issue, or investigation.");
+      }
+      if (!cleanText(report.lifecycle_phase)) {
+        gaps.push("Governance lifecycle phase is missing.");
+        suggestions.push("Select the governance phase so the report can be traced from discovery through release and learning.");
+      }
+      if (!cleanText(report.evidence_status) || ["Missing", "Partial"].includes(report.evidence_status)) {
+        gaps.push(`Evidence is ${cleanText(report.evidence_status) || "missing"}.`);
+        suggestions.push("Attach or reference the artifact, analysis, approval, test result, or decision that supports this update.");
+      }
+      if (["Ready for Review", "Approved", "Approved with Conditions", "Rejected"].includes(report.gate_status) && !cleanText(report.evidence_reference)) {
+        gaps.push("Gate status is set without an evidence reference.");
+        suggestions.push("Add the evidence link or document reference used for the gate decision.");
+      }
+      if (["Approved", "Approved with Conditions"].includes(report.gate_status) && report.evidence_status !== "Validated") {
+        gaps.push("An approved gate does not have validated evidence.");
+        suggestions.push("Validate the supporting evidence before treating the governance gate as approved.");
       }
       if (summary.length < 45) {
         gaps.push("Summary is too short to understand the business context.");
@@ -7143,6 +7596,11 @@
       const dependency = cleanText(report.dependency);
       const milestone = cleanText(report.milestone);
       const decisionNeeded = cleanText(report.decision_needed);
+      const governanceClassification = cleanText(report.governance_classification);
+      const lifecyclePhase = cleanText(report.lifecycle_phase);
+      const evidenceStatus = cleanText(report.evidence_status);
+      const evidenceReference = cleanText(report.evidence_reference);
+      const gateStatus = cleanText(report.gate_status);
       const impact = Number(report.impact || 0);
       const time = Number(report.time || 0);
       const schedule = endDateStatus(report);
@@ -7162,6 +7620,16 @@
       if (!week) blockers.push("Reporting week is required.");
       if (isWeekend(week)) blockers.push("Reporting week cannot be Saturday or Sunday.");
       if (!stage) blockers.push("Stage is required so dashboards can show the workstream lifecycle.");
+      if (!governanceClassification) blockers.push("Governance classification is required.");
+      if (!lifecyclePhase) blockers.push("Governance lifecycle phase is required.");
+      if (!evidenceStatus) blockers.push("Evidence status is required.");
+      if (!gateStatus) blockers.push("Governance gate status is required.");
+      if (["Approved", "Approved with Conditions"].includes(gateStatus) && evidenceStatus !== "Validated") {
+        blockers.push("Approved gates require validated evidence.");
+      }
+      if (["Ready for Review", "Approved", "Approved with Conditions", "Rejected"].includes(gateStatus) && !evidenceReference) {
+        blockers.push("Add the evidence reference used for the gate review or decision.");
+      }
       if (!summary) blockers.push("Summary is required.");
       if (!Number.isFinite(progress) || progress < 0 || progress > 100) blockers.push("Progress must be a number between 0 and 100.");
       if (duplicate) blockers.push(`This owner already has a report for ${productDisplay(product)} / ${feature} in ${reportingFieldLabel(week)}.`);
@@ -7178,6 +7646,10 @@
       }
 
       if (!dueDate && !isCompletedStageValue(stage)) warnings.push("Add an end date so schedule status can be calculated.");
+      if (["Missing", "Partial"].includes(evidenceStatus)) warnings.push("Evidence is incomplete; add the supporting artifact or decision record before the next governance review.");
+      if (["Build", "Validate", "Release / Learn"].includes(lifecyclePhase) && gateStatus === "Not Ready") warnings.push("This work is in a delivery phase but its governance gate is still Not Ready.");
+      if (evidenceStatus === "Validated") positives.push("Supporting evidence is validated.");
+      if (["Approved", "Approved with Conditions"].includes(gateStatus)) positives.push(`Governance gate is ${gateStatus}.`);
       if (isCompletedStageValue(stage) && !dueDate) warnings.push("Completed workstreams should include an end date so delivered work can be audited.");
       if (dueDate && !baselineDueDate) warnings.push("Add the baseline end date when this workstream has a planned delivery date.");
       if (baselineDelta !== null && baselineDelta < 0 && !dateChangeReason) warnings.push("End date moved earlier. Add the date change reason so Ahead of Schedule is auditable.");
@@ -12755,6 +13227,10 @@
         ["Owner", report.owner],
         ["Reporting week", report.week],
         ["Stage", report.stage],
+        ["Governance classification", report.governance_classification],
+        ["Lifecycle phase", report.lifecycle_phase],
+        ["Evidence status", report.evidence_status],
+        ["Gate status", report.gate_status],
         ["End date", reportEndDate(report)],
         ["Summary", report.summary],
         ["Win", report.win],
@@ -12762,6 +13238,9 @@
         ["Action owner", report.action_owner],
         ["Action target date", report.action_due_date]
       ];
+      if ((report.evidence_status && report.evidence_status !== "Missing") || (report.gate_status && report.gate_status !== "Not Ready")) {
+        required.push(["Evidence reference", report.evidence_reference]);
+      }
       const status = endDateStatus(report);
       if (report.health === "red" || report.priority === "Critical" || status?.category === "minorDelay" || status?.category === "majorDelay") {
         required.push(["Blocker or risk", report.blocker]);
@@ -12802,6 +13281,11 @@
         ["Action status", report.action_status || "Open"],
         ["Decision needed", report.decision_needed || "No decision needed captured."],
         ["Stage", report.stage || "No stage captured."],
+        ["Governance classification", report.governance_classification || "No classification captured."],
+        ["Lifecycle phase", report.lifecycle_phase || "No governance phase captured."],
+        ["Evidence status", report.evidence_status || "No evidence status captured."],
+        ["Evidence reference", report.evidence_reference || "No evidence reference captured."],
+        ["Gate status", report.gate_status || "No gate status captured."],
         ["Progress", `${Number(report.progress || 0)}%`],
         ["End date", reportEndDate(report) ? endDateMarkup(report) : "No end date captured."],
         ...(scheduleReason ? [["Schedule reason", `${status.label}: ${scheduleReason}`]] : []),
@@ -13207,12 +13691,25 @@
                 <label>Owner${peoplePickerMarkup("owner", report.owner, { label: "Owner", placeholder: "Select owner" })}</label>
                 <label>Participants (optional)${peoplePickerMarkup("participants", report.participants || "", { multiple: true, label: "Participants", placeholder: "Select participants" })}</label>
                 <label>Type of product<select name="product_type"><option ${report.product_type === "Legacy" ? "selected" : ""}>Legacy</option><option ${report.product_type === "New product" ? "selected" : ""}>New product</option></select></label>
-                <label>Role<select name="role"><option ${report.role === "Product Manager" ? "selected" : ""}>Product Manager</option><option ${report.role === "UI/UX" ? "selected" : ""}>UI/UX</option></select></label>
+                <label>Role<select name="role">${optionListMarkup(FUNCTIONAL_ROLE_OPTIONS, report.role || "Product Manager")}</select></label>
               </div>
             </section>
             <section class="edit-form-section">
               <div>
-                <h4>2. Timing and health</h4>
+                <h4>2. Governance control</h4>
+                <p class="muted small">Connect the weekly update to the product governance lifecycle, evidence, and approval gate.</p>
+              </div>
+              <div class="form-grid">
+                <label>Governance classification<select name="governance_classification" required>${optionListMarkup(GOVERNANCE_CLASSIFICATION_OPTIONS, report.governance_classification || "Investigation")}</select></label>
+                <label>Lifecycle phase<select name="lifecycle_phase" required>${optionListMarkup(LIFECYCLE_PHASE_OPTIONS, report.lifecycle_phase || "Discover")}</select></label>
+                <label>Evidence status<select name="evidence_status" required>${optionListMarkup(EVIDENCE_STATUS_OPTIONS, report.evidence_status || "Missing")}</select></label>
+                ${editField("Evidence reference", "evidence_reference", report.evidence_reference || "", "text")}
+                <label>Gate status<select name="gate_status" required>${optionListMarkup(GATE_STATUS_OPTIONS, report.gate_status || "Not Ready")}</select></label>
+              </div>
+            </section>
+            <section class="edit-form-section">
+              <div>
+                <h4>3. Timing and health</h4>
                 <p class="muted small">Dates feed the Ahead of Schedule, On Time, Minor Delay, and Major Delay indicators across dashboards.</p>
               </div>
               <div class="form-grid">
@@ -13231,7 +13728,7 @@
             </section>
             <section class="edit-form-section">
               <div>
-                <h4>3. Decision-ready update</h4>
+                <h4>4. Decision-ready update</h4>
                 <p class="muted small">Use short, clear text. These fields appear on the dashboards and in report history.</p>
               </div>
               <div class="form-grid">
@@ -13247,7 +13744,7 @@
             </section>
             <section class="edit-form-section">
               <div>
-                <h4>4. Escalation signal</h4>
+                <h4>5. Escalation signal</h4>
                 <p class="muted small">Priority, impact, and time to solve help leadership understand urgency.</p>
               </div>
               <div class="form-grid">
@@ -13564,6 +14061,7 @@
         incidents: renderIncidentReport,
         timeline: renderDeliveryTimeline,
         sourceProjects: renderSourceProjects,
+        governance: renderProductGovernance,
         managementReview: renderManagementReview,
         projectTalkTrack: renderProjectTalkTrack,
         weeklyProjectBrief: renderWeeklyProjectBrief,
@@ -14969,10 +15467,22 @@
     statusForm.addEventListener("change", refreshStatusQualityCheck);
     refreshStatusQualityCheck();
     initReportingWeekInputs();
+    document.getElementById("governanceForm")?.addEventListener("submit", saveGovernanceItem);
+    document.getElementById("clearGovernanceItem")?.addEventListener("click", clearGovernanceForm);
+    document.getElementById("deleteGovernanceItem")?.addEventListener("click", deleteSelectedGovernanceItem);
+    document.getElementById("governanceItemList")?.addEventListener("click", event => {
+      const item = event.target.closest("[data-governance-id]");
+      if (item) selectGovernanceItem(item.dataset.governanceId);
+    });
+    document.getElementById("governanceArtifactProduct")?.addEventListener("change", event => {
+      renderArtifactChecklist(event.target.value);
+    });
+    document.getElementById("saveGovernanceArtifacts")?.addEventListener("click", saveProductArtifacts);
     (async () => {
       await syncUsersWithCloud();
       restoreSession();
       await fetchReports();
+      await loadGovernanceData();
     })();
   </script>
 </body>

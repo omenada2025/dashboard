@@ -4,3 +4,4 @@ supabase/.env
 supabase/.env.local
 supabase/.temp/
 tools/supabase/
+backups/
