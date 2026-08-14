@@ -24,7 +24,7 @@ The process connects product reality, delivery evidence, decisions, weekly execu
 | --- | --- | --- |
 | Product or workstream ownership | Product Manager or System Analyst | Own context, evidence, dates, decisions, acceptance criteria, and weekly status. |
 | Experience contribution | UI/UX | Provide validated designs, usability evidence, and experience acceptance criteria. |
-| Governance oversight | Role Manager | Review evidence quality, approve gates, monitor gaps, and manage portfolio standards. |
+| Governance oversight | Admin, Master admin, or Role Manager | Review evidence quality, approve gates, monitor gaps, and manage portfolio standards. |
 | Leadership decision | Approver or leadership owner | Approve, reject, or condition a gate based on evidence and business risk. |
 
 Each workstream must have one accountable Owner. Participants may contribute, but they do not replace ownership.

@@ -6,9 +6,9 @@ The dashboard monitors product, feature, and UI/UX delivery. It helps the team s
 
 ## Roles
 
-- **Admin - dashboards only:** can view Portfolio Dashboard, Executive View, My Dashboard, and Incidents & Delays.
-- **Master admin - reports and status:** can view dashboards, use My Dashboard, create status reports, edit reports they are allowed to manage, and use Status Center.
-- **Role Manager:** can view all dashboards and admin pages, use My Dashboard for any owner, manage users, review reports, generate owner feedback, and monitor work balance.
+- **Admin - dashboards and governance:** can view Portfolio Dashboard, Executive View, Incidents & Delays, and Product Governance.
+- **Master admin - reports and status:** can view dashboards, use My Dashboard, create status reports, edit reports they are allowed to manage, use Status Center, and Product Governance.
+- **Role Manager:** can view all dashboards and admin pages, use My Dashboard for any owner, manage users, review reports, generate owner feedback, monitor work balance, and Product Governance.
 
 ## Weekly Status Workflow
 
