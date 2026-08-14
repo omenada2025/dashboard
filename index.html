@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-store, max-age=0" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <meta name="dashboard-build" content="2026-08-14-governance-owner-picker" />
+  <meta name="dashboard-build" content="2026-08-14-weekly-cockpit-p0" />
   <title>Omena Consulting Dashboard</title>
   <style>
     :root {
@@ -461,6 +461,32 @@
       border: 1px solid var(--line);
       border-radius: 14px;
       background: rgba(255,255,255,.72);
+    }
+
+    .home-flow-content {
+      display: grid;
+      gap: 7px;
+      min-width: 0;
+      text-align: left;
+    }
+
+    .home-flow-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 14px;
+    }
+
+    .home-flow-next {
+      color: var(--ink);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .home-flow-action {
+      display: grid;
+      justify-items: end;
+      gap: 7px;
+      min-width: 108px;
     }
 
     .home-flow-number {
@@ -2369,6 +2395,15 @@
       .export-actions .btn {
         width: 100%;
       }
+      .home-flow-item {
+        grid-template-columns: auto 1fr;
+        align-items: start;
+      }
+      .home-flow-action {
+        grid-column: 2;
+        justify-items: start;
+        min-width: 0;
+      }
       .people-add {
         grid-template-columns: 1fr;
       }
@@ -2434,7 +2469,7 @@
       </div>
       <nav class="tabs" aria-label="Primary">
         <div class="nav-section">Start</div>
-        <button class="tab active" data-view="home" title="Choose the right workflow for today">Home</button>
+        <button class="tab active" data-view="home" title="See this week's work and next actions">This Week</button>
         <div class="nav-section" data-hide-executive-admin>My Work</div>
         <button class="tab" data-view="myDashboard" data-hide-executive-admin title="Personal dashboard for your workstreams, dates, risks, and next actions">My Dashboard</button>
         <button class="tab" data-view="reports" data-master-only>Update Reports</button>
@@ -2443,7 +2478,7 @@
         <button class="tab" data-view="executive" title="Leadership summary focused on attention items and decisions">Executive View</button>
         <button class="tab" data-view="timeline" data-master-only title="Delivery timeline, dependencies, milestones, and schedule progress">Delivery Timeline</button>
         <button class="tab" data-view="incidents" title="Major delays, minor delays, blockers, at-risk, and critical workstreams">Incidents & Delays</button>
-        <div class="nav-section">Management</div>
+        <div class="nav-section">Governance &amp; Reviews</div>
         <button class="tab" data-view="managementReview" data-role-manager-only>Manager Meeting</button>
         <button class="tab" data-view="projectTalkTrack" data-role-manager-only>Project Talk Track</button>
         <button class="tab" data-view="weeklyProjectBrief" data-role-manager-only>Weekly Project Review</button>
@@ -2472,9 +2507,9 @@
       <section class="view active" id="home">
         <div class="header">
           <div>
-            <span class="page-kicker" id="homeKicker">Command center</span>
-            <h2 id="homeTitle">What do you want to do today?</h2>
-            <p class="muted" id="homeSubtitle">Start with the workflow you need. The dashboard keeps the detailed pages available, but this home view helps you move with less hunting.</p>
+            <span class="page-kicker" id="homeKicker">This week</span>
+            <h2 id="homeTitle">Weekly operating cockpit</h2>
+            <p class="muted" id="homeSubtitle">Move from status preparation to follow-up with one visible journey, clear ownership, and the next action for every stage.</p>
           </div>
           <button class="btn" type="button" data-logout>Logout</button>
         </div>
@@ -2485,8 +2520,8 @@
           <div class="panel">
             <div class="panel-title">
               <div>
-                <h3 id="homeFlowTitle">Recommended workflow</h3>
-                <p class="muted small" id="homeFlowSubtitle">Use this order when preparing weekly status and manager reviews.</p>
+                <h3 id="homeFlowTitle">This week's journey</h3>
+                <p class="muted small" id="homeFlowSubtitle">Each stage shows who acts, what remains, and where to continue.</p>
               </div>
             </div>
             <div class="home-flow-list" id="homeWorkflowList"></div>
@@ -10835,6 +10870,115 @@
         .slice(0, 6);
     }
 
+    function weeklyCockpitDefinitions(source = []) {
+      const weekStarts = source
+        .map(report => mondayForDate(report.week))
+        .filter(Boolean)
+        .sort();
+      const weekStart = weekStarts.at(-1) || "";
+      const weekRows = weekStart
+        ? source.filter(report => mondayForDate(report.week) === weekStart)
+        : source;
+      const chooseView = views => views.find(view => canAccessView(view));
+      const incomplete = weekRows.filter(report =>
+        !cleanText(report.owner) ||
+        !cleanText(report.summary) ||
+        !cleanText(report.next)
+      ).length;
+      const qualityGaps = weekRows.filter(report => {
+        const analysis = analyzeReportQuality(report);
+        return analysis.gaps.length || analysis.completeness.score < 85;
+      }).length;
+      const risks = weekRows.filter(report =>
+        isRiskReport(report) ||
+        hasBlockerSignal(report) ||
+        incidentFlags(report).delayed
+      ).length;
+      const openGovernance = governanceItems.filter(item =>
+        !["Delivered", "Archived"].includes(item.status) &&
+        !["Approved", "Rejected"].includes(item.gate_status)
+      ).length;
+      const feedbackSent = weeklyReviewSends.filter(row =>
+        !weekStart ||
+        mondayForDate(row.filter_week || row.week) === weekStart
+      ).length;
+      const openActions = weekRows.filter(report =>
+        cleanText(report.next) &&
+        !["Completed", "Closed", "Done"].includes(cleanText(report.action_status))
+      ).length;
+      const period = weekStart ? workweekLabel(weekStart) : "Current reporting period";
+      return [
+        {
+          number: "01",
+          title: "Prepare",
+          view: chooseView(["reports", "myDashboard", "dashboard"]),
+          owner: "Report owners",
+          due: "By weekly cutoff",
+          metric: weekRows.length ? `${incomplete} incomplete of ${weekRows.length}` : "No updates yet",
+          tone: incomplete || !weekRows.length ? "amber" : "green",
+          next: incomplete ? "Complete Owner, summary, and next action on the weekly updates." : "Weekly updates have the core handoff fields.",
+          action: canManageReports() ? "Update status" : "Review assigned work"
+        },
+        {
+          number: "02",
+          title: "Validate",
+          view: chooseView(["reportAnalysis", "reports", "dashboard"]),
+          owner: "Role Manager",
+          due: "Before review",
+          metric: `${qualityGaps} need fixes`,
+          tone: qualityGaps ? "amber" : "green",
+          next: qualityGaps ? "Resolve missing context, evidence, dates, or accountable actions." : "Current updates pass the main quality signals.",
+          action: canAccessView("reportAnalysis") ? "Review quality" : "Review updates"
+        },
+        {
+          number: "03",
+          title: "Review",
+          view: chooseView(["managementReview", "incidents", "executive"]),
+          owner: "Manager",
+          due: "Manager meeting",
+          metric: `${risks} risk signals`,
+          tone: risks ? "red" : "green",
+          next: risks ? "Prioritize delays, blockers, and critical workstreams for discussion." : "No critical delivery signals are visible for this week.",
+          action: canAccessView("managementReview") ? "Prepare review" : "Review risks"
+        },
+        {
+          number: "04",
+          title: "Decide",
+          view: chooseView(["governance", "executive"]),
+          owner: "Approver",
+          due: "During review",
+          metric: `${openGovernance} decisions open`,
+          tone: openGovernance ? "amber" : "green",
+          next: openGovernance ? "Confirm evidence, gate status, rationale, and accountable Owner." : "No open governance decisions are waiting.",
+          action: "Open governance"
+        },
+        {
+          number: "05",
+          title: "Communicate",
+          view: chooseView(["weeklyReview", "projectTalkTrack", "executive"]),
+          owner: "Role Manager",
+          due: "After review",
+          metric: `${feedbackSent} sends recorded`,
+          tone: feedbackSent ? "green" : "amber",
+          next: feedbackSent ? "Confirm recipients and any follow-up created from feedback." : "Send the weekly summary and owner feedback from the reviewed context.",
+          action: canAccessView("weeklyReview") ? "Send feedback" : "Open summary"
+        },
+        {
+          number: "06",
+          title: "Follow up",
+          view: chooseView(["actionItems", "myDashboard", "incidents"]),
+          owner: "Action owners",
+          due: "Before next cycle",
+          metric: `${openActions} actions open`,
+          tone: openActions ? "amber" : "green",
+          next: openActions ? "Track accountable Owner, target date, and outcome into the next week." : "No open next actions are visible for this period.",
+          action: canAccessView("actionItems") ? "Track actions" : "Review follow-up"
+        }
+      ]
+        .filter(stage => stage.view)
+        .map(stage => ({ ...stage, period }));
+    }
+
     function renderHome() {
       const cards = document.getElementById("homeActionCards");
       const flow = document.getElementById("homeWorkflowList");
@@ -10847,13 +10991,13 @@
         if (element) element.textContent = text;
       };
 
-      setText("homeKicker", executive ? "Executive briefing" : "Command center");
-      setText("homeTitle", executive ? "CEO / CTO Portfolio Briefing" : "What do you want to do today?");
+      setText("homeKicker", executive ? "Executive briefing" : "This week");
+      setText("homeTitle", executive ? "CEO / CTO Portfolio Briefing" : "Weekly operating cockpit");
       setText("homeSubtitle", executive
         ? "Executive snapshot of portfolio health, delivery risk, blockers, and decisions that need leadership attention."
-        : "Start with the workflow you need. The dashboard keeps the detailed pages available, but this home view helps you move with less hunting.");
-      setText("homeFlowTitle", executive ? "Top products needing attention" : "Recommended workflow");
-      setText("homeFlowSubtitle", executive ? "Highest-risk products first, based on delays, blockers, missing next actions, and critical signals." : "Use this order when preparing weekly status and manager reviews.");
+        : "Move from status preparation to follow-up with one visible journey, clear ownership, and the next action for every stage.");
+      setText("homeFlowTitle", executive ? "Top products needing attention" : "This week's journey");
+      setText("homeFlowSubtitle", executive ? "Highest-risk products first, based on delays, blockers, missing next actions, and critical signals." : "Each stage shows who acts, what remains, and where to continue.");
       setText("homeFocusTitle", executive ? "Leadership decision queue" : "Current focus");
       setText("homeFocusSubtitle", executive ? "Items that may need CEO/CTO action, escalation, or follow-up." : "A quick read of what needs attention before choosing a page.");
 
@@ -10902,18 +11046,23 @@
         return;
       }
 
-      const workflow = [
-        ["1", "Submit status", canManageReports() ? "Update Reports" : "My Dashboard", canManageReports() ? "reports" : "myDashboard"],
-        ["2", "Monitor portfolio", "Portfolio Dashboard", "dashboard"],
-        ["3", "Review risks", "Incidents & Delays", "incidents"],
-        ["4", "Prepare meeting", canManageRoles() ? "Manager Meeting" : "Executive View", canManageRoles() ? "managementReview" : "executive"],
-        ["5", "Send follow-up", "Send Weekly Feedback", "weeklyReview"]
-      ].filter(([, , , view]) => canAccessView(view));
-      flow.innerHTML = workflow.map(([number, title, label, view]) => `
-        <button class="home-flow-item" type="button" data-jump="${escapeHtml(view)}">
-          <span class="home-flow-number">${escapeHtml(number)}</span>
-          <span><strong>${escapeHtml(title)}</strong><br><span class="muted small">${escapeHtml(label)}</span></span>
-          <span class="muted small">Open</span>
+      const workflow = weeklyCockpitDefinitions(source);
+      flow.innerHTML = workflow.map(stage => `
+        <button class="home-flow-item" type="button" data-jump="${escapeHtml(stage.view)}" aria-label="${escapeHtml(`${stage.title}: ${stage.action}`)}">
+          <span class="home-flow-number">${escapeHtml(stage.number)}</span>
+          <span class="home-flow-content">
+            <strong>${escapeHtml(stage.title)}</strong>
+            <span class="home-flow-meta muted small">
+              <span><strong>Responsible:</strong> ${escapeHtml(stage.owner)}</span>
+              <span><strong>Due:</strong> ${escapeHtml(stage.due)}</span>
+              <span>${escapeHtml(stage.period)}</span>
+            </span>
+            <span class="home-flow-next"><strong>Next:</strong> ${escapeHtml(stage.next)}</span>
+          </span>
+          <span class="home-flow-action">
+            <span class="chip ${escapeHtml(stage.tone)}">${escapeHtml(stage.metric)}</span>
+            <span class="muted small">${escapeHtml(stage.action)} →</span>
+          </span>
         </button>
       `).join("");
 
