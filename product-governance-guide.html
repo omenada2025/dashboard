@@ -83,7 +83,7 @@
     <header class="hero">
       <span class="eyebrow">Omena Consulting · Full Operating Guide</span>
       <h1>Product Governance Guide</h1>
-      <p class="lede">How Product Managers and System Analysts turn weekly status updates into reliable product governance information, connecting product reality, delivery evidence, decisions, execution, and release learning.</p>
+      <p class="lede">How Product Managers, System Analysts, and UI/UX contributors turn weekly status updates into reliable product governance information, connecting product reality, experience design, delivery evidence, decisions, execution, and release learning.</p>
       <div class="actions">
         <a class="btn primary" href="https://omenada2025.github.io/omenaconsulting/">Open dashboard</a>
         <a class="btn" href="product-governance-module-manual.html">Module manual</a>
@@ -92,12 +92,12 @@
 
     <section class="card blue">
       <h2>Purpose</h2>
-      <p>Product Manager and System Analyst represent the same accountable <strong>Owner</strong> responsibility in this process. UI/UX remains a contributing functional role.</p>
+      <p>Product Manager and System Analyst represent the same accountable <strong>Owner</strong> responsibility in this process. UI/UX remains a contributing functional role, with its own experience-design lifecycle path.</p>
       <p>A report is not only a narrative: every field supports a dashboard metric, governance gate, or management action.</p>
     </section>
 
     <section class="card green">
-      <h2>Governance Lifecycle</h2>
+      <h2>Product Lifecycle</h2>
       <ol>
         <li><strong>Discover</strong> — Identify the product, stakeholders, business problem, scope, and current context.</li>
         <li><strong>Baseline</strong> — Document the AS-IS product, workflows, rules, permissions, integrations, known issues, and delivery dates.</li>
@@ -111,13 +111,28 @@
       </ol>
     </section>
 
+    <section class="card blue">
+      <h2>UI/UX Lifecycle</h2>
+      <p>When <strong>Functional role</strong> is UI/UX, the dashboard shows the experience-design path instead of the product path:</p>
+      <ol>
+        <li><strong>Discover / Research</strong> — Understand users, journeys, business goals, constraints, and available evidence.</li>
+        <li><strong>Wireframe / Concept</strong> — Explore information architecture, flows, sketches, and candidate concepts.</li>
+        <li><strong>Design</strong> — Produce the detailed experience and visual design, including states and responsive behavior.</li>
+        <li><strong>Design Review</strong> — Review with Product, System Analysis, engineering, and relevant stakeholders.</li>
+        <li><strong>Prototype / Validate</strong> — Prototype critical interactions and validate usability and acceptance criteria with evidence.</li>
+        <li><strong>Handoff</strong> — Provide approved specifications, assets, behaviors, and implementation traceability.</li>
+        <li><strong>Release / Learn</strong> — Review the released experience, capture feedback and outcomes, and feed learning into the next cycle.</li>
+      </ol>
+      <div class="callout"><p><strong>How selection works:</strong> choose Functional role first. Product Manager and System Analyst use the Product Lifecycle; UI/UX uses the UI/UX Lifecycle. Both paths keep the same evidence and gate controls.</p></div>
+    </section>
+
     <section class="card amber">
       <h2>Responsibility Model</h2>
       <div class="table-wrap"><table>
         <thead><tr><th>Responsibility</th><th>Accountable role</th><th>Expected behavior</th></tr></thead>
         <tbody>
           <tr><td>Product or workstream ownership</td><td>Product Manager or System Analyst</td><td>Own context, evidence, dates, decisions, acceptance criteria, and weekly status.</td></tr>
-          <tr><td>Experience contribution</td><td>UI/UX</td><td>Provide validated designs, usability evidence, and experience acceptance criteria.</td></tr>
+          <tr><td>Experience contribution</td><td>UI/UX</td><td>Progress work through the UI/UX lifecycle and provide validated designs, usability evidence, handoff material, and experience acceptance criteria.</td></tr>
           <tr><td>Governance oversight</td><td>Admin, Master admin, or Role Manager</td><td>Review evidence quality, approve gates, monitor gaps, and manage portfolio standards.</td></tr>
           <tr><td>Leadership decision</td><td>Approver or leadership owner</td><td>Approve, reject, or condition a gate based on evidence and business risk.</td></tr>
         </tbody>
@@ -142,7 +157,7 @@
           <h3>Governance control</h3>
           <ul>
             <li><strong>Classification:</strong> Bug, Gap, Change Request, Configuration Issue, or Investigation.</li>
-            <li><strong>Lifecycle phase</strong> locates the item in governance.</li>
+            <li><strong>Lifecycle phase</strong> follows the product or UI/UX path selected by Functional role.</li>
             <li><strong>Evidence status:</strong> Missing, Partial, Available, or Validated.</li>
             <li><strong>Evidence reference</strong> links the supporting document, test, design, ticket, or decision.</li>
             <li><strong>Gate status:</strong> Not Ready, Ready for Review, Approved, Approved with Conditions, or Rejected.</li>
@@ -188,6 +203,7 @@
       <h2>Additional Practical Scenarios</h2>
       <div class="grid">
         <div class="mini"><h3>Bug discovered during validation</h3><p>Classification: Bug · Phase: Validate · Evidence: defect ticket and failed test · Gate: Not Ready until resolved and retested · Health: At Risk when release is affected.</p></div>
+        <div class="mini"><h3>UI/UX design ready for engineering</h3><p>Role: UI/UX · Phase: Handoff · Evidence: approved Figma design, interaction notes, assets, and acceptance criteria · Gate: Ready for Review or Approved when the evidence is validated.</p></div>
         <div class="mini"><h3>New stakeholder request</h3><p>Classification: Change Request · Phase: Assess · Evidence: request, impact analysis, and acceptance criteria · Gate: Ready for Review once scope, cost, and schedule impact are known.</p></div>
         <div class="mini"><h3>Current-state information is incomplete</h3><p>Classification: Investigation or Gap · Phase: Baseline · Evidence: Partial · Gate: Not Ready · Next: complete AS-IS workflow, integration, or business-rule discovery.</p></div>
         <div class="mini"><h3>Delivery completed</h3><p>Stage: Completed · Progress: 100% · Evidence: Validated · Gate: Approved · Phase: Release / Learn · Record the measurable result and lesson learned.</p></div>

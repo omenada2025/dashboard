@@ -205,7 +205,7 @@
           </tr>
           <tr>
             <td><span class="pill amber">UI/UX</span></td>
-            <td>Contribute experience evidence such as validated designs, usability notes, and acceptance criteria.</td>
+            <td>Move experience work through the UI/UX lifecycle and contribute validated designs, usability evidence, handoff material, and acceptance criteria.</td>
           </tr>
           <tr>
             <td><span class="pill green">Admin / Master admin / Role Manager</span></td>
@@ -248,18 +248,38 @@
       </div>
     </section>
 
+    <section class="card green">
+      <h2>5. Product and UI/UX lifecycle paths</h2>
+      <p>Select <strong>Functional responsibility</strong> first. The Lifecycle phase field then shows the path for that role in both the weekly status report and Product Governance form.</p>
+      <div class="grid two">
+        <div>
+          <h3>Product Manager / System Analyst</h3>
+          <p><span class="pill">Product lifecycle</span></p>
+          <p>Discover → Baseline → Assess → Define MSP → Prioritize → Define TO-BE → Build → Validate → Release / Learn</p>
+        </div>
+        <div>
+          <h3>UI/UX</h3>
+          <p><span class="pill amber">UI/UX lifecycle</span></p>
+          <p>Discover / Research → Wireframe / Concept → Design → Design Review → Prototype / Validate → Handoff → Release / Learn</p>
+        </div>
+      </div>
+      <div class="callout green">
+        <p>Both paths use the same classification, evidence, and gate controls. UI/UX is still a contributing functional role; this lifecycle makes its work and readiness visible without changing accountable product ownership.</p>
+      </div>
+    </section>
+
     <section class="card blue">
-      <h2>5. How to use it (quick start)</h2>
+      <h2>6. How to use it (quick start)</h2>
       <div class="rule"><div class="number">1</div><div><h3>Open Product Governance</h3><p>Sign in and go to <strong>Management → Product Governance</strong>.</p></div></div>
       <div class="rule"><div class="number">2</div><div><h3>Create or select an item</h3><p>Choose the product and workstream. Add a clear governance title that names the decision or control point.</p></div></div>
-      <div class="rule"><div class="number">3</div><div><h3>Classify and place it in the lifecycle</h3><p>Mark it as Bug, Gap, Change Request, Configuration Issue, or Investigation. Set the lifecycle phase from Discover through Release / Learn.</p></div></div>
+      <div class="rule"><div class="number">3</div><div><h3>Classify and place it in the lifecycle</h3><p>Mark it as Bug, Gap, Change Request, Configuration Issue, or Investigation. Select Functional responsibility, then choose the matching product or UI/UX lifecycle phase.</p></div></div>
       <div class="rule"><div class="number">4</div><div><h3>Attach evidence</h3><p>Set evidence status (Missing, Partial, Available, Validated) and add the reference link or document name.</p></div></div>
       <div class="rule"><div class="number">5</div><div><h3>Set the gate</h3><p>Use Not Ready, Ready for Review, Approved, Approved with Conditions, or Rejected. Approved gates should have validated evidence.</p></div></div>
       <div class="rule"><div class="number">6</div><div><h3>Keep the product checklist current</h3><p>Update the Minimum Evidence Checklist so product documentation stays reusable for the next gate.</p></div></div>
     </section>
 
     <section class="card green">
-      <h2>6. How it connects to the weekly status report</h2>
+      <h2>7. How it connects to the weekly status report</h2>
       <p>The weekly status report is the operating pulse. Product Governance is the control layer. They share the same governance fields so every weekly update can feed a gate decision.</p>
 
       <div class="flow">
@@ -301,8 +321,8 @@
           </tr>
           <tr>
             <td><span class="mono">Lifecycle phase</span></td>
-            <td>Shows where delivery sits this week (Discover → Release / Learn).</td>
-            <td>Shows which governance phase the item must pass before moving forward.</td>
+            <td>Shows where delivery or design sits this week using the path selected by Functional role.</td>
+            <td>Shows which product or UI/UX governance phase the item must pass before moving forward.</td>
           </tr>
           <tr>
             <td><span class="mono">Evidence status</span></td>
@@ -363,7 +383,7 @@
     </section>
 
     <section class="card amber">
-      <h2>7. Practical examples (weekly report → governance decision)</h2>
+      <h2>8. Practical examples (weekly report → governance decision)</h2>
       <div class="callout amber">
         <p>Each example shows what the owner enters in the <strong>weekly status report</strong> and how that feeds the <strong>Product Governance</strong> decision.</p>
       </div>
@@ -414,6 +434,15 @@
           </ul>
         </div>
         <div>
+          <h3>UI/UX handoff ready</h3>
+          <p><span class="pill amber">UI/UX</span> <span class="pill green">Handoff</span></p>
+          <ul>
+            <li><strong>Weekly report:</strong> approved Figma design, interaction notes, assets, and acceptance criteria are referenced as evidence</li>
+            <li><strong>Governance module:</strong> Gate = Ready for Review or Approved once the handoff evidence is Validated</li>
+            <li><strong>Next:</strong> engineering confirms implementation readiness and tracks design questions</li>
+          </ul>
+        </div>
+        <div>
           <h3>Why both are required</h3>
           <p><span class="pill green">Connected</span></p>
           <ul>
@@ -426,7 +455,7 @@
     </section>
 
     <section class="card">
-      <h2>8. One-sentence summary to share</h2>
+      <h2>9. One-sentence summary to share</h2>
       <div class="callout">
         <p><strong>Product Governance</strong> is connected to the weekly status report through shared fields (classification, lifecycle, evidence, and gate). Owners fill those fields every week in Update Reports; Admin / Master admin / Role Manager use the Product Governance module to review readiness and approve the next move.</p>
       </div>

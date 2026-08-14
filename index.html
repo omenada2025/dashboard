@@ -4197,7 +4197,7 @@
                   </select>
                 </label>
                 <label>Governance classification<select name="governance_classification" required><option>Bug</option><option>Gap</option><option>Change Request</option><option>Configuration Issue</option><option selected>Investigation</option></select></label>
-                <label>Lifecycle phase<select name="lifecycle_phase" required><option>Discover</option><option>Baseline</option><option>Assess</option><option>Define MSP</option><option>Prioritize</option><option>Define TO-BE</option><option>Build</option><option>Validate</option><option>Release / Learn</option></select></label>
+                <label>Lifecycle phase<select name="lifecycle_phase" required></select></label>
                 <label>Evidence status<select name="evidence_status" required><option selected>Missing</option><option>Partial</option><option>Available</option><option>Validated</option></select></label>
                 <label>Gate status<select name="gate_status" required><option selected>Not Ready</option><option>Ready for Review</option><option>Approved</option><option>Approved with Conditions</option><option>Rejected</option></select></label>
                 <label>Evidence reference<input name="evidence_reference" placeholder="Link to Jira, SharePoint, Figma, test, or approval" /></label>
@@ -4505,7 +4505,9 @@
     const ACTION_STATUS_OPTIONS = ["Open", "In Progress", "Waiting on decision", "Blocked", "Closed"];
     const FUNCTIONAL_ROLE_OPTIONS = ["Product Manager", "System Analyst", "UI/UX"];
     const GOVERNANCE_CLASSIFICATION_OPTIONS = ["Bug", "Gap", "Change Request", "Configuration Issue", "Investigation"];
-    const LIFECYCLE_PHASE_OPTIONS = ["Discover", "Baseline", "Assess", "Define MSP", "Prioritize", "Define TO-BE", "Build", "Validate", "Release / Learn"];
+    const PRODUCT_LIFECYCLE_PHASE_OPTIONS = ["Discover", "Baseline", "Assess", "Define MSP", "Prioritize", "Define TO-BE", "Build", "Validate", "Release / Learn"];
+    const UIUX_LIFECYCLE_PHASE_OPTIONS = ["Discover / Research", "Wireframe / Concept", "Design", "Design Review", "Prototype / Validate", "Handoff", "Release / Learn"];
+    const LIFECYCLE_PHASE_OPTIONS = [...new Set([...PRODUCT_LIFECYCLE_PHASE_OPTIONS, ...UIUX_LIFECYCLE_PHASE_OPTIONS])];
     const EVIDENCE_STATUS_OPTIONS = ["Missing", "Partial", "Available", "Validated"];
     const GATE_STATUS_OPTIONS = ["Not Ready", "Ready for Review", "Approved", "Approved with Conditions", "Rejected"];
     const GOVERNANCE_STATUS_OPTIONS = ["Open", "In Review", "Approved", "Delivered", "Archived"];
@@ -7174,12 +7176,23 @@
       }
     }
 
+    function lifecycleOptionsForRole(role = "") {
+      return cleanText(role) === "UI/UX" ? UIUX_LIFECYCLE_PHASE_OPTIONS : PRODUCT_LIFECYCLE_PHASE_OPTIONS;
+    }
+
+    function populateLifecycleForRole(form, selected = "") {
+      if (!form?.elements?.lifecycle_phase) return;
+      const options = lifecycleOptionsForRole(form.elements.functional_role?.value || form.elements.role?.value);
+      const current = cleanText(selected || form.elements.lifecycle_phase.value);
+      setSelectOptions(form.elements.lifecycle_phase, options, options.includes(current) ? current : options[0], "Select lifecycle phase");
+    }
+
     function populateGovernanceFormOptions(form, values = {}) {
       if (!form) return;
       const selectedValue = (value, currentValue, fallback) => cleanText(value ?? currentValue) || fallback;
       setSelectOptions(form.elements.functional_role, FUNCTIONAL_ROLE_OPTIONS, selectedValue(values.functional_role, form.elements.functional_role?.value, "Product Manager"), "Select responsibility");
       setSelectOptions(form.elements.classification, GOVERNANCE_CLASSIFICATION_OPTIONS, selectedValue(values.classification, form.elements.classification?.value, "Investigation"), "Select classification");
-      setSelectOptions(form.elements.lifecycle_phase, LIFECYCLE_PHASE_OPTIONS, selectedValue(values.lifecycle_phase, form.elements.lifecycle_phase?.value, "Discover"), "Select lifecycle phase");
+      populateLifecycleForRole(form, selectedValue(values.lifecycle_phase, form.elements.lifecycle_phase?.value, ""));
       setSelectOptions(form.elements.evidence_status, EVIDENCE_STATUS_OPTIONS, selectedValue(values.evidence_status, form.elements.evidence_status?.value, "Missing"), "Select evidence status");
       setSelectOptions(form.elements.gate_status, GATE_STATUS_OPTIONS, selectedValue(values.gate_status, form.elements.gate_status?.value, "Not Ready"), "Select gate status");
       setSelectOptions(form.elements.status, GOVERNANCE_STATUS_OPTIONS, selectedValue(values.status, form.elements.status?.value, "Open"), "Select item status");
@@ -7657,7 +7670,7 @@
 
       if (!dueDate && !isCompletedStageValue(stage)) warnings.push("Add an end date so schedule status can be calculated.");
       if (["Missing", "Partial"].includes(evidenceStatus)) warnings.push("Evidence is incomplete; add the supporting artifact or decision record before the next governance review.");
-      if (["Build", "Validate", "Release / Learn"].includes(lifecyclePhase) && gateStatus === "Not Ready") warnings.push("This work is in a delivery phase but its governance gate is still Not Ready.");
+      if (["Build", "Validate", "Design Review", "Prototype / Validate", "Handoff", "Release / Learn"].includes(lifecyclePhase) && gateStatus === "Not Ready") warnings.push("This work is in a delivery phase but its governance gate is still Not Ready.");
       if (evidenceStatus === "Validated") positives.push("Supporting evidence is validated.");
       if (["Approved", "Approved with Conditions"].includes(gateStatus)) positives.push(`Governance gate is ${gateStatus}.`);
       if (isCompletedStageValue(stage) && !dueDate) warnings.push("Completed workstreams should include an end date so delivered work can be audited.");
@@ -13729,7 +13742,7 @@
               </div>
               <div class="form-grid">
                 <label>Governance classification<select name="governance_classification" required>${optionListMarkup(GOVERNANCE_CLASSIFICATION_OPTIONS, report.governance_classification || "Investigation")}</select></label>
-                <label>Lifecycle phase<select name="lifecycle_phase" required>${optionListMarkup(LIFECYCLE_PHASE_OPTIONS, report.lifecycle_phase || "Discover")}</select></label>
+                <label>Lifecycle phase<select name="lifecycle_phase" required>${optionListMarkup(lifecycleOptionsForRole(report.role), report.lifecycle_phase || lifecycleOptionsForRole(report.role)[0])}</select></label>
                 <label>Evidence status<select name="evidence_status" required>${optionListMarkup(EVIDENCE_STATUS_OPTIONS, report.evidence_status || "Missing")}</select></label>
                 ${editField("Evidence reference", "evidence_reference", report.evidence_reference || "", "text")}
                 <label>Gate status<select name="gate_status" required>${optionListMarkup(GATE_STATUS_OPTIONS, report.gate_status || "Not Ready")}</select></label>
@@ -13802,7 +13815,10 @@
       const editForm = document.getElementById("editReportForm");
       refreshEditQualityCheck(report.id);
       editForm.addEventListener("input", () => refreshEditQualityCheck(report.id));
-      editForm.addEventListener("change", () => refreshEditQualityCheck(report.id));
+      editForm.addEventListener("change", event => {
+        if (event.target.name === "role") populateLifecycleForRole(editForm);
+        refreshEditQualityCheck(report.id);
+      });
       document.getElementById("reportHistoryBtn").addEventListener("click", async () => {
         reportHistoryOpen = !reportHistoryOpen;
         if (reportHistoryOpen) {
@@ -14612,6 +14628,7 @@
           picker.dataset.selected = "";
           renderDependencyPicker(picker);
         });
+        populateLifecycleForRole(event.currentTarget);
         refreshStatusQualityCheck();
       }, 0);
     });
@@ -15492,10 +15509,16 @@
     initPeoplePickers(statusForm);
     initDependencyPickers(statusForm);
     statusForm.addEventListener("input", refreshStatusQualityCheck);
-    statusForm.addEventListener("change", refreshStatusQualityCheck);
+    statusForm.addEventListener("change", event => {
+      if (event.target.name === "role") populateLifecycleForRole(statusForm);
+      refreshStatusQualityCheck();
+    });
+    populateLifecycleForRole(statusForm);
     refreshStatusQualityCheck();
     initReportingWeekInputs();
-    document.getElementById("governanceForm")?.addEventListener("submit", saveGovernanceItem);
+    const governanceForm = document.getElementById("governanceForm");
+    governanceForm?.addEventListener("submit", saveGovernanceItem);
+    governanceForm?.elements.functional_role?.addEventListener("change", () => populateLifecycleForRole(governanceForm));
     document.getElementById("clearGovernanceItem")?.addEventListener("click", clearGovernanceForm);
     document.getElementById("deleteGovernanceItem")?.addEventListener("click", deleteSelectedGovernanceItem);
     document.getElementById("governanceItemList")?.addEventListener("click", event => {
