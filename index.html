@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-store, max-age=0" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <meta name="dashboard-build" content="2026-08-14-classifications-owner-fix" />
+  <meta name="dashboard-build" content="2026-08-14-governance-owner-picker" />
   <title>Omena Consulting Dashboard</title>
   <style>
     :root {
@@ -3036,7 +3036,7 @@
                 <label>Product<select name="product" required></select></label>
                 <label>Workstream<input name="workstream" required placeholder="Feature, workstream, or decision" /></label>
                 <label>Governance title<input name="title" required placeholder="Decision or control point" /></label>
-                <label>Owner<input name="owner" required placeholder="Accountable owner" /></label>
+                <label>Owner<div class="people-picker" data-people-picker data-name="owner" data-label="Owner" data-placeholder="Select owner"></div></label>
                 <label>Functional responsibility<select name="functional_role" required></select></label>
                 <label>Classification<select name="classification" required></select></label>
                 <label>Lifecycle phase<select name="lifecycle_phase" required></select></label>
@@ -5734,8 +5734,24 @@
       return uniqueProducts([...commonDependencies, ...workstreamDependencies, ...reportDependencies, ...loadCustomDependencies()]);
     }
 
+    function directoryUsers() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(USERS_KEY) || "null");
+        if (Array.isArray(saved) && saved.length) return normalizeUsers(saved);
+      } catch {}
+      return normalizeUsers(DEFAULT_USERS);
+    }
+
+    const PEOPLE_DIRECTORY_PLACEHOLDERS = new Set(["na", "tbd", "tba", "none", "nobody", "unassigned", "notassigned", "pending", "unknown"]);
+
+    function isDirectoryPerson(value = "") {
+      const display = cleanText(value);
+      if (display.length < 2) return false;
+      return !PEOPLE_DIRECTORY_PLACEHOLDERS.has(compactKey(display));
+    }
+
     function peopleDirectory() {
-      const managedPeople = normalizeUsers(loadUsers())
+      const managedPeople = directoryUsers()
         .filter(user => user.active !== false && user.deleted !== true && !isDefaultUser(user.username))
         .map(user => {
           const display = cleanText(user.displayName || "");
@@ -5749,7 +5765,7 @@
         ...splitPeople(report.participants),
         ...splitPeople(report.action_owner)
       ]);
-      return uniquePeople([...managedPeople, ...reportPeople, ...loadCustomPeople()]);
+      return uniquePeople([...managedPeople, ...reportPeople, ...loadCustomPeople()]).filter(isDirectoryPerson);
     }
 
     function refreshPeoplePickers(root = document) {
@@ -5764,6 +5780,16 @@
         }
         renderPeoplePicker(picker);
       });
+    }
+
+    function setPeoplePickerValue(root, name, value = "") {
+      const picker = root?.querySelector?.(`[data-people-picker][data-name="${CSS.escape(name)}"]`);
+      if (!picker) return false;
+      const multiple = picker.dataset.multiple === "true";
+      const selected = multiple ? splitPeople(value) : splitPeople(value).slice(0, 1);
+      picker.dataset.selected = selected.join("|");
+      renderPeoplePicker(picker);
+      return true;
     }
 
     function addPersonToDirectory(name) {
@@ -6728,7 +6754,7 @@
       userDirectoryRefreshPromise = syncUsersWithCloud()
         .then(users => {
           renderUserManagement();
-          refreshPeoplePickers(document.getElementById("statusForm") || document);
+          refreshPeoplePickers(document);
           showRoleMessage("Access list refreshed from Supabase.");
           return users;
         })
@@ -7256,6 +7282,7 @@
       document.getElementById("governanceFormTitle").textContent = "Create governance item";
       document.getElementById("deleteGovernanceItem").hidden = true;
       setSelectOptions(form.elements.product, governanceProducts(), "", "Select product");
+      setPeoplePickerValue(form, "owner", "");
       populateGovernanceFormOptions(form, {
         functional_role: "Product Manager",
         classification: "Investigation",
@@ -7276,9 +7303,10 @@
       form.elements.id.value = item.id;
       setSelectOptions(form.elements.product, governanceProducts(), item.product, "Select product");
       populateGovernanceFormOptions(form, item);
-      ["workstream", "title", "owner", "priority", "evidence_reference", "current_state", "target_state", "acceptance_criteria", "decision_impact"].forEach(name => {
+      ["workstream", "title", "priority", "evidence_reference", "current_state", "target_state", "acceptance_criteria", "decision_impact"].forEach(name => {
         if (form.elements[name]) form.elements[name].value = item[name] || "";
       });
+      setPeoplePickerValue(form, "owner", item.owner || "");
       document.getElementById("governanceFormTitle").textContent = "Edit governance item";
       document.getElementById("deleteGovernanceItem").hidden = false;
       showGovernanceMessage();
@@ -7291,7 +7319,7 @@
       if (!item.product) errors.push("Select a product.");
       if (!item.workstream) errors.push("Enter a workstream.");
       if (!item.title) errors.push("Enter a governance item title.");
-      if (!item.owner) errors.push("Enter the accountable Owner.");
+      if (!item.owner) errors.push("Select the accountable Owner.");
       if (["Approved", "Approved with Conditions"].includes(item.gate_status) && !item.evidence_reference) {
         errors.push("Approved gates require an evidence reference.");
       }
@@ -7308,6 +7336,7 @@
       event.preventDefault();
       const form = event.currentTarget;
       const values = Object.fromEntries(new FormData(form).entries());
+      values.owner = pickerFormValue(form, "owner") || cleanText(values.owner || "");
       const existing = governanceItems.find(item => item.id === cleanText(values.id));
       const item = normalizeGovernanceItem({ ...existing, ...values, id: cleanText(values.id) || crypto.randomUUID(), updated_at: new Date().toISOString() });
       const errors = governanceValidation(item);
@@ -15559,6 +15588,7 @@
     refreshStatusQualityCheck();
     initReportingWeekInputs();
     const governanceForm = document.getElementById("governanceForm");
+    if (governanceForm) initPeoplePickers(governanceForm);
     governanceForm?.addEventListener("submit", saveGovernanceItem);
     governanceForm?.elements.functional_role?.addEventListener("change", () => populateLifecycleForRole(governanceForm));
     document.getElementById("clearGovernanceItem")?.addEventListener("click", clearGovernanceForm);
@@ -15576,7 +15606,7 @@
       restoreSession();
       await fetchReports();
       await loadGovernanceData();
-      refreshPeoplePickers(document.getElementById("statusForm") || document);
+      refreshPeoplePickers(document);
     })();
   </script>
 </body>
