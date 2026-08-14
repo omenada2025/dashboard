@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-store, max-age=0" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <meta name="dashboard-build" content="2026-08-14-weekly-cockpit-p0" />
+  <meta name="dashboard-build" content="2026-08-14-progressive-intake-traceability-p0" />
   <title>Omena Consulting Dashboard</title>
   <style>
     :root {
@@ -1643,6 +1643,97 @@
       align-items: center;
     }
 
+    .form-progress {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .form-progress-step {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--surface);
+      color: var(--muted);
+      padding: 10px 12px;
+      text-align: left;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .form-progress-step.active {
+      border-color: var(--accent);
+      background: var(--surface-soft);
+      color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(20, 93, 122, .1);
+    }
+
+    .form-progress-step.complete::before {
+      content: "✓ ";
+      color: var(--green);
+    }
+
+    .form-step[hidden],
+    [data-status-conditional][hidden] { display: none !important; }
+
+    .form-step-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .draft-status {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .conditional-toggle {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px dashed var(--line);
+      border-radius: 12px;
+      background: var(--surface);
+      padding: 10px 12px;
+      cursor: pointer;
+    }
+
+    .conditional-toggle input { width: auto; margin: 0; }
+
+    .traceability-panel {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--surface-soft);
+      padding: 14px;
+      margin: 14px 0;
+    }
+
+    .traceability-chain {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .traceability-node {
+      display: grid;
+      gap: 2px;
+      min-width: 150px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--surface);
+      padding: 10px;
+    }
+
+    .traceability-node strong { overflow-wrap: anywhere; }
+    .traceability-arrow { color: var(--muted); font-weight: 900; }
+    .traceability-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+
     .full { grid-column: 1 / -1; }
 
     .report-list {
@@ -2395,6 +2486,8 @@
       .export-actions .btn {
         width: 100%;
       }
+      .form-progress { grid-template-columns: 1fr 1fr; }
+      .form-step-controls { align-items: stretch; flex-direction: column; }
       .home-flow-item {
         grid-template-columns: auto 1fr;
         align-items: start;
@@ -3068,6 +3161,7 @@
             <form id="governanceForm">
               <input type="hidden" name="id" />
               <div class="form-grid">
+                <label class="full">Source weekly report<select name="source_report_id"><option value="">No report linked</option></select></label>
                 <label>Product<select name="product" required></select></label>
                 <label>Workstream<input name="workstream" required placeholder="Feature, workstream, or decision" /></label>
                 <label>Governance title<input name="title" required placeholder="Decision or control point" /></label>
@@ -3085,6 +3179,7 @@
                 <label>Acceptance criteria<textarea name="acceptance_criteria" rows="3" placeholder="How will completion be verified?"></textarea></label>
                 <label>Decision / impact<textarea name="decision_impact" rows="3" placeholder="Decision required, impact, and consequence"></textarea></label>
               </div>
+              <div id="governanceTraceability"></div>
               <div class="inline-message" id="governanceMessage" hidden></div>
               <div class="form-actions">
                 <button class="btn" type="button" id="clearGovernanceItem">Clear</button>
@@ -4190,12 +4285,18 @@
         </div>
 
         <div class="panel">
-          <form id="statusForm">
+          <form id="statusForm" novalidate>
             <div class="inline-message success" id="statusFormMessage" hidden></div>
-            <div class="form-section">
+            <nav class="form-progress" aria-label="Status report progress">
+              <button class="form-progress-step active" type="button" data-status-step-target="1">1. Context</button>
+              <button class="form-progress-step" type="button" data-status-step-target="2">2. Delivery</button>
+              <button class="form-progress-step" type="button" data-status-step-target="3">3. Risk &amp; decision</button>
+              <button class="form-progress-step" type="button" data-status-step-target="4">4. Review</button>
+            </nav>
+            <div class="form-section form-step" data-status-step="1">
               <div class="form-section-title">
                 <div>
-                  <h3>1. Product context</h3>
+                  <h3>Context</h3>
                   <p class="muted small">Define what is being reported and who owns the follow-up.</p>
                 </div>
               </div>
@@ -4231,26 +4332,12 @@
                     <option>UI/UX</option>
                   </select>
                 </label>
-                <label>Governance classification<select name="governance_classification" required>
-                  <option>Bug</option>
-                  <option>Gap</option>
-                  <option>Change Request</option>
-                  <option>Configuration Issue</option>
-                  <option selected>Investigation</option>
-                  <option>Enhancement</option>
-                  <option>Risk</option>
-                  <option>Usability Issue</option>
-                </select></label>
-                <label>Lifecycle phase<select name="lifecycle_phase" required></select></label>
-                <label>Evidence status<select name="evidence_status" required><option selected>Missing</option><option>Partial</option><option>Available</option><option>Validated</option></select></label>
-                <label>Gate status<select name="gate_status" required><option selected>Not Ready</option><option>Ready for Review</option><option>Approved</option><option>Approved with Conditions</option><option>Rejected</option></select></label>
-                <label>Evidence reference<input name="evidence_reference" placeholder="Link to Jira, SharePoint, Figma, test, or approval" /></label>
               </div>
             </div>
-            <div class="form-section">
+            <div class="form-section form-step" data-status-step="2" hidden>
               <div class="form-section-title">
                 <div>
-                  <h3>2. Timing and delivery health</h3>
+                  <h3>Delivery</h3>
                   <p class="muted small">Use end date to classify Ahead of Schedule, On Time, Minor Delay, or Major Delay.</p>
                 </div>
               </div>
@@ -4278,7 +4365,11 @@
                     <input type="hidden" name="dependency" value="" />
                   </div>
                 </label>
-                <label>
+                <label class="conditional-toggle">
+                  <input id="statusHasDelay" type="checkbox" />
+                  Delivery is delayed or the baseline changed
+                </label>
+                <label data-status-conditional="delay" hidden>
                   Delay root cause
                   <select name="delay_reason">
                     <option value="">Select root cause</option>
@@ -4296,7 +4387,7 @@
                     <option>Other</option>
                   </select>
                 </label>
-                <label class="full">
+                <label class="full" data-status-conditional="delay" hidden>
                   Date change reason
                   <textarea name="date_change_reason" placeholder="Why did the delivery date change, if applicable?"></textarea>
                 </label>
@@ -4354,10 +4445,10 @@
                 </label>
               </div>
             </div>
-            <div class="form-section">
+            <div class="form-section form-step" data-status-step="3" hidden>
               <div class="form-section-title">
                 <div>
-                  <h3>3. Narrative and decision signals</h3>
+                  <h3>Risk and decision</h3>
                   <p class="muted small">Write the update in a way a leader can understand without extra context.</p>
                 </div>
               </div>
@@ -4378,15 +4469,33 @@
                   Next action
                   <textarea name="next" placeholder="What is the next delivery, design, review, or handoff step?"></textarea>
                 </label>
-                <label>
+                <label>Governance classification<select name="governance_classification" required>
+                  <option>Bug</option>
+                  <option>Gap</option>
+                  <option>Change Request</option>
+                  <option>Configuration Issue</option>
+                  <option selected>Investigation</option>
+                  <option>Enhancement</option>
+                  <option>Risk</option>
+                  <option>Usability Issue</option>
+                </select></label>
+                <label>Lifecycle phase<select name="lifecycle_phase" required></select></label>
+                <label>Evidence status<select name="evidence_status" required><option selected>Missing</option><option>Partial</option><option>Available</option><option>Validated</option></select></label>
+                <label>Gate status<select name="gate_status" required><option selected>Not Ready</option><option>Ready for Review</option><option>Approved</option><option>Approved with Conditions</option><option>Rejected</option></select></label>
+                <label class="full">Evidence reference<input name="evidence_reference" placeholder="Link to Jira, SharePoint, Figma, test, or approval" /></label>
+                <label class="conditional-toggle">
+                  <input id="statusHasRisk" type="checkbox" />
+                  There is a risk, corrective action, or decision to track
+                </label>
+                <label data-status-conditional="risk" hidden>
                   Corrective action owner
                   <div class="people-picker" data-people-picker data-name="action_owner" data-label="Corrective action owner" data-placeholder="Select owner"></div>
                 </label>
-                <label>
+                <label data-status-conditional="risk" hidden>
                   Action target date
                   <input name="action_due_date" type="date" />
                 </label>
-                <label>
+                <label data-status-conditional="risk" hidden>
                   Action status
                   <select name="action_status">
                     <option>Open</option>
@@ -4396,11 +4505,11 @@
                     <option>Closed</option>
                   </select>
                 </label>
-                <label class="full">
+                <label class="full" data-status-conditional="risk" hidden>
                   Decision needed
                   <textarea name="decision_needed" placeholder="What decision, approval, or trade-off is needed to unblock or accelerate delivery?"></textarea>
                 </label>
-                <label>
+                <label data-status-conditional="risk" hidden>
                   Risk impact
                   <select name="impact">
                     <option value="1">Low</option>
@@ -4408,7 +4517,7 @@
                     <option value="3">High</option>
                   </select>
                 </label>
-                <label>
+                <label data-status-conditional="risk" hidden>
                   Time to solve
                   <select name="time">
                     <option value="1">Short</option>
@@ -4416,7 +4525,7 @@
                     <option value="3">Long</option>
                   </select>
                 </label>
-                <label>
+                <label data-status-conditional="risk" hidden>
                   Priority
                   <select name="priority">
                     <option>Normal</option>
@@ -4426,10 +4535,24 @@
                 </label>
               </div>
             </div>
-            <div class="quality-check-panel" id="statusQualityCheck" aria-live="polite"></div>
-            <div class="form-actions">
-              <button class="btn" type="reset">Clear</button>
-              <button class="btn primary" type="submit" id="saveReportBtn">Save Report</button>
+            <div class="form-section form-step" data-status-step="4" hidden>
+              <div class="form-section-title">
+                <div>
+                  <h3>Review and save</h3>
+                  <p class="muted small">Confirm the key references and resolve required quality checks before saving.</p>
+                </div>
+              </div>
+              <div id="statusReviewSummary"></div>
+              <div class="quality-check-panel" id="statusQualityCheck" aria-live="polite"></div>
+            </div>
+            <div class="form-step-controls">
+              <span class="draft-status" id="statusDraftStatus" aria-live="polite">Draft is saved automatically on this device.</span>
+              <div class="form-actions">
+                <button class="btn" type="reset">Clear</button>
+                <button class="btn" type="button" id="statusPrevStep" hidden>Previous</button>
+                <button class="btn primary" type="button" id="statusNextStep">Next</button>
+                <button class="btn primary" type="submit" id="saveReportBtn" hidden>Save Report</button>
+              </div>
             </div>
           </form>
         </div>
@@ -4524,6 +4647,7 @@
     const STORAGE_KEY = "product-uiux-pulse-reports-v1";
     const FIELD_OVERRIDES_KEY = "product-uiux-pulse-field-overrides-v1";
     const SOURCE_PROJECTS_KEY = "omena-source-projects-v1";
+    const STATUS_DRAFT_KEY = "omena-status-report-draft-v1";
     const SOURCE_PROJECTS_URL = "https://netorg14919417.sharepoint.com/:x:/r/sites/ProductManagers/_layouts/15/Doc.aspx?action=edit&sourcedoc=%7B001b27fc-5254-480f-bf98-1ee6c319fcaf%7D&wdExp=TEAMS-TREATMENT&web=1&TeamsCID=9245405c-61c3-49b5-8c31-6275fa488860";
     const labels = {
       green: "On Track",
@@ -4854,6 +4978,8 @@
     let productArtifacts = [];
     let selectedGovernanceItemId = "";
     let governanceCloudAvailable = true;
+    let statusFormStep = 1;
+    let statusDraftTimer = null;
     let userLogLoadMessage = "Open this page or click Refresh log to load activity.";
     const userLogFilters = {
       user: "all",
@@ -7217,6 +7343,7 @@
     function normalizeGovernanceItem(item = {}) {
       return {
         id: cleanText(item.id) || crypto.randomUUID(),
+        source_report_id: cleanText(item.source_report_id),
         product: cleanText(item.product),
         workstream: cleanText(item.workstream),
         title: cleanText(item.title),
@@ -7270,6 +7397,72 @@
       ]);
     }
 
+    function shortEntityRef(prefix, id = "") {
+      return `${prefix}-${cleanText(id).replace(/[^a-z0-9]/gi, "").slice(0, 8).toUpperCase() || "PENDING"}`;
+    }
+
+    function reportsForGovernanceItem(item) {
+      const explicit = reports.find(report => report.id === item.source_report_id);
+      if (explicit) return [explicit];
+      return reports.filter(report =>
+        canonicalText(report.product) === canonicalText(item.product) &&
+        (!item.workstream || canonicalText(report.feature_workstream) === canonicalText(item.workstream))
+      );
+    }
+
+    function governanceForReport(report) {
+      return governanceItems.filter(item =>
+        item.source_report_id === report.id ||
+        (canonicalText(item.product) === canonicalText(report.product) &&
+          (!item.workstream || canonicalText(item.workstream) === canonicalText(report.feature_workstream)))
+      );
+    }
+
+    function populateGovernanceReportOptions(form, selected = "") {
+      const select = form?.elements?.source_report_id;
+      if (!select) return;
+      const current = cleanText(selected || select.value);
+      select.innerHTML = `<option value="">No report linked</option>${reports.map(report =>
+        `<option value="${escapeHtml(report.id)}" ${report.id === current ? "selected" : ""}>${escapeHtml(`${shortEntityRef("RPT", report.id)} · ${report.product || "No product"} · ${reportTitle(report)}`)}</option>`
+      ).join("")}`;
+    }
+
+    function evidenceLinkMarkup(reference = "") {
+      const value = cleanText(reference);
+      if (!value) return `<span class="muted small">No evidence reference</span>`;
+      if (/^https?:\/\//i.test(value)) {
+        return `<a class="btn" href="${escapeHtml(value)}" target="_blank" rel="noopener noreferrer">Open evidence</a>`;
+      }
+      return `<span class="muted small">${escapeHtml(value)}</span>`;
+    }
+
+    function renderGovernanceTraceability(item = null) {
+      const target = document.getElementById("governanceTraceability");
+      if (!target) return;
+      if (!item) {
+        target.innerHTML = `<div class="traceability-panel"><strong>Traceability</strong><p class="muted small">Link a source weekly report to make the report → governance → action → evidence chain navigable.</p></div>`;
+        return;
+      }
+      const source = reportsForGovernanceItem(item)[0];
+      target.innerHTML = `
+        <div class="traceability-panel">
+          <strong>Traceability chain</strong>
+          <div class="traceability-chain">
+            <span class="traceability-node"><small>Weekly report</small><strong>${source ? escapeHtml(shortEntityRef("RPT", source.id)) : "Not linked"}</strong></span>
+            <span class="traceability-arrow">→</span>
+            <span class="traceability-node"><small>Governance</small><strong>${escapeHtml(shortEntityRef("GOV", item.id))}</strong></span>
+            <span class="traceability-arrow">→</span>
+            <span class="traceability-node"><small>Action</small><strong>${source ? escapeHtml(shortEntityRef("ACT", source.id)) : "Not generated"}</strong></span>
+            <span class="traceability-arrow">→</span>
+            <span class="traceability-node"><small>Evidence</small><strong>${escapeHtml(item.evidence_status || "Missing")}</strong></span>
+          </div>
+          <div class="traceability-links">
+            ${source && canAccessView("reports") ? `<button class="btn" type="button" data-open-report="${escapeHtml(source.id)}">Open source report</button>` : ""}
+            ${evidenceLinkMarkup(item.evidence_reference)}
+          </div>
+        </div>`;
+    }
+
     function setSelectOptions(select, values, current = "", placeholder = "Select") {
       if (!select) return;
       const selected = cleanText(current || select.value);
@@ -7317,6 +7510,7 @@
       document.getElementById("governanceFormTitle").textContent = "Create governance item";
       document.getElementById("deleteGovernanceItem").hidden = true;
       setSelectOptions(form.elements.product, governanceProducts(), "", "Select product");
+      populateGovernanceReportOptions(form);
       setPeoplePickerValue(form, "owner", "");
       populateGovernanceFormOptions(form, {
         functional_role: "Product Manager",
@@ -7338,6 +7532,7 @@
       form.elements.id.value = item.id;
       setSelectOptions(form.elements.product, governanceProducts(), item.product, "Select product");
       populateGovernanceFormOptions(form, item);
+      populateGovernanceReportOptions(form, item.source_report_id);
       ["workstream", "title", "priority", "evidence_reference", "current_state", "target_state", "acceptance_criteria", "decision_impact"].forEach(name => {
         if (form.elements[name]) form.elements[name].value = item[name] || "";
       });
@@ -7388,7 +7583,7 @@
           const result = existing
             ? await supabaseTableRequest("governance_items", `?id=eq.${encodeURIComponent(item.id)}`, { method: "PATCH", body: governancePayload(item) })
             : await supabaseTableRequest("governance_items", "", { method: "POST", body: governancePayload(item) });
-          if (Array.isArray(result) && result[0]) saved = normalizeGovernanceItem(result[0]);
+          if (Array.isArray(result) && result[0]) saved = normalizeGovernanceItem({ ...result[0], source_report_id: item.source_report_id });
         }
         const index = governanceItems.findIndex(entry => entry.id === item.id);
         if (index >= 0) governanceItems[index] = saved;
@@ -7489,25 +7684,30 @@
       ].map(([label, value, tone, note]) => `<div class="panel metric"><span class="chip ${tone}">${escapeHtml(label)}</span><strong>${value}</strong><span class="muted small">${escapeHtml(note)}</span></div>`).join("");
       list.innerHTML = governanceItems.length ? governanceItems.map(item => `
         <button class="governance-item ${item.id === selectedGovernanceItemId ? "selected" : ""}" type="button" data-governance-id="${escapeHtml(item.id)}">
-          <span><span class="product-label">${escapeHtml(item.product)}</span><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.workstream || "No workstream")} - ${escapeHtml(item.owner || "Unassigned")} (${escapeHtml(item.functional_role)})</small></span>
+          <span><span class="product-label">${escapeHtml(item.product)} · ${escapeHtml(shortEntityRef("GOV", item.id))}</span><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.workstream || "No workstream")} - ${escapeHtml(item.owner || "Unassigned")} (${escapeHtml(item.functional_role)})${reportsForGovernanceItem(item)[0] ? ` · Source ${escapeHtml(shortEntityRef("RPT", reportsForGovernanceItem(item)[0].id))}` : ""}</small></span>
           <span class="governance-item-signals"><span class="chip ${item.priority === "Critical" ? "red" : item.priority === "High" ? "amber" : "blue"}">${escapeHtml(item.priority)}</span><span class="chip ${item.evidence_status === "Validated" ? "green" : "amber"}">${escapeHtml(item.evidence_status)}</span><span class="chip ${item.gate_status === "Approved" ? "green" : item.gate_status === "Rejected" ? "red" : "gray"}">${escapeHtml(item.gate_status)}</span></span>
         </button>
       `).join("") : `<div class="empty"><strong>No governance items yet</strong>Create the first classified gap, change, bug, configuration issue, or investigation.</div>`;
       setSelectOptions(form.elements.product, governanceProducts(), form.elements.product.value, "Select product");
+      populateGovernanceReportOptions(form, form.elements.source_report_id.value);
       populateGovernanceFormOptions(form);
       setSelectOptions(artifactProduct, governanceProducts(), artifactProduct.value, "Select product");
       renderArtifactChecklist(artifactProduct.value);
+      renderGovernanceTraceability(governanceItems.find(item => item.id === selectedGovernanceItemId));
     }
 
     async function loadGovernanceData() {
       governanceItems = loadLocalGovernanceArray(GOVERNANCE_ITEMS_KEY).map(normalizeGovernanceItem);
+      const localSourceById = new Map(governanceItems.map(item => [item.id, item.source_report_id]));
       productArtifacts = loadLocalGovernanceArray(PRODUCT_ARTIFACTS_KEY);
       try {
         const [items, artifacts] = await Promise.all([
           supabaseTableRequest("governance_items", "?select=*&order=updated_at.desc"),
           supabaseTableRequest("product_artifacts", "?select=*&order=updated_at.desc")
         ]);
-        governanceItems = Array.isArray(items) ? items.map(normalizeGovernanceItem) : governanceItems;
+        governanceItems = Array.isArray(items)
+          ? items.map(item => normalizeGovernanceItem({ ...item, source_report_id: item.source_report_id || localSourceById.get(item.id) }))
+          : governanceItems;
         productArtifacts = Array.isArray(artifacts) ? artifacts : productArtifacts;
         governanceCloudAvailable = true;
         saveGovernanceLocally();
@@ -7862,6 +8062,132 @@
     function refreshStatusQualityCheck() {
       const form = document.getElementById("statusForm");
       renderFormQualityCheck("statusQualityCheck", form, crypto.randomUUID(), { requireProduct: true });
+      renderStatusReviewSummary();
+    }
+
+    function updateStatusConditionalFields() {
+      const form = document.getElementById("statusForm");
+      if (!form) return;
+      const delayedByDates = form.elements.due_date.value && form.elements.baseline_due_date.value &&
+        form.elements.due_date.value > form.elements.baseline_due_date.value;
+      const hasDelay = document.getElementById("statusHasDelay").checked || delayedByDates || form.elements.health.value === "red";
+      const hasRisk = document.getElementById("statusHasRisk").checked || form.elements.health.value === "red" ||
+        Boolean(cleanText(form.elements.blocker.value) || cleanText(form.elements.decision_needed.value));
+      if (delayedByDates || form.elements.health.value === "red") document.getElementById("statusHasDelay").checked = true;
+      if (form.elements.health.value === "red" || cleanText(form.elements.blocker.value) || cleanText(form.elements.decision_needed.value)) {
+        document.getElementById("statusHasRisk").checked = true;
+      }
+      form.querySelectorAll('[data-status-conditional="delay"]').forEach(field => { field.hidden = !hasDelay; });
+      form.querySelectorAll('[data-status-conditional="risk"]').forEach(field => { field.hidden = !hasRisk; });
+    }
+
+    function renderStatusReviewSummary() {
+      const form = document.getElementById("statusForm");
+      const target = document.getElementById("statusReviewSummary");
+      if (!form || !target) return;
+      const product = pickerFormValue(form, "product") || "Product not selected";
+      const owner = pickerFormValue(form, "owner") || "Owner not selected";
+      target.innerHTML = `
+        <div class="traceability-chain">
+          <span class="traceability-node"><small>Product / workstream</small><strong>${escapeHtml(product)}</strong><span class="muted small">${escapeHtml(form.elements.feature_workstream.value || "Workstream not entered")}</span></span>
+          <span class="traceability-node"><small>Owner / week</small><strong>${escapeHtml(owner)}</strong><span class="muted small">${escapeHtml(form.elements.week.value ? reportingFieldLabel(form.elements.week.value) : "Week not selected")}</span></span>
+          <span class="traceability-node"><small>Delivery</small><strong>${escapeHtml(labels[form.elements.health.value] || form.elements.health.value)}</strong><span class="muted small">${escapeHtml(form.elements.stage.value || "Stage not selected")} · ${escapeHtml(form.elements.progress.value || "0")}%</span></span>
+          <span class="traceability-node"><small>Governance / evidence</small><strong>${escapeHtml(form.elements.gate_status.value || "Not Ready")}</strong><span class="muted small">${escapeHtml(form.elements.evidence_status.value || "Missing")}</span></span>
+        </div>`;
+    }
+
+    function statusDraftData(form) {
+      const values = Object.fromEntries(new FormData(form).entries());
+      ["product", "owner", "participants", "action_owner", "dependency"].forEach(name => {
+        values[name] = pickerFormValue(form, name);
+      });
+      values.has_delay = document.getElementById("statusHasDelay").checked;
+      values.has_risk = document.getElementById("statusHasRisk").checked;
+      values.step = statusFormStep;
+      return values;
+    }
+
+    function saveStatusDraft() {
+      const form = document.getElementById("statusForm");
+      if (!form) return;
+      localStorage.setItem(STATUS_DRAFT_KEY, JSON.stringify(statusDraftData(form)));
+      const status = document.getElementById("statusDraftStatus");
+      if (status) status.textContent = `Draft saved ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}.`;
+    }
+
+    function scheduleStatusDraftSave() {
+      clearTimeout(statusDraftTimer);
+      const status = document.getElementById("statusDraftStatus");
+      if (status) status.textContent = "Saving draft…";
+      statusDraftTimer = setTimeout(saveStatusDraft, 350);
+    }
+
+    function restoreStatusDraft(form) {
+      let draft = null;
+      try { draft = JSON.parse(localStorage.getItem(STATUS_DRAFT_KEY) || "null"); } catch {}
+      if (!draft || typeof draft !== "object") return false;
+      Object.entries(draft).forEach(([name, value]) => {
+        if (["product", "owner", "participants", "action_owner", "dependency", "has_delay", "has_risk", "step"].includes(name)) return;
+        const field = form.elements[name];
+        if (field && typeof value === "string") field.value = value;
+      });
+      const productPicker = form.querySelector('[data-product-picker][data-name="product"]');
+      if (productPicker) updateProductPickerSelection(productPicker, draft.product || "");
+      ["owner", "participants", "action_owner"].forEach(name => setPeoplePickerValue(form, name, draft[name] || ""));
+      const dependencyPicker = form.querySelector('[data-dependency-picker][data-name="dependency"]');
+      if (dependencyPicker) {
+        dependencyPicker.dataset.selected = draft.dependency || "";
+        renderDependencyPicker(dependencyPicker);
+      }
+      if (draft.week) {
+        setWeekdayDateValue(document.getElementById("statusWeekFilter"), draft.week);
+        setWeekdayDateValue(form.elements.week, draft.week);
+      }
+      document.getElementById("statusHasDelay").checked = Boolean(draft.has_delay);
+      document.getElementById("statusHasRisk").checked = Boolean(draft.has_risk);
+      statusFormStep = Math.max(1, Math.min(4, Number(draft.step) || 1));
+      document.getElementById("statusDraftStatus").textContent = "Draft restored from this device.";
+      return true;
+    }
+
+    function validateStatusFormStep(step) {
+      const form = document.getElementById("statusForm");
+      const missing = [];
+      if (step === 1) {
+        if (!pickerFormValue(form, "product")) missing.push("product");
+        if (!cleanText(form.elements.feature_workstream.value)) missing.push("feature / workstream");
+        if (!pickerFormValue(form, "owner")) missing.push("Owner");
+      }
+      if (step === 2) {
+        if (!cleanText(form.elements.week.value)) missing.push("reporting week");
+        if (!cleanText(form.elements.stage.value)) missing.push("stage");
+      }
+      if (step === 3 && !cleanText(form.elements.summary.value)) missing.push("summary");
+      if (missing.length) {
+        showStatusFormMessage(`Complete ${missing.join(", ")} before continuing.`, "danger");
+        return false;
+      }
+      hideStatusFormMessage();
+      return true;
+    }
+
+    function renderStatusFormStep(step = statusFormStep) {
+      const form = document.getElementById("statusForm");
+      if (!form) return;
+      statusFormStep = Math.max(1, Math.min(4, Number(step) || 1));
+      form.querySelectorAll("[data-status-step]").forEach(section => {
+        section.hidden = Number(section.dataset.statusStep) !== statusFormStep;
+      });
+      form.querySelectorAll("[data-status-step-target]").forEach(button => {
+        const target = Number(button.dataset.statusStepTarget);
+        button.classList.toggle("active", target === statusFormStep);
+        button.classList.toggle("complete", target < statusFormStep);
+        button.setAttribute("aria-current", target === statusFormStep ? "step" : "false");
+      });
+      document.getElementById("statusPrevStep").hidden = statusFormStep === 1;
+      document.getElementById("statusNextStep").hidden = statusFormStep === 4;
+      document.getElementById("saveReportBtn").hidden = statusFormStep !== 4;
+      if (statusFormStep === 4) refreshStatusQualityCheck();
     }
 
     function refreshEditQualityCheck(reportId = selectedReportId) {
@@ -9656,7 +9982,8 @@
           rank,
           owner: normalizePersonDisplay(report.owner || "Unassigned") || "Unassigned",
           product: report.product || "No product",
-          title: reportTitle(report)
+          title: reportTitle(report),
+          actionRef: shortEntityRef("ACT", report.id)
         };
         const scheduleStatus = analysis.scheduleStatus;
         if (analysis.label === "Escalate") {
@@ -9763,7 +10090,7 @@
             <div>
               <span class="chip ${action.tone}">${escapeHtml(action.label)}</span>
               <h3>${escapeHtml(action.title)}</h3>
-              <p class="muted small">${escapeHtml(action.owner)} - ${escapeHtml(action.product)} - Rank #${escapeHtml(action.rank)}</p>
+              <p class="muted small">${escapeHtml(action.owner)} - ${escapeHtml(action.product)} - Rank #${escapeHtml(action.rank)} · ${escapeHtml(action.actionRef)} · Source ${escapeHtml(shortEntityRef("RPT", action.report.id))}</p>
             </div>
           </div>
           <div class="report-card-detail">
@@ -9775,6 +10102,11 @@
             <div><strong>Action status</strong><p class="muted small">${escapeHtml(action.report.action_status || "Open")}</p></div>
             <div><strong>Decision needed</strong><p class="muted small">${escapeHtml(cleanText(action.report.decision_needed) || "No decision needed captured.")}</p></div>
             <div><strong>End date</strong><p class="muted small">${action.report.end_date ? endDateMarkup(action.report) : "No end date captured."}</p></div>
+          </div>
+          <div class="traceability-links">
+            ${canAccessView("reports") ? `<button class="btn" type="button" data-open-report="${escapeHtml(action.report.id)}">Open source report</button>` : ""}
+            ${canAccessView("governance") ? `<button class="btn" type="button" data-open-governance-report="${escapeHtml(action.report.id)}">Open governance</button>` : ""}
+            ${evidenceLinkMarkup(action.report.evidence_reference)}
           </div>
         </div>
       `, `<div class="empty"><strong>No action items</strong>No blockers, missing next actions, escalations, or schedule recovery items match the current filters.</div>`, "action items");
@@ -13467,7 +13799,7 @@
             <button class="report-card interactive ${r.id === selectedReportId ? "selected" : ""}" type="button" data-report-card="${escapeHtml(r.id)}">
               <header>
                 <div>
-                  <span class="product-label">${escapeHtml(r.product || "No product")}</span>
+                  <span class="product-label">${escapeHtml(r.product || "No product")} · ${escapeHtml(shortEntityRef("RPT", r.id))}</span>
                   <strong>${escapeHtml(reportTitle(r))}</strong>
                   <p class="muted small">${escapeHtml(reportProductLine(r))} - ${escapeHtml(r.product_type || "Legacy")} - ${escapeHtml(r.role)} - Reporting week ${escapeHtml(r.week)}${r.start_date ? ` - Start ${escapeHtml(r.start_date)}` : ""}${reportEndDate(r) ? ` - ${endDateMarkup(r)}` : ""}</p>
                 </div>
@@ -13907,6 +14239,90 @@
       target.textContent = "";
     }
 
+    function reportTraceabilityMarkup(report) {
+      const relatedGovernance = governanceForReport(report);
+      const hasAction = Boolean(cleanText(report.next) || cleanText(report.blocker) || cleanText(report.action_owner) || cleanText(report.decision_needed));
+      return `
+        <section class="traceability-panel" aria-label="Report traceability">
+          <strong>Traceability chain</strong>
+          <p class="muted small">Follow this weekly update into governance, corrective action, and supporting evidence.</p>
+          <div class="traceability-chain">
+            <span class="traceability-node"><small>Weekly report</small><strong>${escapeHtml(shortEntityRef("RPT", report.id))}</strong></span>
+            <span class="traceability-arrow">→</span>
+            <span class="traceability-node"><small>Governance</small><strong>${relatedGovernance.length ? escapeHtml(relatedGovernance.map(item => shortEntityRef("GOV", item.id)).join(", ")) : "Not linked"}</strong></span>
+            <span class="traceability-arrow">→</span>
+            <span class="traceability-node"><small>Action</small><strong>${hasAction ? escapeHtml(shortEntityRef("ACT", report.id)) : "Not captured"}</strong></span>
+            <span class="traceability-arrow">→</span>
+            <span class="traceability-node"><small>Evidence</small><strong>${escapeHtml(report.evidence_status || "Missing")}</strong></span>
+          </div>
+          <div class="traceability-links">
+            ${canAccessView("governance") ? `<button class="btn" type="button" data-open-governance-report="${escapeHtml(report.id)}">${relatedGovernance.length ? "Open related governance" : "Create governance item"}</button>` : ""}
+            ${canAccessView("actionItems") ? `<button class="btn" type="button" data-open-actions-report="${escapeHtml(report.id)}">Open related actions</button>` : ""}
+            ${evidenceLinkMarkup(report.evidence_reference)}
+          </div>
+        </section>`;
+    }
+
+    function openReportTrace(reportId) {
+      if (!canAccessView("reports")) return;
+      selectedReportId = reportId;
+      reportHistoryOpen = false;
+      reportHistoryDate = "";
+      switchView("reports");
+      renderReports();
+      renderDetail();
+      document.getElementById("reportDetail")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function openGovernanceForReport(reportId) {
+      if (!canAccessView("governance")) return;
+      const report = reports.find(item => item.id === reportId);
+      if (!report) return;
+      const linked = governanceForReport(report)[0];
+      switchView("governance");
+      if (linked) {
+        selectGovernanceItem(linked.id);
+        return;
+      }
+      clearGovernanceForm();
+      const form = document.getElementById("governanceForm");
+      if (!form) return;
+      populateGovernanceReportOptions(form, report.id);
+      setSelectOptions(form.elements.product, governanceProducts(), report.product, "Select product");
+      form.elements.workstream.value = report.feature_workstream || "";
+      form.elements.title.value = report.decision_needed || report.blocker || `Review ${reportTitle(report)}`;
+      form.elements.functional_role.value = FUNCTIONAL_ROLE_OPTIONS.includes(report.role) ? report.role : "Product Manager";
+      form.elements.classification.value = report.governance_classification || "Investigation";
+      populateLifecycleForRole(form, report.lifecycle_phase || "");
+      form.elements.evidence_status.value = report.evidence_status || "Missing";
+      form.elements.evidence_reference.value = report.evidence_reference || "";
+      form.elements.gate_status.value = report.gate_status || "Not Ready";
+      form.elements.decision_impact.value = report.decision_needed || report.blocker || "";
+      setPeoplePickerValue(form, "owner", report.owner || "");
+      renderGovernanceTraceability(normalizeGovernanceItem({
+        source_report_id: report.id,
+        product: report.product,
+        workstream: report.feature_workstream,
+        title: form.elements.title.value,
+        owner: report.owner,
+        evidence_status: report.evidence_status,
+        evidence_reference: report.evidence_reference
+      }));
+      form.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function openActionsForReport(reportId) {
+      if (!canAccessView("actionItems")) return;
+      const report = reports.find(item => item.id === reportId);
+      if (!report) return;
+      actionItemFilters.owner = report.owner || "all";
+      actionItemFilters.product = report.product || "all";
+      actionItemFilters.week = report.week || "all";
+      actionItemFilters.type = "all";
+      switchView("actionItems");
+      renderActionItems();
+    }
+
     function renderDetail() {
       const report = reports.find(r => r.id === selectedReportId);
       const detail = document.getElementById("reportDetail");
@@ -13932,12 +14348,14 @@
             ${statusStageChips(report, "Health")}
           </header>
           <div class="summary-meta">
+            <span>ID: ${escapeHtml(shortEntityRef("RPT", report.id))}</span>
             <span>Owner: ${escapeHtml(report.owner || "Not assigned")}</span>
             <span>Week: ${escapeHtml(reportingFieldLabel(report.week))}</span>
             <span>Role: ${escapeHtml(report.role || "Product Manager")}</span>
             <span>Progress: ${Number(report.progress || 0)}%</span>
           </div>
         </section>
+        ${reportTraceabilityMarkup(report)}
         <form class="detail-form" id="editReportForm">
           <div class="inline-message success" id="reportFormMessage" hidden></div>
           <div class="edit-section-grid">
@@ -14545,6 +14963,15 @@
     });
 
     document.addEventListener("click", event => {
+      const reportButton = event.target.closest("[data-open-report]");
+      const governanceButton = event.target.closest("[data-open-governance-report]");
+      const actionsButton = event.target.closest("[data-open-actions-report]");
+      if (reportButton) openReportTrace(reportButton.dataset.openReport);
+      if (governanceButton) openGovernanceForReport(governanceButton.dataset.openGovernanceReport);
+      if (actionsButton) openActionsForReport(actionsButton.dataset.openActionsReport);
+    });
+
+    document.addEventListener("click", event => {
       const logoutBtn = event.target.closest("[data-logout]");
       if (!logoutBtn) return;
       logUserAction("logout", { role: currentProfile }, { target_type: "user", target_id: currentUser?.username });
@@ -14808,6 +15235,8 @@
       try {
         const report = readReportForm(form);
         await createReport(report);
+        clearTimeout(statusDraftTimer);
+        localStorage.removeItem(STATUS_DRAFT_KEY);
         form.reset();
         form.querySelectorAll("[data-people-picker]").forEach(picker => {
           picker.dataset.selected = "";
@@ -14820,6 +15249,8 @@
         setWeekdayDateValue(document.getElementById("statusWeekFilter"), mondayForDate());
         setWeekdayDateValue(form.week, mondayForDate());
         refreshStatusQualityCheck();
+        statusFormStep = 1;
+        renderStatusFormStep();
         saveBtn.textContent = "Saved";
         showStatusFormMessage("Report saved successfully.");
         setTimeout(() => { saveBtn.textContent = "Save Report"; }, 1400);
@@ -14835,6 +15266,8 @@
 
     document.getElementById("statusForm").addEventListener("reset", event => {
       hideStatusFormMessage();
+      clearTimeout(statusDraftTimer);
+      localStorage.removeItem(STATUS_DRAFT_KEY);
       setTimeout(() => {
         event.currentTarget.querySelectorAll("[data-product-picker]").forEach(picker => {
           picker.dataset.selected = "";
@@ -14849,6 +15282,12 @@
           renderDependencyPicker(picker);
         });
         populateLifecycleForRole(event.currentTarget);
+        document.getElementById("statusHasDelay").checked = false;
+        document.getElementById("statusHasRisk").checked = false;
+        updateStatusConditionalFields();
+        statusFormStep = 1;
+        renderStatusFormStep();
+        document.getElementById("statusDraftStatus").textContent = "Draft cleared.";
         refreshStatusQualityCheck();
       }, 0);
     });
@@ -15728,18 +16167,71 @@
     initProductPickers(statusForm);
     initPeoplePickers(statusForm);
     initDependencyPickers(statusForm);
-    statusForm.addEventListener("input", refreshStatusQualityCheck);
+    const restoredStatusDraft = restoreStatusDraft(statusForm);
+    statusForm.addEventListener("input", () => {
+      updateStatusConditionalFields();
+      refreshStatusQualityCheck();
+      scheduleStatusDraftSave();
+    });
     statusForm.addEventListener("change", event => {
       if (event.target.name === "role") populateLifecycleForRole(statusForm);
+      updateStatusConditionalFields();
       refreshStatusQualityCheck();
+      scheduleStatusDraftSave();
+    });
+    statusForm.addEventListener("click", event => {
+      const target = event.target.closest("[data-status-step-target]");
+      if (target) {
+        const nextStep = Number(target.dataset.statusStepTarget);
+        if (nextStep <= statusFormStep || validateStatusFormStep(statusFormStep)) {
+          renderStatusFormStep(nextStep);
+          scheduleStatusDraftSave();
+        }
+        return;
+      }
+      if (event.target.closest("[data-people-picker], [data-product-picker], [data-dependency-picker]")) {
+        setTimeout(scheduleStatusDraftSave, 0);
+      }
+    });
+    document.getElementById("statusPrevStep").addEventListener("click", () => {
+      renderStatusFormStep(statusFormStep - 1);
+      scheduleStatusDraftSave();
+    });
+    document.getElementById("statusNextStep").addEventListener("click", () => {
+      if (validateStatusFormStep(statusFormStep)) {
+        renderStatusFormStep(statusFormStep + 1);
+        scheduleStatusDraftSave();
+      }
     });
     populateLifecycleForRole(statusForm);
+    updateStatusConditionalFields();
+    renderStatusFormStep(restoredStatusDraft ? statusFormStep : 1);
     refreshStatusQualityCheck();
     initReportingWeekInputs();
     const governanceForm = document.getElementById("governanceForm");
     if (governanceForm) initPeoplePickers(governanceForm);
     governanceForm?.addEventListener("submit", saveGovernanceItem);
     governanceForm?.elements.functional_role?.addEventListener("change", () => populateLifecycleForRole(governanceForm));
+    governanceForm?.elements.source_report_id?.addEventListener("change", event => {
+      const report = reports.find(item => item.id === event.target.value);
+      if (!report) {
+        renderGovernanceTraceability(governanceItems.find(item => item.id === selectedGovernanceItemId));
+        return;
+      }
+      setSelectOptions(governanceForm.elements.product, governanceProducts(), report.product, "Select product");
+      governanceForm.elements.workstream.value ||= report.feature_workstream || "";
+      governanceForm.elements.title.value ||= report.decision_needed || report.blocker || `Review ${reportTitle(report)}`;
+      setPeoplePickerValue(governanceForm, "owner", report.owner || "");
+      renderGovernanceTraceability(normalizeGovernanceItem({
+        source_report_id: report.id,
+        product: report.product,
+        workstream: report.feature_workstream,
+        title: governanceForm.elements.title.value,
+        owner: report.owner,
+        evidence_status: report.evidence_status,
+        evidence_reference: report.evidence_reference
+      }));
+    });
     document.getElementById("clearGovernanceItem")?.addEventListener("click", clearGovernanceForm);
     document.getElementById("deleteGovernanceItem")?.addEventListener("click", deleteSelectedGovernanceItem);
     document.getElementById("governanceItemList")?.addEventListener("click", event => {
