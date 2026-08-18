@@ -3,6 +3,7 @@ param(
   [switch]$RecordOnly,
   [switch]$Force,
   [switch]$AllProductManagers,
+  [switch]$AllOwners,
   [string]$Week = "",
   [string]$Owner = ""
 )
@@ -113,7 +114,7 @@ function Build-OwnerEmailMap {
     "deepa" = "deepa@zenatech.com"
     "faran" = "faran@zenatech.com"
     "riya" = "riya@zenatech.com"
-    "reza" = "reza.bostani@zenatech.com"
+    "reza" = "reza.boostani@zenatech.com"
     "sajjad" = "sajjad@zenatech.com"
     "daniela" = "daniela@zenatech.com"
   }
@@ -143,6 +144,19 @@ function Build-OwnerEmailMap {
 
 function Summarize-Owner {
   param($OwnerName, $Rows)
+
+  if (@($Rows).Count -eq 0) {
+    return @(
+      "Weekly feedback for $OwnerName",
+      "",
+      "Hi $OwnerName,",
+      "",
+      "No status reports were submitted for this reporting week.",
+      "Please add this week's updates with health, progress, any blocker or risk, and a clear next action.",
+      "",
+      "Suggested improvement: submit the weekly status even when work is on track, so management review has a complete picture."
+    ) -join "`n"
+  }
 
   $products = @($Rows | ForEach-Object { Get-Field $_ @("product") } | Where-Object { $_ } | Sort-Object -Unique)
   $avgProgress = Average (@($Rows | ForEach-Object { Get-Field $_ @("progress") }))
@@ -223,6 +237,16 @@ function Build-OwnerHtml {
 
   $products = @($Rows | ForEach-Object { Get-Field $_ @("product") } | Where-Object { $_ } | Sort-Object -Unique)
   $avgProgress = Average @($Rows | ForEach-Object { Get-Field $_ @("progress") })
+  if (@($Rows).Count -eq 0) {
+    $empty = New-Object System.Text.StringBuilder
+    [void]$empty.Append('<div style="margin:0;padding:24px;background:#f1f5f9;font-family:Arial,sans-serif;color:#17212b;">')
+    [void]$empty.Append('<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:760px;margin:0 auto;background:#ffffff;border:1px solid #dbe3ec;border-collapse:collapse;">')
+    [void]$empty.Append("<tr><td style=`"padding:28px 30px;background:#17324d;color:#ffffff;`"><div style=`"font-size:12px;letter-spacing:1.4px;font-weight:bold;`">OMENA CONSULTING</div><h1 style=`"margin:8px 0 4px;font-size:26px;line-height:1.25;`">Your Weekly Feedback</h1><div style=`"font-size:15px;color:#dbeafe;`">Reporting week: $(Html $ReportingWeek)</div></td></tr>")
+    [void]$empty.Append("<tr><td style=`"padding:26px 30px;`"><p style=`"margin:0 0 8px;font-size:16px;`">Hello $(Html $OwnerName),</p><p style=`"margin:0 0 22px;color:#475569;`">No status reports were submitted for this reporting week. Please add this week's updates with health, progress, any blocker or risk, and a clear next action.</p>")
+    [void]$empty.Append("<table role=`"presentation`" width=`"100%`" cellpadding=`"0`" cellspacing=`"0`" style=`"margin-top:8px;border-collapse:collapse;background:#eff6ff;border-left:4px solid #2563eb;`"><tr><td style=`"padding:14px 16px;`"><strong style=`"color:#1e3a8a;`">Suggested improvement</strong><br><span style=`"color:#334155;`">Submit the weekly status even when work is on track, so management review has a complete picture.</span></td></tr></table>")
+    [void]$empty.Append('</td></tr><tr><td style="padding:18px 30px;border-top:1px solid #dbe3ec;background:#f8fafc;color:#64748b;font-size:12px;">Generated because no submitted status reports were found for this owner in the reporting week.</td></tr></table></div>')
+    return $empty.ToString()
+  }
   $atRisk = @($Rows | Where-Object {
     (Get-Field $_ @("health")) -match "red|amber|risk|blocked" -or
     (Get-Field $_ @("priority")) -match "critical" -or
@@ -359,7 +383,54 @@ foreach ($row in $existing) {
 }
 
 $groups = @()
-if ($AllProductManagers) {
+if ($AllOwners) {
+  $displayByKey = @{}
+  foreach ($row in $reports) {
+    $name = Get-Field $row @("owner")
+    if ($name) {
+      $key = Canonical $name
+      if (-not $displayByKey.ContainsKey($key)) { $displayByKey[$key] = $name }
+    }
+  }
+  foreach ($user in $users) {
+    $isActive = $true
+    if ($null -ne $user.PSObject.Properties["active"]) { $isActive = [bool]$user.active }
+    if ($null -ne $user.PSObject.Properties["is_active"]) { $isActive = [bool]$user.is_active }
+    if (-not $isActive) { continue }
+    $name = Get-Field $user @("display_name", "name")
+    if ($name -and -not (Is-Email $name)) {
+      $key = Canonical $name
+      if (-not $displayByKey.ContainsKey($key)) { $displayByKey[$key] = $name }
+    }
+  }
+  foreach ($name in @("Deepa", "Faran", "Jojo", "Jocasta", "Krishna", "Nadishani", "Reza", "Riya", "Sajjad", "Sam", "Saurabh", "Swati")) {
+    $key = Canonical $name
+    if (-not $displayByKey.ContainsKey($key)) { $displayByKey[$key] = $name }
+  }
+
+  $rawGroups = @()
+  foreach ($key in ($displayByKey.Keys | Sort-Object)) {
+    $ownerName = [string]$displayByKey[$key]
+    $ownerWeekRows = @($weekRows | Where-Object { (Canonical (Get-Field $_ @("owner"))) -eq $key })
+    $rawGroups += [pscustomobject]@{
+      Name = $ownerName
+      Rows = $ownerWeekRows
+      ReportingWeek = $targetWeek
+    }
+  }
+
+  $seenEmail = @{}
+  foreach ($group in ($rawGroups | Sort-Object @{ Expression = { -@($_.Rows).Count } }, Name)) {
+    $email = $emailMap[(Canonical $group.Name)]
+    if ($email) {
+      $emailKey = Canonical $email
+      if ($seenEmail.ContainsKey($emailKey)) { continue }
+      $seenEmail[$emailKey] = $true
+    }
+    $groups += $group
+  }
+  $groups = @($groups | Sort-Object Name)
+} elseif ($AllProductManagers) {
   # Every PM receives feedback based on all of their projects from their most recent submitted week.
   $pmRows = @($reports | Where-Object { (Get-Field $_ @("role")) -eq "Product Manager" -and (Get-Field $_ @("owner")) })
   foreach ($ownerGroup in ($pmRows | Group-Object { Get-Field $_ @("owner") } | Sort-Object Name)) {
@@ -430,7 +501,15 @@ foreach ($group in $groups) {
       } catch {
         $status = "failed"
         $errorMessage = $_.Exception.Message
-        if ($_.ErrorDetails.Message) { $errorMessage = $_.ErrorDetails.Message }
+        if ($_.ErrorDetails.Message) {
+          $errorMessage = $_.ErrorDetails.Message
+        } elseif ($_.Exception.Response) {
+          try {
+            $reader = New-Object System.IO.StreamReader($_.Exception.Response.GetResponseStream())
+            $bodyText = $reader.ReadToEnd()
+            if ($bodyText) { $errorMessage = $bodyText }
+          } catch {}
+        }
         Write-Output "FAILED: $ownerName <$email> - $errorMessage"
         $failed += 1
       }
@@ -467,4 +546,4 @@ foreach ($group in $groups) {
   }
 }
 
-Write-Output "Weekly feedback complete. week=$targetWeek allProductManagers=$AllProductManagers sent=$sent skipped=$skipped failed=$failed dryRun=$DryRun recordOnly=$RecordOnly"
+Write-Output "Weekly feedback complete. week=$targetWeek allOwners=$AllOwners allProductManagers=$AllProductManagers sent=$sent skipped=$skipped failed=$failed dryRun=$DryRun recordOnly=$RecordOnly"

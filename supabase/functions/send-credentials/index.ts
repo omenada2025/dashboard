@@ -27,12 +27,6 @@ function jsonResponse(body: Record<string, unknown>, status = 200) {
   });
 }
 
-function requiredEnv(name: string) {
-  const value = Deno.env.get(name);
-  if (!value) throw new Error(`Missing ${name}`);
-  return value;
-}
-
 function escapeHtml(value: string) {
   return value
     .replaceAll("&", "&amp;")
@@ -92,6 +86,59 @@ function htmlFeedbackEmail(displayName: string, message: string, htmlMessage?: s
   `;
 }
 
+async function sendWithSendGrid(options: {
+  to: string;
+  displayName: string;
+  subject: string;
+  text: string;
+  html: string;
+  fromEmail: string;
+  fromName: string;
+  apiKey: string;
+}) {
+  return await fetch("https://api.sendgrid.com/v3/mail/send", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${options.apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      personalizations: [{ to: [{ email: options.to, name: options.displayName }], subject: options.subject }],
+      from: { email: options.fromEmail, name: options.fromName },
+      content: [
+        { type: "text/plain", value: options.text },
+        { type: "text/html", value: options.html },
+      ],
+    }),
+  });
+}
+
+async function sendWithResend(options: {
+  to: string;
+  subject: string;
+  text: string;
+  html: string;
+  fromEmail: string;
+  fromName: string;
+  apiKey: string;
+}) {
+  return await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${options.apiKey}`,
+      "Content-Type": "application/json",
+      "User-Agent": "omena-supabase-email/1.0",
+    },
+    body: JSON.stringify({
+      from: `${options.fromName} <${options.fromEmail}>`,
+      to: [options.to],
+      subject: options.subject,
+      text: options.text,
+      html: options.html,
+    }),
+  });
+}
+
 async function sendEmail(options: {
   to: string;
   displayName: string;
@@ -99,52 +146,64 @@ async function sendEmail(options: {
   text: string;
   html: string;
 }) {
+  const sendgridApiKey = Deno.env.get("SENDGRID_API_KEY");
+  const sendgridFromEmail = Deno.env.get("SENDGRID_FROM_EMAIL");
+  const sendgridFromName = Deno.env.get("SENDGRID_FROM_NAME") || "Omena Consulting";
   const resendApiKey = Deno.env.get("RESEND_API_KEY");
+  const resendFromName = Deno.env.get("RESEND_FROM_NAME") || sendgridFromName;
+  const errors: string[] = [];
+
+  if (sendgridApiKey && sendgridFromEmail) {
+    const response = await sendWithSendGrid({
+      ...options,
+      fromEmail: sendgridFromEmail,
+      fromName: sendgridFromName,
+      apiKey: sendgridApiKey,
+    });
+    if (response.ok) {
+      return { provider: "SendGrid", response };
+    }
+    errors.push(`SendGrid: ${await response.text()}`);
+  }
+
   if (resendApiKey) {
-    const fromEmail = Deno.env.get("RESEND_FROM_EMAIL") || Deno.env.get("SENDGRID_FROM_EMAIL");
-    if (!fromEmail) throw new Error("Missing RESEND_FROM_EMAIL");
+    const resendFromCandidates = [
+      Deno.env.get("RESEND_FROM_EMAIL"),
+      sendgridFromEmail,
+      "noreply@zenatech.com",
+      ["onboarding", "resend.dev"].join("@"),
+    ].filter((value, index, all): value is string => Boolean(value) && all.indexOf(value) === index);
+
+    for (const fromEmail of resendFromCandidates) {
+      const response = await sendWithResend({
+        to: options.to,
+        subject: options.subject,
+        text: options.text,
+        html: options.html,
+        fromEmail,
+        fromName: resendFromName,
+        apiKey: resendApiKey,
+      });
+      if (response.ok) {
+        return { provider: "Resend", response };
+      }
+      errors.push(`Resend ${fromEmail.includes("@") ? fromEmail.split("@")[1] : "sender"}: ${await response.text()}`);
+    }
 
     return {
       provider: "Resend",
-      response: await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${resendApiKey}`,
-          "Content-Type": "application/json",
-          "User-Agent": "omena-supabase-email/1.0",
-        },
-        body: JSON.stringify({
-          from: `${Deno.env.get("RESEND_FROM_NAME") || "Omena Consulting"} <${fromEmail}>`,
-          to: [options.to],
-          subject: options.subject,
-          text: options.text,
-          html: options.html,
-        }),
-      }),
+      response: new Response(JSON.stringify({ error: errors.join(" | ") }), { status: 403 }),
     };
   }
 
-  const sendgridApiKey = requiredEnv("SENDGRID_API_KEY");
-  const fromEmail = requiredEnv("SENDGRID_FROM_EMAIL");
-  const fromName = Deno.env.get("SENDGRID_FROM_NAME") || "Omena Consulting";
-  return {
-    provider: "SendGrid",
-    response: await fetch("https://api.sendgrid.com/v3/mail/send", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${sendgridApiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        personalizations: [{ to: [{ email: options.to, name: options.displayName }], subject: options.subject }],
-        from: { email: fromEmail, name: fromName },
-        content: [
-          { type: "text/plain", value: options.text },
-          { type: "text/html", value: options.html },
-        ],
-      }),
-    }),
-  };
+  if (errors.length) {
+    return {
+      provider: "SendGrid",
+      response: new Response(JSON.stringify({ error: errors.join(" | ") }), { status: 401 }),
+    };
+  }
+
+  throw new Error("Missing SENDGRID_API_KEY/SENDGRID_FROM_EMAIL or RESEND_API_KEY/RESEND_FROM_EMAIL");
 }
 
 Deno.serve(async (request) => {
