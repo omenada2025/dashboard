@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This guide explains how Product Managers, System Analysts, and UI/UX contributors should use the dashboard to turn weekly status updates into reliable product governance information. Product Manager and System Analyst represent the same accountable **Owner** responsibility in this process. UI/UX remains a contributing functional role, with its own experience-design lifecycle path.
+This guide explains how Product Managers and UI/UX contributors should use the dashboard to turn weekly status updates into reliable product governance information. Product Manager represents the accountable **Owner** responsibility in this process. UI/UX remains a contributing functional role, with its own experience-design lifecycle path.
 
 The process connects product reality, delivery evidence, decisions, weekly execution, and release learning. A report is not only a narrative: every field supports a dashboard metric, governance gate, or management action.
 
@@ -25,7 +25,7 @@ When **Functional role** is UI/UX, the lifecycle selector follows this experienc
 1. **Discover / Research** - Understand users, journeys, business goals, constraints, and available evidence.
 2. **Wireframe / Concept** - Explore information architecture, flows, sketches, and candidate concepts.
 3. **Design** - Produce the detailed experience and visual design, including states and responsive behavior.
-4. **Design Review** - Review the design with Product, System Analysis, engineering, and relevant stakeholders.
+4. **Design Review** - Review the design with Product, engineering, and relevant stakeholders.
 5. **Prototype / Validate** - Prototype critical interactions and validate usability and acceptance criteria with evidence.
 6. **Handoff** - Provide approved specifications, assets, behaviors, and traceability for implementation.
 7. **Release / Learn** - Review the released experience, capture feedback and outcomes, and feed learning into the next cycle.
@@ -36,7 +36,7 @@ The two paths share the same governance field, evidence rules, and gate statuses
 
 | Responsibility | Accountable role | Expected behavior |
 | --- | --- | --- |
-| Product or workstream ownership | Product Manager or System Analyst | Own context, evidence, dates, decisions, acceptance criteria, and weekly status. |
+| Product or workstream ownership | Product Manager | Own context, evidence, dates, decisions, acceptance criteria, and weekly status. |
 | Experience contribution | UI/UX | Progress work through the UI/UX lifecycle and provide validated designs, usability evidence, handoff material, and experience acceptance criteria. |
 | Governance oversight | Admin, Master admin, or Role Manager | Review evidence quality, approve gates, monitor gaps, and manage portfolio standards. |
 | Leadership decision | Approver or leadership owner | Approve, reject, or condition a gate based on evidence and business risk. |
@@ -49,9 +49,9 @@ Each workstream must have one accountable Owner. Participants may contribute, bu
 
 - **Product** groups all related workstreams into one product view.
 - **Feature / workstream** identifies the exact activity being delivered.
-- **Owner** is the accountable Product Manager or System Analyst.
+- **Owner** is the accountable Product Manager.
 - **Participants** are optional contributors.
-- **Functional role** identifies whether the update is from Product Management, System Analysis, or UI/UX.
+- **Functional role** identifies whether the update is from Product Management or UI/UX.
 
 ### Governance control
 
