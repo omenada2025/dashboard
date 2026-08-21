@@ -2,7 +2,9 @@
 
 ## Purpose
 
-The dashboard monitors product, feature, and UI/UX delivery. It helps the team see what is on track, what is delayed, what is blocked, who owns the next action, and what leadership decisions are needed.
+The dashboard monitors product, feature, UI/UX, and Training delivery. It helps the team see what is on track, what is delayed, what is blocked, who owns the next action, and what leadership decisions are needed.
+
+Active Functional responsibilities: **Product Manager**, **UI/UX**, and **Training**. `System Analyst` may still appear on older reports as a legacy value, but it is not an active option.
 
 ## Roles
 
@@ -17,20 +19,21 @@ The dashboard monitors product, feature, and UI/UX delivery. It helps the team s
 3. Select the **Product**.
 4. Enter the **Feature / workstream** being reported.
 5. Select the **Owner** and optional **Participants**.
-6. Confirm **Type of product** and **Role**.
-7. Select the **Reporting week**.
-8. Add **Start date**, **End date**, and **Baseline end date** if the original plan is known.
-9. Select **Depends on** if the work depends on another workstream.
-10. Add **Health**, **Progress**, **Stage**, and **Milestone**.
-11. Write the **Summary**, **Win**, **Blocker or risk**, and **Next action**.
-12. If there is a delay or risk, add:
+6. Confirm **Type of product** and **Role** (`Product Manager`, `UI/UX`, or `Training`).
+7. Select the **Lifecycle phase** that matches the role (product path, UI/UX path, or Training: Prepare → Deliver → Adopt → Handoff / Support).
+8. Select the **Reporting week**.
+9. Add **Start date**, **End date**, and **Baseline end date** if the original plan is known.
+10. Select **Depends on** if the work depends on another workstream.
+11. Add **Health**, **Progress**, **Stage**, and **Milestone**.
+12. Write the **Summary**, **Win**, **Blocker or risk**, and **Next action**.
+13. If there is a delay or risk, add:
     - **Delay root cause**
     - **Date change reason**
     - **Corrective action owner**
     - **Action target date**
     - **Decision needed**
     - **Action status**
-13. Save the report.
+14. Save the report.
 
 ## Schedule Rules
 
@@ -73,7 +76,7 @@ Use it for leadership review. It summarizes the highest-priority risks, blockers
 
 ### My Dashboard
 
-Use it as the personal workspace for each PM or UI/UX owner. It automatically focuses on reports where the signed-in user is the owner or participant.
+Use it as the personal workspace for each PM, UI/UX, or Training contributor. It automatically focuses on reports where the signed-in user is the owner or participant.
 
 My Dashboard shows:
 

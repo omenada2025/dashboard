@@ -55,7 +55,7 @@ Think of the form as a connected system. Each field answers a management questio
 | Owner | Who is accountable for status and follow-up? | Work Balance, Coaching Feedback, Send Weekly Feedback |
 | Participants | Who is involved but not final owner? | Status Center, report history |
 | Type of product | Is this a legacy or new product? | Filters, product mix, portfolio segmentation |
-| Role | Is the work Product Manager or UI/UX? | Work Balance, executive filters, workload by team |
+| Role | Is the work Product Manager, UI/UX, or Training? | Work Balance, executive filters, workload by team |
 | Reporting week | Which week does this status belong to? | Weekly dashboards, weekly feedback, history |
 | Start date | When did the workstream begin? | Cycle time, timeline, delay context |
 | Baseline end date | What was the original promised date? | Schedule movement and date change logic |
@@ -149,12 +149,15 @@ Use:
 
 ### Role
 
-Use the main role of the owner in this report:
+Use the main Functional responsibility for this report:
 
-- `Product Manager`
-- `UI/UX`
+- `Product Manager` — accountable product ownership path
+- `UI/UX` — experience-design lifecycle path
+- `Training` — enablement path: Prepare → Deliver → Adopt → Handoff / Support
 
-This field feeds workload and team distribution.
+`System Analyst` may still appear on older reports as a legacy value, but it is not an active option.
+
+This field feeds workload, team filters, and the lifecycle phase list in Status Center and Product Governance.
 
 ### Reporting Week
 
@@ -286,6 +289,7 @@ Stage is mandatory because it shows where the work is in the delivery flow.
 | Environment | Environment, credentials, deployment, or technical setup. |
 | Client implementation | Implementation, onboarding, or client validation. |
 | Release | Release preparation or execution. |
+| Training | Enablement or knowledge-transfer stage in the portfolio (optional complement to the Training Functional responsibility). |
 | Paused | Workstream is stopped. |
 | Completed | Workstream is delivered. |
 
