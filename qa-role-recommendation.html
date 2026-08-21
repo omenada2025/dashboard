@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Omena Consulting - Recommendation: QA Functional Responsibility</title>
+  <style>
+    :root {
+      --ink: #12202f;
+      --muted: #617187;
+      --line: #d7e1eb;
+      --panel: #ffffff;
+      --soft: #f4f8fb;
+      --blue: #0f5574;
+      --green: #16845f;
+      --amber: #c98216;
+      --red: #b51f4a;
+      --shadow: 0 18px 45px rgba(18, 32, 47, 0.10);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
+      color: var(--ink);
+      background:
+        linear-gradient(rgba(214, 225, 235, 0.55) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(214, 225, 235, 0.55) 1px, transparent 1px),
+        #edf3f8;
+      background-size: 24px 24px;
+    }
+    .shell { max-width: 980px; margin: 0 auto; padding: 32px 18px 64px; }
+    .hero, .card, .callout {
+      background: rgba(255, 255, 255, 0.94);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+    }
+    .hero { padding: 32px; margin-bottom: 20px; }
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 8px; padding: 7px 12px;
+      border-radius: 999px; background: #e8f4fa; color: var(--blue);
+      font-weight: 800; font-size: 12px; letter-spacing: .08em; text-transform: uppercase;
+    }
+    h1 { font-size: clamp(28px, 4.5vw, 44px); line-height: 1.08; margin: 18px 0 12px; }
+    h2 { font-size: 22px; margin: 0 0 10px; }
+    h3 { font-size: 16px; margin: 0 0 8px; }
+    p { color: var(--muted); line-height: 1.55; margin: 0 0 12px; }
+    .lede { font-size: 18px; color: var(--ink); line-height: 1.45; }
+    .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin: 18px 0; }
+    .grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .card { padding: 22px; margin-bottom: 18px; }
+    .card.blue { border-top: 5px solid var(--blue); }
+    .card.green { border-top: 5px solid var(--green); }
+    .card.amber { border-top: 5px solid var(--amber); }
+    .card.red { border-top: 5px solid var(--red); }
+    .stat {
+      padding: 18px; background: var(--soft); border: 1px solid var(--line);
+      border-radius: 18px; text-align: center;
+    }
+    .stat strong { display: block; font-size: 20px; color: var(--ink); margin-bottom: 4px; }
+    .stat span { color: var(--muted); font-size: 13px; }
+    table {
+      width: 100%; border-collapse: collapse; overflow: hidden; border-radius: 16px;
+      margin: 14px 0; background: white; border: 1px solid var(--line);
+    }
+    th, td { text-align: left; vertical-align: top; padding: 13px 14px; border-bottom: 1px solid var(--line); line-height: 1.45; }
+    th { background: #edf6fb; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+    tr:last-child td { border-bottom: 0; }
+    .pill {
+      display: inline-flex; align-items: center; padding: 6px 10px; border-radius: 999px;
+      font-weight: 800; font-size: 12px; margin: 3px 4px 3px 0;
+      background: #edf4f8; color: #245c78; white-space: nowrap;
+    }
+    .pill.green { background: #ddf4e9; color: #10734f; }
+    .pill.amber { background: #fff1d5; color: #a96509; }
+    .pill.red { background: #fde3ec; color: #b51f4a; }
+    .callout { padding: 18px 20px; margin: 16px 0; border-left: 5px solid var(--blue); }
+    .callout.amber { border-left-color: var(--amber); }
+    .callout.green { border-left-color: var(--green); }
+    .callout.red { border-left-color: var(--red); }
+    ul { margin: 0 0 12px; padding-left: 18px; color: var(--muted); line-height: 1.55; }
+    li { margin-bottom: 6px; }
+    .footer { margin-top: 28px; color: var(--muted); font-size: 13px; text-align: center; }
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 10px 14px; border-radius: 12px; border: 1px solid var(--line);
+      background: white; color: var(--ink); text-decoration: none; font-weight: 700; font-size: 14px;
+    }
+    .btn.primary { background: var(--blue); border-color: var(--blue); color: white; }
+    .share-note {
+      margin-top: 16px; padding: 12px 14px; border-radius: 12px;
+      background: var(--soft); border: 1px solid var(--line);
+      color: var(--muted); font-size: 13px; line-height: 1.5;
+    }
+    .share-note a { color: var(--blue); overflow-wrap: anywhere; }
+    .flow {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr;
+      gap: 10px;
+      align-items: stretch;
+      margin: 18px 0;
+    }
+    .flow-box {
+      background: var(--soft);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+    }
+    .flow-box strong { display: block; margin-bottom: 6px; color: var(--ink); }
+    .flow-arrow {
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+      color: var(--blue);
+      font-size: 22px;
+      min-width: 28px;
+    }
+    code, .mono {
+      font-family: Consolas, "Segoe UI Mono", monospace;
+      font-size: 12px;
+      background: #edf4f8;
+      color: #245c78;
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+    @media (max-width: 800px) {
+      .grid, .grid.two, .flow { grid-template-columns: 1fr; }
+      .flow-arrow { transform: rotate(90deg); padding: 4px 0; }
+    }
+    @media print {
+      body { background: white; }
+      .hero, .card, .callout { box-shadow: none; }
+      .actions { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="hero">
+      <span class="eyebrow">Omena Consulting · Process recommendation</span>
+      <h1>Recommendation: add QA as a Functional responsibility</h1>
+      <p class="lede">Mirror the Training / UI/UX pattern for dedicated quality work — do <strong>not</strong> create a “Blocker” or “Risk Manager” role. Blockers and risks stay shared weekly fields; QA owns the validation path that surfaces them with evidence.</p>
+      <div class="share-note">
+        Share this recommendation:
+        <a href="https://omenada2025.github.io/omenaconsulting/qa-role-recommendation.html">https://omenada2025.github.io/omenaconsulting/qa-role-recommendation.html</a>
+      </div>
+      <div class="actions">
+        <a class="btn primary" href="https://omenada2025.github.io/omenaconsulting/">Open dashboard</a>
+        <a class="btn" href="training-role-recommendation.html">Training role guide (live)</a>
+        <a class="btn" href="manuals.html">All manuals</a>
+      </div>
+    </header>
+
+    <section class="card blue">
+      <h2>Verdict</h2>
+      <div class="grid">
+        <div class="stat"><strong>Add QA</strong><span>Functional responsibility</span></div>
+        <div class="stat"><strong>Like Training</strong><span>Own lifecycle path</span></div>
+        <div class="stat"><strong>Not “Risk”</strong><span>Signals stay shared</span></div>
+      </div>
+      <div class="callout green">
+        <p><strong>Recommendation:</strong> add <span class="mono">QA</span> as a Functional responsibility with lifecycle <strong>Plan → Execute → Validate → Sign-off</strong>. Product Manager remains accountable Owner. QA contributes validation, defects, and release readiness — the same ownership model as UI/UX and Training.</p>
+      </div>
+      <div class="callout red">
+        <p><strong>Do not add:</strong> a Functional responsibility named Blocker, Risk, or Escalation. Those are report/governance signals already covered by blocker text, health, delay reason, Incidents &amp; Delays, and governance classification <span class="mono">Risk</span>.</p>
+      </div>
+    </section>
+
+    <section class="card green">
+      <h2>1. Why QA — not a “blocker role”</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Option</th>
+            <th>Fit?</th>
+            <th>Why</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>QA as Functional responsibility</td>
+            <td><span class="pill green">Recommended</span></td>
+            <td>There are dedicated people who test, log findings, and gate release quality. They need a role + lifecycle like Training.</td>
+          </tr>
+          <tr>
+            <td>“Blocker / Risk” Functional responsibility</td>
+            <td><span class="pill red">No</span></td>
+            <td>Blocker/risk is a signal every role already reports. A role for “pointing out risk” breaks coaching filters and has no coherent lifecycle.</td>
+          </tr>
+          <tr>
+            <td>Only strengthen report quality rules</td>
+            <td><span class="pill amber">Complement</span></td>
+            <td>Useful for all roles (require blocker + next action when At Risk) — does not replace QA ownership of validation workstreams.</td>
+          </tr>
+          <tr>
+            <td>Access profile for QA</td>
+            <td><span class="pill red">No</span></td>
+            <td>Access profiles control pages/permissions. QA is work responsibility, not a login permission tier.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card amber">
+      <h2>2. Naming and place in the model</h2>
+      <p>Active today: Product Manager, UI/UX, Training. Proposed next: <span class="mono">QA</span>.</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Layer</th>
+            <th>Use for QA?</th>
+            <th>Detail</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Functional responsibility</td>
+            <td><span class="pill green">Yes</span></td>
+            <td>Who executes test / validation workstreams and reports weekly.</td>
+          </tr>
+          <tr>
+            <td>Lifecycle path</td>
+            <td><span class="pill green">Yes</span></td>
+            <td>Plan → Execute → Validate → Sign-off (role-specific, like Training).</td>
+          </tr>
+          <tr>
+            <td>Operational stage (QA, QA Review…)</td>
+            <td><span class="pill">Keep</span></td>
+            <td>Already exists as portfolio stage. Complements lifecycle; do not replace Functional role with stage alone.</td>
+          </tr>
+          <tr>
+            <td>Weekly blocker / health / delay fields</td>
+            <td><span class="pill green">Shared</span></td>
+            <td>QA uses the same fields as PM/UI/UX/Training to surface findings. No new “risk-only” role.</td>
+          </tr>
+          <tr>
+            <td>Governance classification Risk / Bug / Usability Issue</td>
+            <td><span class="pill green">Reuse</span></td>
+            <td>Formal control items for defects and risks with evidence + gate.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card blue">
+      <h2>3. Proposed QA lifecycle</h2>
+      <p>Same mechanism as UI/UX and Training: choose Functional responsibility first; Lifecycle phase list switches.</p>
+      <div class="flow">
+        <div class="flow-box"><strong>1. Plan</strong><p>Scope, environments, cases, entry criteria, owners.</p></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box"><strong>2. Execute</strong><p>Run tests, log defects, track blockers and coverage.</p></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box"><strong>3. Validate</strong><p>Retest, regression, acceptance evidence, risk residual.</p></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box"><strong>4. Sign-off</strong><p>Release readiness decision with validated evidence.</p></div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Phase</th>
+            <th>Typical evidence</th>
+            <th>Blocker / risk habit</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="mono">Plan</span></td>
+            <td>Test plan, environment readiness, case list</td>
+            <td>Flag missing env / data / build as dependency + blocker early.</td>
+          </tr>
+          <tr>
+            <td><span class="mono">Execute</span></td>
+            <td>Execution log, open defects, coverage %</td>
+            <td>Every critical defect becomes blocker text + next action + action owner.</td>
+          </tr>
+          <tr>
+            <td><span class="mono">Validate</span></td>
+            <td>Retest results, regression pack, stakeholder acceptance notes</td>
+            <td>Health At Risk until residual risk is accepted or fixed.</td>
+          </tr>
+          <tr>
+            <td><span class="mono">Sign-off</span></td>
+            <td>Sign-off note, gate Approved, evidence Validated</td>
+            <td>Gate Approved only with Validated evidence (same governance rule).</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card green">
+      <h2>4. Ownership, weekly reports, and gates</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Area</th>
+            <th>How QA connects</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Weekly Updates</td>
+            <td><span class="mono">role = QA</span>; lifecycle from QA path; same summary / win / blocker / next action / health fields as other roles.</td>
+          </tr>
+          <tr>
+            <td>Owner</td>
+            <td>Product Manager remains accountable Owner of the product. QA is the contributor for validation workstreams (same pattern as UI/UX and Training). For a pure QA workstream, the QA person can be Owner of that workstream.</td>
+          </tr>
+          <tr>
+            <td>Governance</td>
+            <td>Use Bug, Risk, Usability Issue, Investigation as needed. Evidence + gate unchanged.</td>
+          </tr>
+          <tr>
+            <td>Portfolio stage</td>
+            <td>Keep existing stages QA / QA Review as operational labels; Functional role drives coaching and lifecycle filters.</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="callout amber">
+        <p><strong>Ownership rule:</strong> do not invent a parallel “risk owner” role. Whoever finds the issue (often QA) reports it; Product Manager stays accountable for product decisions; corrective action owner is named on the report.</p>
+      </div>
+    </section>
+
+    <section class="card amber">
+      <h2>5. Minimal implementation (when you approve)</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Surface</th>
+            <th>Change</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="mono">FUNCTIONAL_ROLE_OPTIONS</span></td>
+            <td>Add <span class="mono">QA</span> beside Product Manager, UI/UX, Training.</td>
+          </tr>
+          <tr>
+            <td><span class="mono">QA_LIFECYCLE_PHASE_OPTIONS</span></td>
+            <td><span class="mono">Plan</span>, <span class="mono">Execute</span>, <span class="mono">Validate</span>, <span class="mono">Sign-off</span>.</td>
+          </tr>
+          <tr>
+            <td><span class="mono">lifecycleOptionsForRole()</span></td>
+            <td>If role === QA → QA path; keep Training / UI/UX / Product branches.</td>
+          </tr>
+          <tr>
+            <td>Role filters</td>
+            <td>Same list as intake across Weekly Updates, Brief, Capacity, Feedback, Portfolio.</td>
+          </tr>
+          <tr>
+            <td>Supabase migration</td>
+            <td>Extend role + lifecycle_phase checks for QA phases (keep legacy values).</td>
+          </tr>
+          <tr>
+            <td>Docs / manuals</td>
+            <td>Update manuals index and governance guides once live.</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="callout">
+        <p><strong>Optional complement (any role):</strong> quality rule — if Health is At Risk or Major Delay, require blocker + next action + action owner before save. That improves signal quality without a new role.</p>
+      </div>
+    </section>
+
+    <section class="card red">
+      <h2>6. Alternatives (weaker)</h2>
+      <ul>
+        <li><strong>Stage-only QA</strong> — keep using stage “QA” without Functional role. Cheap, but loses filters, coaching, and lifecycle for QA people (same weakness Training avoided).</li>
+        <li><strong>PM owns all testing</strong> — no QA role; PM reports validation under Validate / Build. Fine only if there is no dedicated QA capacity.</li>
+        <li><strong>“Risk” role</strong> — rejected: duplicates Incidents, Action Items, and Risk classification without a real work path.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>Suggested decision</h2>
+      <ol>
+        <li>Confirm there are dedicated QA people who should report under their own Functional responsibility.</li>
+        <li>Approve <strong>QA + Plan → Execute → Validate → Sign-off</strong> (same pattern as Training).</li>
+        <li>Keep blocker/risk as shared fields; optionally tighten save rules for At Risk reports.</li>
+        <li>Implement in app + migration + manuals when ready.</li>
+      </ol>
+      <div class="actions">
+        <a class="btn primary" href="training-role-recommendation.html">See live Training pattern</a>
+        <a class="btn" href="product-governance-module-manual.html">Governance manual</a>
+        <a class="btn" href="manuals.html">All manuals</a>
+      </div>
+    </section>
+
+    <p class="footer">Omena Consulting · Process recommendation · QA Functional responsibility · Not yet implemented in the app</p>
+  </div>
+</body>
+</html>
