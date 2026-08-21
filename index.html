@@ -13746,7 +13746,7 @@
         const avgProgress = rows.length ? Math.round(rows.reduce((sum, report) => sum + Number(report.progress || 0), 0) / rows.length) : 0;
         const riskCount = rows.filter(isRiskReport).length;
         const delayedCount = rows.filter(report => {
-          const status = endDateStatus(report).label;
+          const status = endDateStatus(report)?.label;
           return status === "Major Delay" || status === "Minor Delay";
         }).length;
         const blockerCount = rows.filter(hasBlockerSignal).length;
@@ -14166,7 +14166,9 @@
     function renderHealth() {
       const sorted = getDashboardReports().sort((a, b) => {
         const rank = { red: 0, amber: 1, gray: 2, green: 3 };
-        return rank[a.health] - rank[b.health] || Number(b.progress || 0) - Number(a.progress || 0);
+        const aRank = rank[a.health] ?? 4;
+        const bRank = rank[b.health] ?? 4;
+        return aRank - bRank || Number(b.progress || 0) - Number(a.progress || 0);
       });
       if (!sorted.some(report => report.id === selectedPortfolioHealthId)) {
         selectedPortfolioHealthId = null;
