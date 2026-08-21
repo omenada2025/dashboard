@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Omena Consulting · Preview — próximas melhorias</title>
+  <title>Omena Consulting · Preview — shipped features</title>
   <style>
     :root {
       --ink: #13202e;
@@ -60,10 +60,10 @@
     .preview-banner {
       display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
       margin-top: 14px; padding: 12px 14px; border-radius: 14px;
-      background: var(--amber-soft); border: 1px solid #f0d59a;
-      color: #7a5410; font-size: 13px; font-weight: 700; line-height: 1.45;
+      background: var(--green-soft); border: 1px solid #9dceb5;
+      color: #1f5c3a; font-size: 13px; font-weight: 700; line-height: 1.45;
     }
-    .preview-banner span { font-weight: 600; color: #8a6a28; }
+    .preview-banner span { font-weight: 600; color: #2d6b48; }
     .share-note {
       margin-top: 14px; padding: 12px 14px; border-radius: 12px;
       background: var(--soft); border: 1px solid var(--line);
@@ -77,9 +77,7 @@
       background: white; color: var(--ink); text-decoration: none; font-weight: 700; font-size: 13px;
     }
     .btn.primary { background: var(--accent-strong); border-color: var(--accent-strong); color: white; }
-    .toc {
-      display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 0;
-    }
+    .toc { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 0; }
     .toc a {
       text-decoration: none; font-size: 12px; font-weight: 800;
       padding: 7px 11px; border-radius: 999px; border: 1px solid var(--line);
@@ -100,11 +98,8 @@
     }
     .pill.green { background: var(--green-soft); color: var(--green); }
     .pill.amber { background: var(--amber-soft); color: #8a5a0a; }
-    .pill.red { background: var(--red-soft); color: var(--red); }
     .pill.new { background: #dff0f8; color: var(--accent-strong); outline: 2px solid rgba(47, 111, 143, 0.25); }
-    .frames {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
-    }
+    .frames { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     .frames.stack { grid-template-columns: 1fr; }
     .frame-wrap { min-width: 0; }
     .frame-label {
@@ -118,11 +113,8 @@
     }
     .frame-label .tag.before { background: var(--red-soft); color: var(--red); }
     .ui-frame {
-      border: 1px solid var(--line-strong);
-      border-radius: 16px;
-      overflow: hidden;
-      background: var(--canvas);
-      box-shadow: var(--shadow-soft);
+      border: 1px solid var(--line-strong); border-radius: 16px; overflow: hidden;
+      background: var(--canvas); box-shadow: var(--shadow-soft);
     }
     .ui-chrome {
       display: flex; align-items: center; gap: 6px;
@@ -135,148 +127,111 @@
       background: linear-gradient(180deg, var(--sidebar), var(--sidebar-soft));
       color: #e8eef5; padding: 14px 10px; font-size: 11px;
     }
-    .ui-brand {
-      display: flex; align-items: center; gap: 8px; margin-bottom: 14px; font-weight: 800; font-size: 12px;
-    }
+    .ui-brand { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; font-weight: 800; font-size: 12px; }
     .ui-mark {
       width: 22px; height: 22px; border-radius: 6px;
       background: linear-gradient(135deg, #0b1220, #2f6f8f);
       display: grid; place-items: center; font-size: 9px; color: white;
     }
     .ui-nav { display: grid; gap: 4px; }
-    .ui-nav div {
-      padding: 6px 8px; border-radius: 8px; color: rgba(255,255,255,.62); font-weight: 600;
-    }
+    .ui-nav div { padding: 6px 8px; border-radius: 8px; color: rgba(255,255,255,.62); font-weight: 600; }
     .ui-nav .active { background: rgba(255,255,255,.12); color: white; }
-    .ui-main { padding: 12px 12px 14px; min-width: 0; }
-    .ui-kicker { font-size: 10px; font-weight: 800; color: var(--accent); text-transform: uppercase; letter-spacing: .06em; }
-    .ui-main h4 { margin: 2px 0 4px; font-size: 15px; }
-    .ui-sub { font-size: 11px; color: var(--muted); margin: 0 0 10px; }
-    .scope-bar, .filter-bar, .form-panel, .gov-panel, .meeting-strip {
-      background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    .ui-main { padding: 14px; background: var(--canvas); }
+    .ui-kicker {
+      font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
+      color: var(--accent-strong); margin-bottom: 4px;
     }
-    .scope-bar {
-      display: flex; flex-wrap: wrap; gap: 8px; align-items: end;
-      padding: 10px; margin-bottom: 10px;
-    }
-    .scope-bar .title { flex: 0 0 auto; margin-right: 4px; }
-    .scope-bar .title strong { display: block; font-size: 11px; }
-    .scope-bar .title small { font-size: 10px; color: var(--muted); }
-    .field { display: grid; gap: 3px; min-width: 0; }
-    .field label { font-size: 10px; font-weight: 700; color: var(--muted); }
-    .field .control {
-      appearance: none; min-height: 28px; padding: 4px 8px;
-      border: 1px solid var(--line); border-radius: 8px;
-      background: white; font-size: 11px; color: var(--ink); font-weight: 600;
-      display: flex; align-items: center; justify-content: space-between; gap: 6px;
-    }
-    .field .control.open {
-      border-color: var(--accent); box-shadow: 0 0 0 2px rgba(47, 111, 143, 0.15);
-    }
-    .field .control .caret { color: var(--muted); font-size: 9px; }
-    .chip-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; width: 100%; margin-top: 2px; }
-    .chip {
-      display: inline-flex; align-items: center; gap: 5px;
-      padding: 4px 8px; border-radius: 999px; font-size: 10px; font-weight: 800;
-      background: var(--blue-soft); color: var(--accent-strong); border: 1px solid #c5dce8;
-    }
-    .chip.local { background: #f3f5f7; color: var(--muted); border-color: var(--line); }
-    .chip .tip {
-      width: 12px; height: 12px; border-radius: 50%;
-      background: rgba(31, 88, 116, 0.18); color: var(--accent-strong);
-      font-size: 8px; display: grid; place-items: center; font-weight: 900;
-    }
-    .filter-bar {
-      display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px;
-      padding: 10px; margin-bottom: 10px;
-    }
-    .form-panel, .gov-panel { padding: 12px; }
-    .steps {
-      display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap;
-    }
+    .ui-main h4 { margin: 0 0 4px; font-size: 16px; }
+    .ui-sub { font-size: 12px; color: var(--muted); margin: 0 0 12px; }
+    .steps { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
     .step {
-      flex: 1; min-width: 70px; text-align: center; padding: 7px 6px;
-      border-radius: 10px; border: 1px solid var(--line); font-size: 10px; font-weight: 800;
-      color: var(--muted); background: var(--soft);
+      font-size: 10px; font-weight: 700; padding: 5px 8px; border-radius: 8px;
+      background: white; border: 1px solid var(--line); color: var(--muted);
     }
-    .step.active { background: var(--blue-soft); color: var(--accent-strong); border-color: #b7d3e2; }
-    .step.done { background: var(--green-soft); color: var(--green); }
-    .form-grid {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+    .step.active { background: var(--blue-soft); border-color: #b7d3e2; color: var(--accent-strong); }
+    .step.done { background: var(--green-soft); border-color: #9dceb5; color: var(--green); }
+    .form-panel, .gov-panel {
+      background: white; border: 1px solid var(--line); border-radius: 12px; padding: 12px;
     }
-    .form-grid .full { grid-column: 1 / -1; }
-    .lifecycle-track {
-      display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-top: 10px;
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .field { min-width: 0; }
+    .field.full { grid-column: 1 / -1; }
+    .field label {
+      display: block; font-size: 10px; font-weight: 800; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .04em; margin-bottom: 4px;
     }
-    .lc {
-      padding: 8px; border-radius: 10px; border: 1px solid var(--line);
-      background: var(--soft); text-align: center;
+    .control {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 10px; border-radius: 10px; border: 1px solid var(--line);
+      background: #f8fafc; font-size: 12px; font-weight: 700;
     }
-    .lc strong { display: block; font-size: 10px; margin-bottom: 2px; }
-    .lc span { font-size: 9px; color: var(--muted); line-height: 1.3; }
-    .lc.current {
-      background: var(--blue-soft); border-color: #b7d3e2;
-    }
-    .lc.current strong { color: var(--accent-strong); }
+    .control.open { border-color: var(--accent); background: white; box-shadow: 0 0 0 3px rgba(47,111,143,.12); }
+    .caret { color: var(--muted); font-size: 10px; }
     .dropdown-menu {
       margin-top: 4px; border: 1px solid var(--line); border-radius: 10px;
       background: white; overflow: hidden; box-shadow: var(--shadow-soft);
     }
-    .dropdown-menu div {
-      padding: 7px 10px; font-size: 11px; font-weight: 600; border-bottom: 1px solid var(--soft);
-    }
+    .dropdown-menu div { padding: 7px 10px; font-size: 12px; font-weight: 600; border-bottom: 1px solid var(--soft); }
     .dropdown-menu div:last-child { border-bottom: 0; }
     .dropdown-menu .sel { background: var(--blue-soft); color: var(--accent-strong); }
-    .dropdown-menu .new-item { background: #f3fbf7; color: var(--green); }
-    .compare {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px;
+    .dropdown-menu .new-item { color: var(--green); font-weight: 800; }
+    .lifecycle-track { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 12px; }
+    .lc {
+      background: var(--soft); border: 1px solid var(--line); border-radius: 10px;
+      padding: 8px; font-size: 10px;
     }
-    .compare .box {
-      padding: 10px; border-radius: 12px; border: 1px solid var(--line); background: var(--soft);
+    .lc strong { display: block; font-size: 11px; margin-bottom: 2px; }
+    .lc span { color: var(--muted); }
+    .lc.current { background: var(--blue-soft); border-color: #b7d3e2; }
+    .chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 5px 9px; border-radius: 999px; font-size: 11px; font-weight: 700;
+      background: var(--blue-soft); color: var(--accent-strong);
     }
-    .compare .box strong { display: block; font-size: 11px; margin-bottom: 6px; }
-    .strike { text-decoration: line-through; color: #9aa7b5; }
-    .report-card {
-      padding: 10px; border-radius: 12px; border: 1px solid var(--line); background: white;
-      display: grid; gap: 6px;
+    .chip.local { background: var(--amber-soft); color: #8a5a0a; }
+    .chip .tip {
+      display: inline-grid; place-items: center; width: 14px; height: 14px;
+      border-radius: 50%; background: rgba(0,0,0,.08); font-size: 9px; cursor: help;
     }
-    .report-card header {
-      display: flex; justify-content: space-between; gap: 8px; align-items: start;
-    }
-    .report-card h5 { margin: 0; font-size: 12px; }
-    .meta { font-size: 10px; color: var(--muted); }
-    .health {
-      font-size: 10px; font-weight: 800; padding: 3px 7px; border-radius: 999px;
-      background: var(--amber-soft); color: var(--amber);
-    }
-    .meeting-strip {
-      display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px;
-      padding: 10px; margin-top: 8px;
-    }
-    .meeting-step {
-      padding: 8px; border-radius: 10px; border: 1px dashed var(--line);
-      background: var(--soft); min-height: 58px;
-    }
-    .meeting-step strong { display: block; font-size: 11px; margin-bottom: 3px; }
-    .meeting-step small { font-size: 9px; color: var(--muted); line-height: 1.35; }
-    .meeting-step.on {
-      border-style: solid; border-color: var(--accent); background: var(--blue-soft);
-    }
-    .meeting-step.done {
-      border-style: solid; border-color: #9dceb5; background: var(--green-soft);
-    }
+    .note-inline { font-size: 13px; color: var(--muted); margin: 0; }
     .callout {
-      margin-top: 12px; padding: 12px 14px; border-radius: 12px;
-      background: var(--soft); border-left: 4px solid var(--accent-strong);
-      font-size: 13px; color: var(--muted); line-height: 1.5;
+      margin-top: 14px; padding: 12px 14px; border-radius: 12px;
+      background: var(--soft); border: 1px solid var(--line);
+      font-size: 13px; line-height: 1.5; color: var(--ink);
     }
-    .callout strong { color: var(--ink); }
-    .footer { margin-top: 20px; color: var(--muted); font-size: 12px; text-align: center; }
-    .note-inline { font-size: 12px; color: var(--muted); margin: 0 0 12px; }
+    .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .box { border: 1px solid var(--line); border-radius: 12px; padding: 10px; background: white; }
+    .box strong { display: block; font-size: 12px; margin-bottom: 8px; }
+    .strike { text-decoration: line-through; opacity: .55; }
+    .scope-bar {
+      display: grid; gap: 10px; padding: 12px; border-radius: 12px;
+      background: white; border: 1px solid var(--line); margin-bottom: 10px;
+    }
+    .scope-bar .title { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px; }
+    .scope-bar .title small { color: var(--muted); font-weight: 600; }
+    .filter-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
+    .report-card { background: white; border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+    .report-card header { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+    .report-card h5 { margin: 0 0 2px; font-size: 14px; }
+    .report-card .meta { font-size: 11px; color: var(--muted); font-weight: 600; }
+    .health {
+      font-size: 11px; font-weight: 800; padding: 4px 8px; border-radius: 999px;
+      background: var(--amber-soft); color: #8a5a0a; white-space: nowrap;
+    }
+    .meeting-strip { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 10px; }
+    .meeting-step {
+      background: white; border: 1px solid var(--line); border-radius: 12px;
+      padding: 10px; min-height: 72px;
+    }
+    .meeting-step strong { display: block; font-size: 12px; margin-bottom: 4px; }
+    .meeting-step small { color: var(--muted); font-size: 11px; line-height: 1.35; }
+    .meeting-step.done { background: var(--green-soft); border-color: #9dceb5; }
+    .meeting-step.on { background: var(--blue-soft); border-color: #b7d3e2; outline: 2px solid rgba(47,111,143,.2); }
+    .footer { text-align: center; color: var(--muted); font-size: 12px; margin-top: 8px; }
     @media (max-width: 900px) {
-      .frames, .frames.stack, .compare, .filter-bar, .form-grid, .lifecycle-track, .meeting-strip, .ui-app {
-        grid-template-columns: 1fr;
-      }
+      .frames, .compare, .filter-bar, .meeting-strip, .lifecycle-track, .form-grid { grid-template-columns: 1fr; }
+      .ui-app { grid-template-columns: 1fr; }
       .ui-side { display: none; }
     }
     @media print {
@@ -290,38 +245,37 @@
   <div class="shell">
     <header class="hero">
       <span class="eyebrow">Omena Consulting · UI preview</span>
-      <h1>Como ficaria: Training + quick wins</h1>
-      <p class="lede">Mock visual das próximas melhorias pós-P2 — frames no visual do dashboard, para decidir o que implementar primeiro.</p>
+      <h1>Shipped: Training + quick wins</h1>
+      <p class="lede">Visual reference for the features now live in the dashboard — Training role, Product filter labels, global scope chips, and meeting-mode strip.</p>
       <div class="preview-banner">
-        Isto é um preview · ainda não está no app
-        <span>Nada aqui altera o dashboard em produção. Use para alinhar o “como ficaria”.</span>
+        Implemented in the app · preview of shipped features
+        <span>Open the dashboard to use Training, Product filters, and the updated meeting strip.</span>
       </div>
       <div class="share-note">
-        Link compartilhável:
+        Shareable link:
         <a href="https://omenada2025.github.io/omenaconsulting/preview-proximas-melhorias.html">https://omenada2025.github.io/omenaconsulting/preview-proximas-melhorias.html</a>
       </div>
       <div class="actions">
-        <a class="btn primary" href="https://omenada2025.github.io/omenaconsulting/">Abrir dashboard</a>
-        <a class="btn" href="training-role-recommendation.html">Recomendação Training</a>
-        <a class="btn" href="product-governance-module-manual.html">Manual Product Governance</a>
+        <a class="btn primary" href="https://omenada2025.github.io/omenaconsulting/">Open dashboard</a>
+        <a class="btn" href="training-role-recommendation.html">Training recommendation</a>
+        <a class="btn" href="product-governance-module-manual.html">Product Governance manual</a>
       </div>
-      <nav class="toc" aria-label="Seções do preview">
+      <nav class="toc" aria-label="Preview sections">
         <a href="#training">1. Training</a>
         <a href="#quick-wins">2. Quick wins</a>
         <a href="#meeting">3. Meeting mode</a>
       </nav>
     </header>
 
-    <!-- ========== 1. TRAINING ========== -->
     <section class="section-card blue" id="training">
       <div class="section-head">
         <div>
-          <h2>1. Training como Functional responsibility</h2>
-          <p class="note-inline">Mesmo padrão de UI/UX: escolher o papel no intake → o lifecycle muda para Prepare → Deliver → Adopt → Handoff / Support. Governance reutiliza evidence + gate.</p>
+          <h2>1. Training as Functional responsibility</h2>
+          <p class="note-inline">Same pattern as UI/UX: choose the role in intake → lifecycle switches to Prepare → Deliver → Adopt → Handoff / Support. Governance reuses evidence + gate.</p>
         </div>
         <div>
-          <span class="pill new">Novo no dropdown</span>
-          <span class="pill green">Sem access profile</span>
+          <span class="pill new">Live in dropdown</span>
+          <span class="pill green">No access profile</span>
         </div>
       </div>
 
@@ -329,7 +283,7 @@
         <div class="frame-wrap">
           <div class="frame-label">
             Intake · Update Reports
-            <span class="tag">Com Training</span>
+            <span class="tag">With Training</span>
           </div>
           <div class="ui-frame">
             <div class="ui-chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span>Weekly Updates · New report</span></div>
@@ -361,7 +315,7 @@
                       <div class="dropdown-menu">
                         <div>Product Manager</div>
                         <div>UI/UX</div>
-                        <div class="sel new-item">Training ← novo</div>
+                        <div class="sel new-item">Training ← new</div>
                       </div>
                     </div>
                     <div class="field">
@@ -380,9 +334,9 @@
                     </div>
                   </div>
                   <div class="lifecycle-track">
-                    <div class="lc"><strong>Prepare</strong><span>Materiais · audiência</span></div>
-                    <div class="lc current"><strong>Deliver</strong><span>Sessões · cobertura</span></div>
-                    <div class="lc"><strong>Adopt</strong><span>Competência · uso</span></div>
+                    <div class="lc"><strong>Prepare</strong><span>Materials · audience</span></div>
+                    <div class="lc current"><strong>Deliver</strong><span>Sessions · coverage</span></div>
+                    <div class="lc"><strong>Adopt</strong><span>Competence · usage</span></div>
                     <div class="lc"><strong>Handoff / Support</strong><span>BAU · runbook</span></div>
                   </div>
                 </div>
@@ -394,7 +348,7 @@
         <div class="frame-wrap">
           <div class="frame-label">
             Product Governance
-            <span class="tag">Mesmo path</span>
+            <span class="tag">Same path</span>
           </div>
           <div class="ui-frame">
             <div class="ui-chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span>Governance · Item detail</span></div>
@@ -411,7 +365,7 @@
               <div class="ui-main">
                 <div class="ui-kicker">Decision register</div>
                 <h4>Enablement — Checkout training</h4>
-                <p class="ui-sub">Workstream pós-release · evidência e gate iguais aos demais</p>
+                <p class="ui-sub">Post-release workstream · same evidence and gate as other roles</p>
                 <div class="gov-panel">
                   <div class="form-grid">
                     <div class="field">
@@ -456,21 +410,20 @@
       </div>
 
       <div class="callout">
-        <strong>O que muda na prática:</strong> Training entra na mesma lista de Functional responsibility do intake e da governance.
-        Lifecycle troca automaticamente para o path de capacitação. Não nasce access profile novo.
+        <strong>What changed:</strong> Training is in the same Functional responsibility list for intake and governance.
+        Lifecycle switches automatically to the enablement path. No new access profile.
       </div>
     </section>
 
-    <!-- ========== 2. QUICK WINS ========== -->
     <section class="section-card green" id="quick-wins">
       <div class="section-head">
         <div>
-          <h2>2. Quick wins — labels, Role filter, escopo</h2>
-          <p class="note-inline">Três correções visíveis: Product (nunca Project) nos filtros; Role completo (Product Manager · UI/UX · Training); chip que explica Global vs filtro local.</p>
+          <h2>2. Quick wins — labels, Role filter, scope</h2>
+          <p class="note-inline">Three visible fixes: Product (never Project) on filters; full Role list (Product Manager · UI/UX · Training); chips that explain Global vs local filter.</p>
         </div>
         <div>
-          <span class="pill green">Baixo esforço</span>
-          <span class="pill">Alta clareza</span>
+          <span class="pill green">Low effort</span>
+          <span class="pill">High clarity</span>
         </div>
       </div>
 
@@ -478,25 +431,25 @@
         <div class="frame-wrap">
           <div class="frame-label">
             Label consistency
-            <span class="tag before">Antes → Depois</span>
+            <span class="tag before">Before → After</span>
           </div>
           <div class="ui-frame">
             <div class="ui-chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span>Submitted Reports · filter bar</span></div>
             <div class="ui-main" style="padding:14px">
               <div class="compare">
                 <div class="box">
-                  <strong>Hoje</strong>
+                  <strong>Before</strong>
                   <div class="field" style="margin-bottom:8px">
                     <label class="strike">Project</label>
                     <div class="control strike">All projects</div>
                   </div>
                   <div class="field">
                     <label>Role</label>
-                    <div class="control">All roles · só PM + UI/UX</div>
+                    <div class="control">All roles · PM + UI/UX only</div>
                   </div>
                 </div>
                 <div class="box" style="background:var(--green-soft);border-color:#9dceb5">
-                  <strong>Depois</strong>
+                  <strong>After</strong>
                   <div class="field" style="margin-bottom:8px">
                     <label>Product</label>
                     <div class="control">All products</div>
@@ -513,7 +466,7 @@
                   </div>
                 </div>
               </div>
-              <p class="ui-sub" style="margin-top:12px;margin-bottom:0">Mesma lista do intake (<code style="font-size:10px;background:#edf4f8;padding:2px 5px;border-radius:4px">FUNCTIONAL_ROLE_OPTIONS</code>) em Weekly Updates, Brief, Capacity, Feedback, Portfolio.</p>
+              <p class="ui-sub" style="margin-top:12px;margin-bottom:0">Same list as intake (<code style="font-size:10px;background:#edf4f8;padding:2px 5px;border-radius:4px">FUNCTIONAL_ROLE_OPTIONS</code>) across Weekly Updates, Brief, Capacity, Feedback, and Portfolio.</p>
             </div>
           </div>
         </div>
@@ -524,7 +477,7 @@
             <span class="tag">Chip + tooltip</span>
           </div>
           <div class="ui-frame">
-            <div class="ui-chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span>Weekly Updates · escopo aplicado</span></div>
+            <div class="ui-chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span>Weekly Updates · applied scope</span></div>
             <div class="ui-main" style="padding:14px">
               <div class="scope-bar">
                 <div class="title">
@@ -546,11 +499,11 @@
                 <div class="chip-row">
                   <span class="chip" title="Applies to every workspace until cleared">
                     Global · Product: Checkout Hub
-                    <span class="tip" title="Escopo global: segue você entre Home, Portfolio, Updates e Meeting.">?</span>
+                    <span class="tip" title="Global scope: follows you across Home, Portfolio, Updates, and Meeting.">?</span>
                   </span>
                   <span class="chip local" title="Only on this screen">
                     Local · Health: At Risk
-                    <span class="tip" title="Filtro local: só esta tela (health, type, gate).">?</span>
+                    <span class="tip" title="Local filter: this screen only (health, type, gate).">?</span>
                   </span>
                 </div>
               </div>
@@ -587,40 +540,39 @@
       </div>
 
       <div class="callout">
-        <strong>Resultado:</strong> glossário e UI falam a mesma língua (Product). Product Manager, UI/UX e Training deixam de sumir nos filtros.
-        O chip deixa óbvio o que é escopo global versus ajuste da tela.
+        <strong>Result:</strong> glossary and UI use the same language (Product). Product Manager, UI/UX, and Training stay visible in filters.
+        Chips make global scope vs screen-local refinement obvious.
       </div>
     </section>
 
-    <!-- ========== 3. MEETING MODE ========== -->
     <section class="section-card amber" id="meeting">
       <div class="section-head">
         <div>
-          <h2>3. Meeting mode (opcional · strip)</h2>
-          <p class="note-inline">Em vez de saltar entre cinco páginas, uma faixa fina de sessão: Prepare → Review → Decisions → Actions → Send — com progresso da reunião.</p>
+          <h2>3. Meeting mode (optional · strip)</h2>
+          <p class="note-inline">Instead of jumping across five pages, a thin session strip: Prepare → Review → Decisions → Actions → Send — with meeting progress.</p>
         </div>
         <div>
-          <span class="pill amber">Estrutural</span>
-          <span class="pill">Mock slim</span>
+          <span class="pill amber">Structural</span>
+          <span class="pill green">Shipped</span>
         </div>
       </div>
 
       <div class="frames stack">
         <div class="frame-wrap">
           <div class="frame-label">
-            Manager Meeting · sessão em andamento
-            <span class="tag">Preview</span>
+            Manager Meeting · live session
+            <span class="tag">Shipped</span>
           </div>
           <div class="ui-frame">
             <div class="ui-chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span>Meeting mode · W33</span></div>
             <div class="ui-main" style="padding:14px">
               <div class="ui-kicker">Live session</div>
               <h4>Weekly operating review</h4>
-              <p class="ui-sub">Escopo: Checkout Hub · 3 At Risk · 1 decisão pendente</p>
+              <p class="ui-sub">Scope: Checkout Hub · 3 At Risk · 1 pending decision</p>
               <div class="meeting-strip">
                 <div class="meeting-step done">
                   <strong>1. Prepare</strong>
-                  <small>Agenda gerada · owners</small>
+                  <small>Agenda generated · owners</small>
                 </div>
                 <div class="meeting-step on">
                   <strong>2. Review</strong>
@@ -632,24 +584,24 @@
                 </div>
                 <div class="meeting-step">
                   <strong>4. Actions</strong>
-                  <small>Criar follow-ups</small>
+                  <small>Create follow-ups</small>
                 </div>
                 <div class="meeting-step">
                   <strong>5. Send</strong>
-                  <small>Resumo + feedback</small>
+                  <small>Summary + feedback</small>
                 </div>
               </div>
               <div class="report-card" style="margin-top:10px">
                 <header>
                   <div>
-                    <h5>Agora: Checkout Hub — payment retry</h5>
+                    <h5>Now: Checkout Hub — payment retry</h5>
                     <div class="meta">PM · Validate · Gate Ready for Review</div>
                   </div>
                   <span class="health">At Risk</span>
                 </header>
                 <div class="form-grid" style="margin-top:4px">
                   <div class="field full">
-                    <label>Decision (captura inline)</label>
+                    <label>Decision (inline capture)</label>
                     <div class="control">Approve retry window · owner: Deepa · due Fri</div>
                   </div>
                 </div>
@@ -660,21 +612,21 @@
       </div>
 
       <div class="callout">
-        <strong>Nota:</strong> este é o mock mais “estrutural”. Serve para visualizar o fechamento do ciclo semanal;
-        Training e quick wins podem ir antes sem depender deste modo.
+        <strong>Note:</strong> this strip is live on Management Review. Use it to close the weekly cycle:
+        Prepare (brief) → Review (health) → Decisions → Actions → Send (weekly review feedback).
       </div>
     </section>
 
     <section class="section-card">
-      <h2>Como usar este preview</h2>
-      <p>Mostre o link ao time e escolha: <strong>quick wins primeiro</strong> (labels + Role + chips) ou <strong>Training completo</strong> (papel + lifecycle + filtros + docs).</p>
+      <h2>How to use this preview</h2>
+      <p>Share this link as a visual guide to what is already in the app: <strong>Training role + lifecycle</strong>, <strong>Product labels and Role filters</strong>, and the <strong>meeting-mode strip</strong>.</p>
       <div class="actions" style="margin-top:4px">
-        <a class="btn primary" href="training-role-recommendation.html">Detalhe da recomendação Training</a>
-        <a class="btn" href="https://omenada2025.github.io/omenaconsulting/">Voltar ao dashboard</a>
+        <a class="btn primary" href="https://omenada2025.github.io/omenaconsulting/">Open live dashboard</a>
+        <a class="btn" href="training-role-recommendation.html">Training recommendation detail</a>
       </div>
     </section>
 
-    <p class="footer">Omena Consulting · Preview pós-P2 · HTML mock (não implementa mudanças na app)</p>
+    <p class="footer">Omena Consulting · Preview of shipped features · Training role · Quick wins · Meeting mode</p>
   </div>
 </body>
 </html>

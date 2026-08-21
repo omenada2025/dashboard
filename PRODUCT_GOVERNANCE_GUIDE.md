@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This guide explains how Product Managers and UI/UX contributors should use the dashboard to turn weekly status updates into reliable product governance information. Product Manager represents the accountable **Owner** responsibility in this process. UI/UX remains a contributing functional role, with its own experience-design lifecycle path.
+This guide explains how Product Managers, UI/UX, and Training contributors should use the dashboard to turn weekly status updates into reliable product governance information. Product Manager represents the accountable **Owner** responsibility in this process. UI/UX and Training remain contributing functional roles, each with its own lifecycle path.
 
 The process connects product reality, delivery evidence, decisions, weekly execution, and release learning. A report is not only a narrative: every field supports a dashboard metric, governance gate, or management action.
 
@@ -30,7 +30,16 @@ When **Functional role** is UI/UX, the lifecycle selector follows this experienc
 6. **Handoff** - Provide approved specifications, assets, behaviors, and traceability for implementation.
 7. **Release / Learn** - Review the released experience, capture feedback and outcomes, and feed learning into the next cycle.
 
-The two paths share the same governance field, evidence rules, and gate statuses. Select the functional role first; the dashboard then shows only the lifecycle phases for that role. This keeps weekly status and Product Governance aligned without creating a separate parallel process.
+### Training Lifecycle
+
+When **Functional role** is Training, the lifecycle selector follows this enablement path:
+
+1. **Prepare** - Define audience, materials, schedule, and success criteria for enablement.
+2. **Deliver** - Run sessions and capture attendance or delivery evidence.
+3. **Adopt** - Confirm competence, usage, and follow-up coaching needs.
+4. **Handoff / Support** - Transfer to BAU support with runbooks and ownership clarity.
+
+The three paths share the same governance field, evidence rules, and gate statuses. Select the functional role first; the dashboard then shows only the lifecycle phases for that role. This keeps weekly status and Product Governance aligned without creating a separate parallel process.
 
 ## Responsibility Model
 
@@ -38,6 +47,7 @@ The two paths share the same governance field, evidence rules, and gate statuses
 | --- | --- | --- |
 | Product or workstream ownership | Product Manager | Own context, evidence, dates, decisions, acceptance criteria, and weekly status. |
 | Experience contribution | UI/UX | Progress work through the UI/UX lifecycle and provide validated designs, usability evidence, handoff material, and experience acceptance criteria. |
+| Enablement contribution | Training | Progress enablement through Prepare → Deliver → Adopt → Handoff / Support and provide attendance, adoption, and support evidence. |
 | Governance oversight | Admin, Master admin, or Role Manager | Review evidence quality, approve gates, monitor gaps, and manage portfolio standards. |
 | Leadership decision | Approver or leadership owner | Approve, reject, or condition a gate based on evidence and business risk. |
 
@@ -51,12 +61,12 @@ Each workstream must have one accountable Owner. Participants may contribute, bu
 - **Feature / workstream** identifies the exact activity being delivered.
 - **Owner** is the accountable Product Manager.
 - **Participants** are optional contributors.
-- **Functional role** identifies whether the update is from Product Management or UI/UX.
+- **Functional role** identifies whether the update is from Product Management, UI/UX, or Training.
 
 ### Governance control
 
 - **Governance classification** explains what kind of item is being managed: Bug, Gap, Change Request, Configuration Issue, Investigation, Enhancement, Risk, or Usability Issue.
-- **Lifecycle phase** shows where the item is in the product or UI/UX lifecycle, based on Functional role.
+- **Lifecycle phase** shows where the item is in the product, UI/UX, or Training lifecycle, based on Functional role.
 - **Evidence status** shows whether supporting evidence is Missing, Partial, Available, or Validated.
 - **Evidence reference** links or names the document, approval, test result, meeting decision, design, ticket, or analysis supporting the update.
 - **Gate status** shows whether the item is Not Ready, Ready for Review, Approved, Approved with Conditions, or Rejected.
