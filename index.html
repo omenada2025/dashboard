@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-store, max-age=0" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <meta name="dashboard-build" content="2026-08-21-fix-home-empty-data" />
+  <meta name="dashboard-build" content="2026-08-24-training-sync-evidence" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231f5874'/%3E%3Ctext x='32' y='41' text-anchor='middle' font-family='Arial,sans-serif' font-size='28' font-weight='700' fill='white'%3EPU%3C/text%3E%3C/svg%3E" />
   <title>Omena Consulting Dashboard</title>
   <style>
@@ -463,6 +463,37 @@
 
     .home-action-card .btn {
       margin-top: auto;
+    }
+
+    .home-sync-banner {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px 14px;
+      margin-bottom: 16px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: var(--surface-soft);
+    }
+
+    .home-sync-banner.green { background: var(--green-soft); border-color: #9dceb5; }
+    .home-sync-banner.amber { background: var(--amber-soft); border-color: #e6c985; }
+    .home-sync-banner.red { background: var(--red-soft); border-color: #efb8c8; }
+
+    .home-sync-banner strong { display: block; font-size: 13px; margin-bottom: 2px; }
+    .home-sync-banner p { margin: 0; font-size: 12px; color: var(--muted); line-height: 1.45; }
+    .home-sync-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+    .artifact-group-title {
+      grid-column: 1 / -1;
+      margin: 8px 0 0;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      color: var(--muted);
     }
 
     .home-flow-list {
@@ -2755,6 +2786,8 @@
           <button class="btn" type="button" data-logout>Logout</button>
         </div>
 
+        <div class="home-sync-banner" id="homeSyncBanner" hidden aria-live="polite"></div>
+
         <div class="grid home-action-grid" id="homeActionCards"></div>
 
         <div class="grid two-col">
@@ -3364,8 +3397,15 @@
         </div>
 
         <div class="panel" style="margin-top:16px">
-          <div class="panel-title"><div><h3>Minimum evidence checklist</h3><p class="muted small">Track the core artifacts required to move a product or workstream through governance.</p></div></div>
-          <div class="form-grid"><label>Product<select id="governanceArtifactProduct"></select></label></div>
+          <div class="panel-title"><div><h3>Minimum evidence checklist</h3><p class="muted small">Track role-specific artifacts required to move a product or workstream through governance.</p></div></div>
+          <div class="form-grid">
+            <label>Product<select id="governanceArtifactProduct"></select></label>
+            <label>Functional role<select id="governanceArtifactRole">
+              <option value="Product Manager">Product Manager</option>
+              <option value="UI/UX">UI/UX</option>
+              <option value="Training">Training</option>
+            </select></label>
+          </div>
           <div class="artifact-checklist" id="governanceArtifactChecklist"></div>
           <div class="form-actions"><button class="btn primary" type="button" id="saveGovernanceArtifacts">Save evidence checklist</button></div>
         </div>
@@ -4898,13 +4938,26 @@
     const EVIDENCE_STATUS_OPTIONS = ["Missing", "Partial", "Available", "Validated"];
     const GATE_STATUS_OPTIONS = ["Not Ready", "Ready for Review", "Approved", "Approved with Conditions", "Rejected"];
     const GOVERNANCE_STATUS_OPTIONS = ["Open", "In Review", "Approved", "Delivered", "Archived"];
-    const GOVERNANCE_ARTIFACT_TYPES = [
-      "Product Reality Assessment", "Application/Feature Inventory", "Application Map",
-      "AS-IS Functional Specification", "Business Rules Catalogue", "Workflow Catalogue",
-      "Roles & Permissions Matrix", "Data & Integration Map", "Known Issues Register",
-      "Product Gap Register", "Product Risk Register", "Product Readiness Assessment",
-      "MSP Definition", "Prioritized Product Backlog", "TO-BE Product Definition"
-    ];
+    const GOVERNANCE_ARTIFACT_GROUPS = {
+      "Product Manager": [
+        "Product Reality Assessment", "Application/Feature Inventory", "Application Map",
+        "AS-IS Functional Specification", "Business Rules Catalogue", "Workflow Catalogue",
+        "Roles & Permissions Matrix", "Data & Integration Map", "Known Issues Register",
+        "Product Gap Register", "Product Risk Register", "Product Readiness Assessment",
+        "MSP Definition", "Prioritized Product Backlog", "TO-BE Product Definition"
+      ],
+      "UI/UX": [
+        "Research Summary / User Insights", "Wireframes / Concepts", "High-Fidelity Designs (Figma)",
+        "Design System References", "Prototype / Usability Validation", "Design Review Sign-off",
+        "Developer Handoff Package", "Release / Learn Notes"
+      ],
+      "Training": [
+        "Training Needs Assessment", "Curriculum / Training Plan", "Training Materials (deck, guide, video)",
+        "Delivery Schedule / Sessions Log", "Adoption / Completion Metrics", "Handoff / Support Checklist",
+        "Feedback & Improvement Log"
+      ]
+    };
+    const GOVERNANCE_ARTIFACT_TYPES = Object.values(GOVERNANCE_ARTIFACT_GROUPS).flat();
     const GOVERNANCE_ITEMS_KEY = "omena-governance-items-v1";
     const PRODUCT_ARTIFACTS_KEY = "omena-product-artifacts-v1";
 
@@ -5814,6 +5867,33 @@
       return /action_status/i.test(detail) && /check constraint|violates/i.test(detail);
     }
 
+    function isFunctionalRoleConstraintError(error) {
+      const detail = [error?.message, error?.details, error?.hint].filter(Boolean).join(" ");
+      return /(role|lifecycle_phase|functional_role)/i.test(detail) && /check constraint|violates/i.test(detail);
+    }
+
+    function formatEmailDeliveryError(error, owner = "") {
+      const raw = error instanceof Error ? error.message : String(error || "Unknown email error");
+      const detail = raw.toLowerCase();
+      const prefix = owner ? `${owner}: ` : "";
+      if (/domain.*not verified|sender.*not verified|verify.*domain/.test(detail)) {
+        return `${prefix}Email provider rejected the send because the sender domain is not verified yet. Verify the domain in Resend or SendGrid, then retry.`;
+      }
+      if (/credit|quota|limit|exceeded|billing/.test(detail)) {
+        return `${prefix}Email provider credits or quota are exhausted. Restore SendGrid credits or finish Resend domain verification, then retry.`;
+      }
+      if (/401|403|unauthorized|forbidden|invalid api key/.test(detail)) {
+        return `${prefix}Email function credentials were rejected. Check Supabase function secrets and the configured email API key.`;
+      }
+      if (/timeout|network|fetch failed|failed to fetch/.test(detail)) {
+        return `${prefix}Could not reach the email function. Check Supabase function deployment and network access, then retry.`;
+      }
+      if (/not configured|opened an email draft/.test(detail)) {
+        return raw;
+      }
+      return raw.startsWith(prefix.trim()) ? raw : `${prefix}${raw}`;
+    }
+
     function forceSafeActionStatus(payload) {
       if (Array.isArray(payload)) return payload.map(item => forceSafeActionStatus(item));
       if (!payload || typeof payload !== "object") return payload;
@@ -5843,6 +5923,9 @@
       }
       if (isActionStatusConstraintError(error)) {
         return `Could not ${action} this report because the database action status rule is outdated. I tried a safe retry, but the database still rejected it. Run the latest Supabase schema update and try again.`;
+      }
+      if (isFunctionalRoleConstraintError(error)) {
+        return `Could not ${action} this report because the database does not accept this functional role or lifecycle phase yet. Run supabase/migrations/20260821150000_training_lifecycle.sql in the Supabase SQL Editor, then retry.`;
       }
       const detail = [error.message, error.details, error.hint].filter(Boolean).join(" ");
       return detail
@@ -5881,17 +5964,67 @@
     }
 
     function inferRole(report) {
-      const text = `${report.owner || ""} ${report.participants || ""} ${report.product || ""} ${report.feature_workstream || ""} ${report.stage || ""}`.toLowerCase();
+      const text = `${report.owner || ""} ${report.participants || ""} ${report.product || ""} ${report.feature_workstream || ""} ${report.stage || ""} ${report.summary || ""}`.toLowerCase();
+      const trainingTerms = ["training", "enablement", "adoption", "curriculum", "onboarding", "knowledge transfer", "workshop", "lms", "kt "];
       const uiuxOwners = ["sam", "riya", "jocasta"];
       const uiuxTerms = ["ui/ux", "uiux", "design", "figma", "wireframe", "prototype", "visual"];
-      return uiuxOwners.some(name => text.includes(name)) || uiuxTerms.some(term => text.includes(term))
-        ? "UI/UX"
-        : "Product Manager";
+      if (trainingTerms.some(term => text.includes(term))) return "Training";
+      if (uiuxOwners.some(name => text.includes(name)) || uiuxTerms.some(term => text.includes(term))) return "UI/UX";
+      return "Product Manager";
+    }
+
+    let syncStatusText = "Loading reports...";
+
+    function syncStatusTone(text = "") {
+      const value = cleanText(text).toLowerCase();
+      if (/unavailable|failed|no local|normalize failed|rejected|error/.test(value)) return "red";
+      if (/local fallback|legacy schema|returned no rows/.test(value)) return "amber";
+      if (/synced|saved to supabase|local browser storage/.test(value)) return "green";
+      return "blue";
+    }
+
+    function renderSyncStatusBanner() {
+      const banner = document.getElementById("homeSyncBanner");
+      if (!banner) return;
+      const status = cleanText(syncStatusText) || "Loading reports...";
+      const tone = syncStatusTone(status);
+      const total = reports.length;
+      const filtered = typeof getDashboardReports === "function" ? getDashboardReports().length : total;
+      const scopeActive = (globalScope.week || "all") !== "all" || (globalScope.product || "all") !== "all" || (globalScope.owner || "all") !== "all";
+      const countLine = total
+        ? scopeActive && filtered !== total
+          ? `${filtered} of ${total} reports match the current global scope.`
+          : `${total} reports loaded from the shared database.`
+        : "No reports are loaded yet.";
+      const hint = tone === "amber" || tone === "red"
+        ? "Use Retry sync or Clear global scope if counts look wrong."
+        : scopeActive && !filtered
+          ? "Global scope is hiding all reports. Clear Week / Product / Owner to restore the portfolio view."
+          : "Counts below reflect the current global scope.";
+      banner.hidden = false;
+      banner.className = `home-sync-banner ${tone}`;
+      banner.innerHTML = `
+        <div>
+          <strong>${escapeHtml(status)}</strong>
+          <p>${escapeHtml(countLine)} ${escapeHtml(hint)}</p>
+        </div>
+        <div class="home-sync-actions">
+          <button class="btn soft" type="button" data-empty-action="retry-view">Retry sync</button>
+          ${scopeActive ? `<button class="btn soft" type="button" id="homeSyncClearScope">Clear global scope</button>` : ""}
+        </div>
+      `;
+      document.getElementById("homeSyncClearScope")?.addEventListener("click", () => {
+        globalScope = { week: "all", product: "all", owner: "all" };
+        applyGlobalScope();
+        renderAllSafely("home sync banner clear scope");
+      });
     }
 
     function setSyncStatus(text) {
+      syncStatusText = text || "";
       const subtitle = document.getElementById("dashboardSubtitle");
-      subtitle.dataset.syncStatus = text;
+      if (subtitle) subtitle.dataset.syncStatus = syncStatusText;
+      renderSyncStatusBanner();
     }
 
     async function supabaseTableRequest(table, path = "", options = {}) {
@@ -8073,25 +8206,33 @@
       }
     }
 
-    function renderArtifactChecklist(product = "") {
+    function governanceArtifactTypesForRole(role = "Product Manager") {
+      return GOVERNANCE_ARTIFACT_GROUPS[cleanText(role)] || GOVERNANCE_ARTIFACT_GROUPS["Product Manager"];
+    }
+
+    function renderArtifactChecklist(product = "", role = document.getElementById("governanceArtifactRole")?.value || "Product Manager") {
       const container = document.getElementById("governanceArtifactChecklist");
       if (!container) return;
+      const selectedRole = cleanText(role) || "Product Manager";
       if (!product) {
         container.innerHTML = emptyStateMarkup({
           kind: "initial",
           title: "Select a product",
-          description: "Choose a product to review and link its required evidence pack.",
+          description: "Choose a product and functional role to review the required evidence pack.",
           primaryLabel: "Choose product",
           primaryAction: "focus-governance-product"
         });
         return;
       }
       const byType = new Map(productArtifacts.filter(item => canonicalText(item.product) === canonicalText(product)).map(item => [item.artifact_type, item]));
-      container.innerHTML = GOVERNANCE_ARTIFACT_TYPES.map(type => {
-        const artifact = byType.get(type);
-        const checked = artifact && artifact.validation_status !== "Missing";
-        return `<label class="artifact-check"><input type="checkbox" data-artifact-type="${escapeHtml(type)}" ${checked ? "checked" : ""}><span><strong>${escapeHtml(type)}</strong><small>${escapeHtml(artifact?.validation_status || "Missing")}</small></span></label>`;
-      }).join("");
+      container.innerHTML = `
+        <div class="artifact-group-title">${escapeHtml(selectedRole)} artifacts</div>
+        ${governanceArtifactTypesForRole(selectedRole).map(type => {
+          const artifact = byType.get(type);
+          const checked = artifact && artifact.validation_status !== "Missing";
+          return `<label class="artifact-check"><input type="checkbox" data-artifact-type="${escapeHtml(type)}" ${checked ? "checked" : ""}><span><strong>${escapeHtml(type)}</strong><small>${escapeHtml(artifact?.validation_status || "Missing")}</small></span></label>`;
+        }).join("")}
+      `;
     }
 
     async function saveProductArtifacts() {
@@ -8121,7 +8262,7 @@
         productArtifacts = productArtifacts.filter(item => canonicalText(item.product) !== canonicalText(product));
         productArtifacts.push(...saved);
         saveGovernanceLocally();
-        renderArtifactChecklist(product);
+        renderArtifactChecklist(product, document.getElementById("governanceArtifactRole")?.value || "Product Manager");
         renderProductGovernance();
         showGovernanceMessage(governanceCloudAvailable ? "Evidence pack saved." : "Evidence pack saved locally.", governanceCloudAvailable ? "success" : "warning");
       } catch (error) {
@@ -8163,7 +8304,7 @@
       populateGovernanceReportOptions(form, form.elements.source_report_id.value);
       populateGovernanceFormOptions(form);
       setSelectOptions(artifactProduct, governanceProducts(), artifactProduct.value, "Select product");
-      renderArtifactChecklist(artifactProduct.value);
+      renderArtifactChecklist(artifactProduct.value, document.getElementById("governanceArtifactRole")?.value || "Product Manager");
       renderGovernanceTraceability(governanceItems.find(item => item.id === selectedGovernanceItemId));
     }
 
@@ -10802,7 +10943,7 @@
       });
       if (!response.ok) {
         const detail = await response.text();
-        throw new Error(`${owner}: ${detail || `HTTP ${response.status}`}`);
+        throw new Error(formatEmailDeliveryError(new Error(detail || `HTTP ${response.status}`), owner));
       }
       return response.json().catch(() => ({}));
     }
@@ -11820,6 +11961,7 @@
       if (reports.length && (globalScope.week || "all") === "all") {
         applyGlobalScope();
       }
+      renderSyncStatusBanner();
       const source = typeof getDashboardReports === "function" ? getDashboardReports() : reports;
       const cockpitSource = source.length ? source : reports;
       const executive = isExecutiveAdmin();
@@ -16727,7 +16869,7 @@
           await recordWeeklyReviewSend(weeklyReviewSendSnapshot(recipient.owner, recipient.email, "sent", "", batchId));
           logUserAction("weekly_review_email_sent", { owner: recipient.owner, email: recipient.email, filters: { ...weeklyReviewFilters } }, { target_type: "weekly_review", target_id: recipient.owner });
         } catch (error) {
-          const message = error instanceof Error ? error.message : `${recipient.owner}: unknown error`;
+          const message = formatEmailDeliveryError(error, recipient.owner);
           failed.push(message);
           await recordWeeklyReviewSend(weeklyReviewSendSnapshot(recipient.owner, recipient.email, "failed", message, batchId));
         }
@@ -16937,6 +17079,9 @@
     });
     document.getElementById("governanceArtifactProduct")?.addEventListener("change", event => {
       renderArtifactChecklist(event.target.value);
+    });
+    document.getElementById("governanceArtifactRole")?.addEventListener("change", event => {
+      renderArtifactChecklist(document.getElementById("governanceArtifactProduct")?.value || "", event.target.value);
     });
     document.getElementById("saveGovernanceArtifacts")?.addEventListener("click", saveProductArtifacts);
     ["globalWeekFilter", "globalProductFilter", "globalOwnerFilter"].forEach(id => {
